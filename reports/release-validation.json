@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "release": "1.0.0",
+  "recorded_at": "2026-09-14T10:26:09.076437+08:00",
+  "checks": {
+    "dspark_cpu_contract_tests": 4,
+    "archive_and_assembly_tests": 5,
+    "source_syntax_links_and_checksums": "PASS",
+    "fixed_k5_rejects_other_draft_lengths": "PASS",
+    "deployment_handoff_files_removed": "PASS"
+  },
+  "scope": "CPU fixed-configuration, source and archive checks only; historical GPU performance is operator-reported",
+  "new_gpu_benchmark_executed": false,
+  "k5_default": 5,
+  "runtime_image_rebuilt_during_publication": false,
+  "large_resources_uploaded": false
+}

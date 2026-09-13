@@ -1,0 +1,176 @@
+{
+  "recorded_at": "2026-09-14T00:13:01.844607+08:00",
+  "source": "user-pasted target terminal output of tests/run-all.sh; raw target JSON/JSONL files have not been transferred",
+  "assistant_executed_target_gpu_inference": false,
+  "status": "PASS_FOR_REPORTED_CHECKS",
+  "target_report_directory": "/ai/services/deepseek-v4.1-flash-a100/deploy/runtime/acceptance-20260913T160221",
+  "runtime_image_tag": "deepseek-v4.1-flash-a100:20260913-r1",
+  "hotfix_chain": [
+    "hf001-loopback",
+    "hf002-probe-progress",
+    "hf003-graph-release"
+  ],
+  "tested_model_identity": [
+    "DeepSeek-V4.1-Flash"
+  ],
+  "reported_functional_case_count": 22,
+  "functional": {
+    "text_and_sse": {
+      "status": "PASS",
+      "first_token_seconds": 0.13449227064847946,
+      "prompt_tokens": 20,
+      "completion_tokens": 6
+    },
+    "cache": {
+      "status": "PASS",
+      "cold_cached_tokens": 0,
+      "hot_cached_tokens": 14208,
+      "prompt_tokens": 14398,
+      "token_hit_ratio": 0.9868037227392693,
+      "cold_seconds": 1.8340497184544802,
+      "hot_seconds": 0.2192436084151268,
+      "hot_gateway_request_id": null
+    },
+    "dspark": {
+      "status": "PASS",
+      "drafts": 321,
+      "draft_tokens": 1605,
+      "accepted_tokens": 702,
+      "acceptance_rate": 0.4373831775700935,
+      "completion_tokens": 1024,
+      "sse_events": 322,
+      "wall_seconds": 12.372,
+      "scope": "separate functional DSpark request, not counters from the entire C56 benchmark"
+    },
+    "offline_input_rejections": {
+      "status": "PASS",
+      "invalid_model": "rejected",
+      "remote_media": "rejected before fetching"
+    },
+    "tool_roundtrips": {
+      "status": "PASS",
+      "protocols": [
+        "chat",
+        "responses",
+        "messages"
+      ],
+      "streaming_modes": [
+        false,
+        true
+      ],
+      "receipt_and_call_id_matched": true
+    },
+    "vision": [
+      {
+        "status": "PASS",
+        "images": 1,
+        "ocr": "LOCAL1A100",
+        "prompt_tokens": 219,
+        "seconds": 0.304
+      },
+      {
+        "status": "PASS",
+        "images": 2,
+        "ocr": "LOCAL1A100,LOCAL2A100",
+        "prompt_tokens": 415,
+        "seconds": 0.367
+      },
+      {
+        "status": "PASS",
+        "images": 4,
+        "ocr": "LOCAL1A100,LOCAL2A100,LOCAL3A100,LOCAL4A100",
+        "prompt_tokens": 807,
+        "seconds": 0.564
+      }
+    ],
+    "short_request_concurrency": [
+      {
+        "status": "PASS",
+        "concurrency": 56,
+        "successful": 56,
+        "seconds": 1.6186716929078102,
+        "p50_seconds": 1.5249056005850434,
+        "p95_seconds": 1.5843329299241304
+      },
+      {
+        "status": "PASS",
+        "concurrency": 32,
+        "successful": 32,
+        "seconds": 1.015743400901556,
+        "p50_seconds": 0.9950562883168459,
+        "p95_seconds": 1.0051768198609352
+      }
+    ],
+    "long_retrieval": [
+      {
+        "status": "PASS",
+        "requested_input_budget": 32768,
+        "actual_prompt_tokens": 32215,
+        "seconds": 6.543970623984933
+      },
+      {
+        "status": "PASS",
+        "requested_input_budget": 65536,
+        "actual_prompt_tokens": 64961,
+        "seconds": 9.10810200870037
+      },
+      {
+        "status": "PASS",
+        "requested_input_budget": 131072,
+        "actual_prompt_tokens": 130492,
+        "seconds": 21.590241944417357
+      },
+      {
+        "status": "PASS",
+        "requested_input_budget": 258048,
+        "actual_prompt_tokens": 257482,
+        "seconds": 56.45115350373089
+      }
+    ],
+    "long_retrieval_scope": "four-position synthetic retrieval; output budget 4096, not 4096 actual output tokens; duration includes prefill and response"
+  },
+  "benchmark": {
+    "model": "DeepSeek-V4.1-Flash",
+    "context": 262144,
+    "protocol": "Chat Completions HTTP/SSE",
+    "thinking": true,
+    "reasoning_effort": "high",
+    "temperature": 0,
+    "concurrency": 56,
+    "warmups": 2,
+    "single_stream_samples": 5,
+    "requested_output_tokens": 1024,
+    "ignore_eos": true,
+    "status": "PASS",
+    "started_at": "2026-09-13T16:04:22.011407+00:00",
+    "timing_note": "decode=(usage completion_tokens-1)/(last token-bearing event - first); DSpark may emit several tokens per event; inter-event latency is not per-token latency",
+    "failed_requests": 0,
+    "load_completed_requests": 200,
+    "load_seconds": 153.44663214497268,
+    "requested_duration_hours": 0,
+    "duration_satisfied": true,
+    "single_decode_median": 101.73116581001878,
+    "load_output_tokens_per_second": 1334.6659821540422,
+    "load_latency_p50": 39.38027561828494,
+    "load_latency_p95": 47.529245214536786,
+    "load_ttft_p95": 1.6546838078647852,
+    "finished_at": "2026-09-13T16:08:08.001179+00:00",
+    "trace_file": "benchmark-thinking.jsonl"
+  },
+  "derived_interpretation": {
+    "single_1024_decode_seconds_estimate": 10.055915430188179,
+    "median_request_end_to_end_output_rate": 26.002865239585553,
+    "cache_end_to_end_request_speedup": 8.365350906749349,
+    "accepted_tokens_per_draft": 2.1869158878504673,
+    "rate_scope": "usage completion_tokens include reasoning plus visible output; TTFT is first token-bearing SSE event, possibly reasoning; single decode timing is client-event estimate",
+    "no_speedup_claim_for_dspark": "draft acceptance proves activity, not an on/off measured speedup",
+    "no_per_user_rate_from_aggregate_division": true
+  },
+  "limitations": [
+    "C56 benchmark uses short independent prompts with 1024 output tokens and 200 requests; not C56 full-256K residency or a many-hour soak",
+    "five single-stream samples and one load round; no confidence interval or global optimality claim",
+    "synthetic tool receipts and image OCR do not establish real CLI coding-task quality",
+    "direct engine HTTP tests do not prove existing NewAPI cache accounting or host.docker.internal frontend path",
+    "old V4 Flash R3 text figure 175.94 tok/s has different prompt and server timing; no controlled old/new regression percentage is established"
+  ]
+}

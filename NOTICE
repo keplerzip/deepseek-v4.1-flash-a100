@@ -1,0 +1,18 @@
+DeepSeek-V4.1-Flash A100 Offline Deployment Toolkit
+Copyright 2026 keplerzip and contributors.
+
+Original deployment and validation code is licensed under Apache License 2.0.
+
+This repository includes modified files derived from vLLM / wtdcode/vllm-backport,
+copyright contributors to the vLLM project, licensed under Apache License 2.0.
+The original SPDX headers are retained. Upstream source revision:
+a350766628514d597670d2a5217777fdee2ba7f4.
+
+Derived files are in build/image/patched/vllm and deploy/tests/upstream.
+Modifications include offline input/encoding fixes and KV/graph observation hooks.
+The DeepSeek reference encoder informs the upstream tokenizer implementation;
+the model MIT license is retained in licenses/DeepSeek-LICENSE.
+
+Model weights, upstream container layers and external CLI binaries are not
+redistributed by this source release. Their licenses remain with their owners.
+See docs/acknowledgements.md for project links and attribution scope.

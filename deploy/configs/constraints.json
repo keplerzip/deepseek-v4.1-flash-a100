@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "served_model_name": "DeepSeek-V4.1-Flash",
+  "max_model_len": 262144,
+  "minimum_concurrency": 32,
+  "concurrency_formula": "max(32,2*(effective_kv_tokens//262144))",
+  "tensor_parallel_size": 8,
+  "pipeline_parallel_size": 1,
+  "dspark_k": 5,
+  "cuda_graph_mode": "FULL_AND_PIECEWISE",
+  "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+  "target_gpu_validation": "NOT_RUN",
+  "speed_winner": "NOT_MEASURED"
+}

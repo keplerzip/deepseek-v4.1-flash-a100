@@ -1,0 +1,42 @@
+{
+  "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
+  "patch_applies_to": "pristine base; includes upstream Responses fix; do not apply patch 0001 twice",
+  "upstream_responses_commit": "4f4498fea2ec91848d1b131e82ae1401a09d4d3a",
+  "official_encoder_sha256": "502bdaec8a3fd88ebc24c4721a7038fbe42f2063c664638127056107920035c1",
+  "patch_sha256": "7cb4e98c1deeb76cce0cab964978ba88d5fb0fa908049965b4ab6d5714e762bd",
+  "files": [
+    {
+      "path": "vllm/tokenizers/deepseek_v41.py",
+      "base_sha256": "d6e9cbce7c5f127819452fa5d03dd4f22ad9f136dd202a54b5b31fe42402cae2",
+      "patched_sha256": "ec2645dc38f2ba5a2997ab8e41df4295cf9f50a8a32106fc3f82597f51ec2fff"
+    },
+    {
+      "path": "vllm/tokenizers/deepseek_v41_encoding.py",
+      "base_sha256": "081382cb953a1c8041fdfc82a6001cf0c932553171436625c89fe5b9fbcda464",
+      "patched_sha256": "e8429020c03efddbc34d2b5aa1d21c919e46d5936e93736d9c63a2c21171ff6f"
+    },
+    {
+      "path": "vllm/v1/core/kv_cache_utils.py",
+      "base_sha256": "3326435f857c903711939d4f6b2776395262729b464b3973949c1234a163ff3f",
+      "patched_sha256": "5c6852b7ad7017f1acc045d229c63e0151e8a8ee1886a7462935c755ed2d14f1"
+    },
+    {
+      "path": "vllm/v1/worker/gpu/spec_decode/dspark/speculator.py",
+      "base_sha256": "88f0c5da4bdfe96ef81cb4eb2381c4ef57303fd122dd278d08a90e8af202c9dc",
+      "patched_sha256": "e5ef9f9452f7c88fb2edda125ec938391d872a0081117d506b448c2fbb458082"
+    },
+    {
+      "path": "vllm/v1/worker/gpu/cudagraph_utils.py",
+      "base_sha256": "c20278e8e8a1dfd65467059ddadb3fdd2a576178e839509d53202a18cef32d7b",
+      "patched_sha256": "852229aa5b462bb284a89eef43b7723267c5674f38934f4eaddbd42a0b25c834"
+    }
+  ],
+  "behavior_changes": [
+    "accept Responses text blocks",
+    "official low=50/high=75/max=100 effort mapping",
+    "map Responses developer instructions to official system role; retain official latest_reminder input",
+    "official namespace qualification for tool schemas and replayed calls",
+    "exact KV group accounting, DSpark load and CUDA graph capture/replay observations; no kernel math changes"
+  ],
+  "gpu_validated": false
+}

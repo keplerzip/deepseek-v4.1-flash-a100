@@ -1,0 +1,28 @@
+{
+  "release": "1.0.0",
+  "model": "DeepSeek-V4.1-Flash",
+  "default_dspark_k": 5,
+  "native_dspark_block_size": 5,
+  "context": 262144,
+  "tensor_parallel_size": 8,
+  "engram_cpu_offload": true,
+  "concurrency_formula": "max(32,2*(effective_kv_tokens//262144))",
+  "base_image": "lazymio/vllm-backport@sha256:349690323ab9aba712111529ed1ca60730199205d8202f67895ffde85b451be3",
+  "upstream_source": "https://github.com/wtdcode/vllm-backport",
+  "upstream_revision": "a350766628514d597670d2a5217777fdee2ba7f4",
+  "runtime_tag": "deepseek-v4.1-flash-a100:20260913-r1",
+  "runtime_archive_sha256": "ad8bb1964bba06ff887ff6b9eecbf68f1bb9396063eb9f3c12cb117024e81c62",
+  "modelscope_model_id": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "nccl": "2.29.7",
+  "newapi_compatibility_reference": "v1.0.0-rc.37 (externally managed; not bundled)",
+  "report_provenance": "operator-pasted isolated-target results; no raw JSONL transferred",
+  "source_only": true,
+  "model_and_image_files_in_git": false,
+  "deployment_policy": "fixed native DSpark k=5",
+  "allowed_dspark_k": [
+    5
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "model": "/models/DeepSeek-V4.1-Flash",
+  "served_model_name": "DeepSeek-V4.1-Flash",
+  "tensor_parallel_size": 8,
+  "pipeline_parallel_size": 1,
+  "max_model_len": 262144,
+  "max_num_batched_tokens": 4096,
+  "gpu_memory_utilization": 0.90,
+  "kv_cache_dtype": "fp8_ds_mla",
+  "engram_config": {"cpu_offload": true},
+  "enable_prefix_caching": true,
+  "enable_prompt_tokens_details": true,
+  "tokenizer_mode": "deepseek_v41",
+  "tool_call_parser": "deepseek_v41",
+  "reasoning_parser": "deepseek_v41",
+  "enable_auto_tool_choice": true,
+  "disable_custom_all_reduce": true,
+  "limit_mm_per_prompt": {"image": 4},
+  "generation_config": "vllm",
+  "speculative_config": {
+    "method": "dspark",
+    "num_speculative_tokens": 5,
+    "draft_sample_method": "greedy",
+    "rejection_sample_method": "standard",
+    "use_local_argmax_reduction": true,
+    "enable_adaptive_verification": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "status": "USER_REPORTED_COMPLETED_COMPARISON",
+  "source": "User-pasted target comparison table; raw per-request JSONL files were retained on the isolated target and were not transferred here",
+  "recorded_at": "2026-09-14T03:19:27.482962+08:00",
+  "assistant_executed_gpu_benchmark": false,
+  "model": "DeepSeek-V4.1-Flash",
+  "context": 262144,
+  "test_concurrency": 32,
+  "rows": [
+    {
+      "mode": "off",
+      "k": 5,
+      "single_decode_tok_s": 139.8,
+      "single_end_to_end_tok_s": 137.22,
+      "c32_output_tok_s": 1379.01,
+      "c32_p95_seconds": 24.56
+    },
+    {
+      "mode": "off",
+      "k": 7,
+      "single_decode_tok_s": 146.04,
+      "single_end_to_end_tok_s": 143.5,
+      "c32_output_tok_s": 1359.6,
+      "c32_p95_seconds": 25.28
+    },
+    {
+      "mode": "high",
+      "k": 5,
+      "single_decode_tok_s": 109.95,
+      "single_end_to_end_tok_s": 108.58,
+      "c32_output_tok_s": 1039.91,
+      "c32_p95_seconds": 34.93
+    },
+    {
+      "mode": "high",
+      "k": 7,
+      "single_decode_tok_s": 95.69,
+      "single_end_to_end_tok_s": 94.44,
+      "c32_output_tok_s": 960.82,
+      "c32_p95_seconds": 37.96
+    }
+  ],
+  "reported_k7_change_percent": {
+    "off": {
+      "single_decode": 4.46,
+      "c32_output": -1.41
+    },
+    "high": {
+      "single_decode": -12.97,
+      "c32_output": -7.61
+    }
+  },
+  "at_report_time_selected_k": 7,
+  "requested_permanent_default_k": 5,
+  "method": {
+    "fixed_order": [
+      5,
+      7
+    ],
+    "single_samples_per_mode": 5,
+    "load_requests_per_mode": 200,
+    "output_tokens_per_request": 1024,
+    "engram_cpu_offload_both": true,
+    "high_tps_includes_reasoning_tokens": true
+  },
+  "limitations": [
+    "No statistical significance claimed from five single-stream samples and fixed order.",
+    "Does not isolate Engram offload cost or compare intrinsic old/new model speed.",
+    "C32 is short-prompt serving concurrency, not simultaneous full 256K residency."
+  ],
+  "public_runtime_policy": "fixed k=5; k=7 values are historical comparison data"
+}

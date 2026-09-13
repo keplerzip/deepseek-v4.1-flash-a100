@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "baseline_id": "deepseek-v4.1-flash-a100-v1.0.0-source",
+  "release": "1.0.0",
+  "served_model_name": "DeepSeek-V4.1-Flash",
+  "context": 262144,
+  "concurrency_formula": "max(32,2*(effective_kv_tokens//262144))",
+  "tensor_parallel_size": 8,
+  "pipeline_parallel_size": 1,
+  "dspark_k": 5,
+  "engram_cpu_offload": true,
+  "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+  "runtime_image_tag": "deepseek-v4.1-flash-a100:20260913-r1",
+  "runtime_archive_sha256": "ad8bb1964bba06ff887ff6b9eecbf68f1bb9396063eb9f3c12cb117024e81c62",
+  "runtime_config_id": "sha256:3dca0cd7e3e4c0c1971b5bf1167ea9406b4a35ec63495213a310ced6a57d79ad",
+  "newapi_version": "v1.0.0-rc.37",
+  "clients": {
+    "claude_code": "2.1.218",
+    "codex": "0.154.0",
+    "opencode": "1.18.30"
+  },
+  "target_gpu_acceptance": "USER_REPORTED_REFERENCE_RESULTS_SEE_REPORTS",
+  "host_permission": "ordinary deployment owner; sudo -n docker only",
+  "service_layout": "all service files and runtime under /ai/services/deepseek-v4.1-flash-a100; existing Docker storage retained",
+  "container_write_identity": "operator UID/GID",
+  "deployment_policy": "fixed native DSpark k=5"
+}
