@@ -12,6 +12,7 @@
 | unhashable type: dict | 已保留 schema guard 修正，不将 JSON Schema 对象/联合 type 当作媒体 discriminator。 |
 | 直连成功、网关 404 | 检查 Responses/Messages 渠道路由、base URL 拼接和模型映射。 |
 | At most 4 image(s) may be provided | 旧交付的图片数量保护值为 4；当前源码已固定为 999。升级需同步默认配置、选中/调优配置和 offline_ops.py 保护值及文件校验清单，再停止并启动模型。历史图片也计入本次请求数量。 |
+| 5 图 Chat 通过，Responses 验收返回 400 | 先读取错误正文；早期图片数量补丁的测试请求漏了 input_image.detail，固定镜像 schema 要求这个字段。补上 detail: auto 并重跑验收即可，已生效的图片数量配置无需重启。tests/vision-schema.sh 可离线复现参数校验。 |
 | 模型重启后缓存为 0 | 服务重启，旧 KV 不保留；无重启空闲问题另见缓存文档。 |
 
 ```bash
