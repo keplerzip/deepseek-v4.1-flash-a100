@@ -2,6 +2,7 @@
   "release": "1.0.0",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
+  "image_limit_per_prompt": 999,
   "native_dspark_block_size": 5,
   "context": 262144,
   "tensor_parallel_size": 8,

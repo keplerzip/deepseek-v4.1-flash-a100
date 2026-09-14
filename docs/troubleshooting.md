@@ -11,6 +11,7 @@
 | C32→C56 后再次加载 | KV 标定以及 network=none 转 internal 网络均可能触发明确重启。 |
 | unhashable type: dict | 已保留 schema guard 修正，不将 JSON Schema 对象/联合 type 当作媒体 discriminator。 |
 | 直连成功、网关 404 | 检查 Responses/Messages 渠道路由、base URL 拼接和模型映射。 |
+| At most 4 image(s) may be provided | 旧交付的图片数量保护值为 4；当前源码已固定为 999。升级需同步默认配置、选中/调优配置和 offline_ops.py 保护值及文件校验清单，再停止并启动模型。历史图片也计入本次请求数量。 |
 | 模型重启后缓存为 0 | 服务重启，旧 KV 不保留；无重启空闲问题另见缓存文档。 |
 
 ```bash

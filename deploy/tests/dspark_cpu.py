@@ -22,13 +22,15 @@ class ContractTests(unittest.TestCase):
             result, argv = ops.resolve(candidate, 56)
             self.assertEqual(result['max_model_len'], 262144)
             self.assertEqual(result['engram_config'], {'cpu_offload': True})
+            self.assertEqual(result['limit_mm_per_prompt'], {'image': 999})
+            self.assertEqual(json.loads(argv[argv.index('--limit-mm-per-prompt')+1]), {'image': 999})
             self.assertTrue(set(shapes) <= set(result['compilation_config']['cudagraph_capture_sizes']))
             self.assertEqual(result['speculative_config']['num_speculative_tokens'], k)
         for invalid in (True, 4, 6, 7, 8, 10):
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = invalid
             with self.assertRaises(ValueError): ops.resolve(candidate, 56)
-        for key, value in [('max_model_len', 32768), ('served_model_name', 'alias'), ('engram_config', {'cpu_offload': False})]:
+        for key, value in [('max_model_len', 32768), ('served_model_name', 'alias'), ('engram_config', {'cpu_offload': False}), ('limit_mm_per_prompt', {'image': 4})]:
             candidate = copy.deepcopy(base)
             candidate[key] = value
             with self.assertRaises(ValueError): ops.resolve(candidate, 56)

@@ -15,7 +15,7 @@
   "reasoning_parser": "deepseek_v41",
   "enable_auto_tool_choice": true,
   "disable_custom_all_reduce": true,
-  "limit_mm_per_prompt": {"image": 4},
+  "limit_mm_per_prompt": {"image": 999},
   "generation_config": "vllm",
   "speculative_config": {
     "method": "dspark",

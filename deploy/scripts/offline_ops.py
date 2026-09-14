@@ -22,7 +22,7 @@ def resolve(config, concurrency, fixed_blocks=None):
                 'kv_cache_dtype':'fp8_ds_mla','engram_config':{'cpu_offload':True},
                 'tool_call_parser':'deepseek_v41','reasoning_parser':'deepseek_v41',
                 'enable_prefix_caching':True,'enable_prompt_tokens_details':True,'enable_auto_tool_choice':True,
-                'limit_mm_per_prompt':{'image':4},'generation_config':'vllm','disable_custom_all_reduce':True}
+                'limit_mm_per_prompt':{'image':999},'generation_config':'vllm','disable_custom_all_reduce':True}
     allowed=set(expected)|{'speculative_config','max_num_batched_tokens','gpu_memory_utilization'}
     if set(config)!=allowed: raise ValueError('Unexpected or missing runtime keys')
     for key, value in expected.items():

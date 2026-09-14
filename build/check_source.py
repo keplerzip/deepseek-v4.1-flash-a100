@@ -26,6 +26,7 @@ def main():
                 assert (path.parent/target).exists(),(str(path),link)
     cfg=json.loads((ROOT/'deploy/configs/runtime.json').read_text())
     assert cfg['speculative_config']['num_speculative_tokens']==5
+    assert cfg['limit_mm_per_prompt']=={'image':999}
     assert cfg['served_model_name']=='DeepSeek-V4.1-Flash' and cfg['max_model_len']==262144
     assert json.loads((ROOT/'release.json').read_text())['default_dspark_k']==5
     assert json.loads((ROOT/'release.json').read_text())['allowed_dspark_k']==[5]

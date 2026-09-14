@@ -47,7 +47,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 | Engram | 主存卸载 |
 | KV | `fp8_ds_mla`，prefix caching 与命中 token 明细 |
 | 并发公式 | `C=max(32, 2*floor(effective_KV_tokens/262144))` |
-| 多模态 | 最多 4 张内联图片；拒绝公网媒体抓取 |
+| 多模态 | 图片数量配置为 999（与固定版本 vLLM 默认值一致）；拒绝公网媒体抓取 |
 | API | Chat Completions、Responses、Anthropic Messages |
 | 访问 | `127.0.0.1:8005` 和本机 Docker bridge，客户端免密 |
 | NewAPI | 接已有实例；不安装、不修改网关 |

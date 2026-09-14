@@ -237,11 +237,12 @@ def run(args):
     def vision(count):
         parts=[{'type':'text','text':'Read the code printed on each image, in image order. Return only the codes separated by commas.'}]
         for n in range(1,count+1):
-            encoded=base64.b64encode((Path(__file__).parent/'fixtures'/f'code-{n}.png').read_bytes()).decode()
+            fixture=(n-1)%4+1
+            encoded=base64.b64encode((Path(__file__).parent/'fixtures'/f'code-{fixture}.png').read_bytes()).decode()
             parts.append({'type':'image_url','image_url':{'url':'data:image/png;base64,'+encoded}})
         reply=client.chat(parts,max_tokens=128)
         text=chat_text(reply).replace(' ','')
-        expected=','.join(f'LOCAL{n}A100' for n in range(1,count+1))
+        expected=','.join(f'LOCAL{(n-1)%4+1}A100' for n in range(1,count+1))
         assert text==expected,(text,expected)
         return {'images':count,'ocr':text,'prompt_tokens':reply['usage']['prompt_tokens']}
 
@@ -291,7 +292,7 @@ def run(args):
     if args.suite in ['full','gateway']:
         for api in ['chat','responses','messages']:
             for streaming in [False,True]: test(f'{api}-tools-stream={streaming}',lambda a=api,s=streaming:tools(a,s))
-        for count in [1,2,4]: test(f'vision-{count}',lambda n=count:vision(n))
+        for count in [1,2,4,5,8]: test(f'vision-{count}',lambda n=count:vision(n))
         test('concurrent-requests',parallel)
     if args.suite == 'long':
         for budget in [32768,65536,131072,258048]: test('long-'+str(budget),lambda b=budget:long_context(b))
