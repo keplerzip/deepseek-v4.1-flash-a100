@@ -33,6 +33,10 @@ python3 build/assemble.py \
 
 输出目录必须不存在。脚本验证归档、复制源码与镜像，生成 allowed-image-ids、image-integrity、baseline 和完整 deploy.sha256，不覆盖已有服务。模型与 deploy 相邻；脚本不复制权重、不下载目标运行依赖、不安装宿主包。
 
+在同一文件系统内整理现有交付，可加 `--link-archive` 保留一份镜像数据；组装校验完成后可删除旧目录中的链接。此模式下两个路径指向同一归档，应保持只读。
+
+当前性能更新放在 `deploy/overrides/performance/`，启动时验证基底与覆盖文件 SHA256，再只读挂载进原镜像。无需重新制作大镜像即可获得此更新。向已有隔离实例交付小包时运行 `python3 build/package_update.py --output /data/dsv41-perf1.tar.gz`；目标用包内 install.sh 应用。详细边界与回退见 [性能更新](performance-update-20260915.md)。
+
 将整个 transfer 下的项目目录拷到隔离机，由普通操作者持有文件。若只压缩 deploy，则模型另行复制一份，避免在归档里再占约 510 GB。最后按 [部署说明](deployment.md) 启动。
 
 ## 源码检查与发行
@@ -40,7 +44,9 @@ python3 build/assemble.py \
 ```bash
 python3 build/check_source.py
 python3 deploy/tests/dspark_cpu.py
+python3 deploy/tests/performance_cpu.py
 python3 build/test_archive.py
+python3 build/test_update.py
 ```
 
 这些是 CPU 检查；不会生成 GPU TPS。公开仓库的 deploy/manifests/deploy.sha256 是源码参考清单，包含历史镜像归档期望值，未补齐镜像时部署校验会失败。assemble.py 会针对实际输出重新生成完整清单。

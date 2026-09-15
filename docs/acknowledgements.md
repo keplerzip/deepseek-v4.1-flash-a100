@@ -16,3 +16,7 @@
 固定源码 wtdcode/vllm-backport@a350766628514d597670d2a5217777fdee2ba7f4，响应文本块修正参考上游 [4f4498f](https://github.com/wtdcode/vllm-backport/commit/4f4498fea2ec91848d1b131e82ae1401a09d4d3a)。
 
 派生文件保留 SPDX 和版权头。[vLLM Apache-2.0 许可](../licenses/vllm-LICENSE)、[DeepSeek MIT 许可](../licenses/DeepSeek-LICENSE) 保留原文。原创部署脚本采用 Apache-2.0，没有重新许可模型、客户端或未随 Git 分发的镜像依赖。
+
+## 20260915 性能更新
+
+感谢 zyongye 与 vLLM 维护者提供 [#56633](https://github.com/vllm-project/vllm/pull/56633) 的 delayed mHC 融合与 DSpark 辅助状态优化，以及 Isotr0py 提供 [#56554](https://github.com/vllm-project/vllm/pull/56554) 的图像 padding 修复。本项目将其适配到固定的 SM80 backport，保留既有 A100 调优；新增 kernel 仍需目标 GPU 验收。mHC epilogue 的 SGLang 来源与原版权声明一并保留。

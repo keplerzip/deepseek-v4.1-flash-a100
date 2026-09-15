@@ -1,0 +1,59 @@
+{
+  "id": "20260915-perf1",
+  "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
+  "upstream_prs": [
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/56633",
+      "commit": "5372e72a9884c141874465f0eb8054a4a81da6bb"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/56554",
+      "commit": "30118ba27d1d923bdd91f97d945528dcb4a862c1"
+    }
+  ],
+  "files": [
+    {
+      "path": "vllm/model_executor/kernels/mhc/dsv41_sm80.py",
+      "group": "mhc",
+      "base_sha256": null,
+      "patched_sha256": "a13a52573b1281ce972df7973dc624f8f1fd4171b9a94b26ba971da20270bd63"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/amd/vl_model.py",
+      "group": "vision",
+      "base_sha256": "7b9b65ebb9a3e466aed22b680618aa8b4556d97520690d00652fd5c65e10369c",
+      "patched_sha256": "6f3fcc8a5896432ef51f809348097e92c7782ab226adb5ecb32cdc599ce05af4"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/common/mm_preprocess.py",
+      "group": "vision",
+      "base_sha256": "4ce1a019d74b1933706432c8aa1c347be78882019f25a956599665cf6d105d63",
+      "patched_sha256": "91f66f0c84f55709c10f16127b486a8af0e5f291efe08b46d617830eed3e8cab"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/nvidia/dspark.py",
+      "group": "mhc",
+      "base_sha256": "7645489aea921148c9bfb5a0b18e3f9073af1b10b0d51a7b70a881bd848038bf",
+      "patched_sha256": "c399b20bf9c94d609a16128f64e1013ac0662e039374809378c6b456013df25d"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/nvidia/model.py",
+      "group": "mhc",
+      "base_sha256": "83c22bcc4c45e37d6da6e69edd9c43188e1baf5c11d486714f650d2777878dfa",
+      "patched_sha256": "d8b8689ba30e1e4b5a8832d30fb140a96c58968a7ac543d850962ce8f4a5a0b0"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/nvidia/vl_model.py",
+      "group": "vision",
+      "base_sha256": "ab698e56c83a345ea73e41359cab79b5e484ccfc116ed131347d50cdfe896251",
+      "patched_sha256": "a5a3f477225990946093092d4781db181b59b52102aff2e0e345e631973817f1"
+    },
+    {
+      "path": "vllm/transformers_utils/configs/deepseek_v41.py",
+      "group": "vision",
+      "base_sha256": "e0c7583efa9baa95302398daa61604e0f656ecf9f1b072c5715e5ed5a5c54599",
+      "patched_sha256": "260cc131e5607665fe830d0c80cd2a615391623357ee3ced3847956ad46cf621"
+    }
+  ],
+  "gpu_validated": false
+}

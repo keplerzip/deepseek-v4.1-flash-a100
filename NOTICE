@@ -16,3 +16,8 @@ the model MIT license is retained in licenses/DeepSeek-LICENSE.
 Model weights, upstream container layers and external CLI binaries are not
 redistributed by this source release. Their licenses remain with their owners.
 See docs/acknowledgements.md for project links and attribution scope.
+
+20260915-perf1 includes an SM80 adaptation of vLLM PR #56633 by zyongye
+(commit 5372e72a9884c141874465f0eb8054a4a81da6bb), and the V4.1 image padding
+correction from PR #56554 by Isotr0py. The mHC epilogues retain vLLM's
+SGLang-derived implementation. Copyright and Apache-2.0 notices are retained.

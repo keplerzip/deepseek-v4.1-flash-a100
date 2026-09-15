@@ -8,10 +8,12 @@ API_PORT=8005
 START_TIMEOUT_SECONDS=7200
 NEWAPI_BASE_URL=""
 CONTAINERD_ROOT_DIR=""
+PERF_NCCL=auto
+PERF_MHC=1
 while IFS='=' read -r key value; do
   [[ -z "$key" || "$key" == \#* ]] && continue
   case "$key" in
-    MODEL_DIR|BIND_HOST|API_PORT|START_TIMEOUT_SECONDS|NEWAPI_BASE_URL|CONTAINERD_ROOT_DIR) printf -v "$key" '%s' "$value" ;;
+    MODEL_DIR|BIND_HOST|API_PORT|START_TIMEOUT_SECONDS|NEWAPI_BASE_URL|CONTAINERD_ROOT_DIR|PERF_NCCL|PERF_MHC) printf -v "$key" '%s' "$value" ;;
     *) printf 'Unknown deployment setting: %s\n' "$key" >&2; exit 2 ;;
   esac
 done < "$DEPLOY_DIR/deployment.env"
@@ -22,6 +24,8 @@ MODEL_DIR=$(realpath -e -- "$MODEL_DIR")
 [[ "$API_PORT" =~ ^[0-9]+$ ]] && ((API_PORT>=1024 && API_PORT<=65535)) || { echo 'Invalid API_PORT' >&2; exit 2; }
 [[ "$START_TIMEOUT_SECONDS" =~ ^[0-9]+$ ]] || { echo 'Invalid timeout' >&2; exit 2; }
 [[ "$BIND_HOST" =~ ^[0-9.]+$ ]] || { echo 'BIND_HOST must be an IPv4 address' >&2; exit 2; }
+[[ "$PERF_NCCL" == auto || "$PERF_NCCL" == legacy ]] || { echo 'PERF_NCCL must be auto or legacy' >&2; exit 2; }
+[[ "$PERF_MHC" == 0 || "$PERF_MHC" == 1 ]] || { echo 'PERF_MHC must be 0 or 1' >&2; exit 2; }
 IMAGE_TAG=deepseek-v4.1-flash-a100:20260913-r1
 ENGINE_NAME=deepseek-v4.1-flash-engine
 FRONTEND_NAME=deepseek-v4.1-flash-api
@@ -111,12 +115,30 @@ make_secret() {
   chmod 600 "$STATE_DIR/engine-secret.env"
 }
 
+prepare_performance() {
+  local run=$1
+  image_python /deploy/scripts/performance.py --host-deploy "$DEPLOY_DIR" \
+    --mhc "$PERF_MHC" --nccl "$PERF_NCCL" --record "/state/$run/performance.json" \
+    > "$STATE_DIR/$run/performance-mounts.nul"
+  mapfile -d '' -t PERFORMANCE_MOUNTS < "$STATE_DIR/$run/performance-mounts.nul"
+}
+
 launch_engine() {
   local mode=$1 run=$2
   local args_file="$STATE_DIR/$run/argv.nul"
   op argv "/state/$run/resolved.json" > "$args_file"
-  local -a arguments
+  local -a arguments nccl_args=() entrypoint_args=() entry_command=()
   mapfile -d '' -t arguments < "$args_file"
+  prepare_performance "$run"
+  if [[ "$PERF_NCCL" == legacy ]]; then
+    nccl_args=(-e NCCL_ALGO=Ring -e NCCL_PROTO=Simple)
+  else
+    # Explicitly unset restrictions even if a future image bakes them in.
+    # This is the pinned image's original `vllm serve` entrypoint, without a shell.
+    entrypoint_args=(--entrypoint /usr/bin/env)
+    entry_command=(-u NCCL_ALGO -u NCCL_PROTO vllm serve)
+  fi
+  printf 'Performance update: mHC=%s NCCL=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_NCCL"
   docker run -d --pull never --name "$ENGINE_NAME" --label dsv41.owner=offline-delivery \
     "${CONTAINER_USER_ARGS[@]}" \
     --gpus all --ipc host --ulimit memlock=-1:-1 --ulimit stack=67108864:67108864 \
@@ -126,14 +148,15 @@ launch_engine() {
     -e HF_HUB_DISABLE_TELEMETRY=1 -e VLLM_NO_USAGE_STATS=1 -e DO_NOT_TRACK=1 \
     -e PYTHONDONTWRITEBYTECODE=1 -e TOKENIZERS_PARALLELISM=false \
     -e VLLM_USE_BREAKABLE_CUDAGRAPH=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_DSPARK_FUSED_MARKOV=1 \
-    -e NCCL_ALGO=Ring -e NCCL_PROTO=Simple -e NCCL_IB_DISABLE=1 \
+    "${nccl_args[@]}" -e NCCL_IB_DISABLE=1 \
     -e NCCL_SOCKET_IFNAME=lo -e GLOO_SOCKET_IFNAME=lo \
     -e HF_HOME=/state/cache/hf -e XDG_CACHE_HOME=/state/cache \
     -e TRITON_CACHE_DIR=/state/cache/triton -e TORCHINDUCTOR_CACHE_DIR=/state/cache/inductor \
     -e DSV41_OBSERVATION_DIR="/state/$run/observations" \
     -v "$MODEL_DIR:/models/DeepSeek-V4.1-Flash:ro" -v "$STATE_DIR:/state" \
     -v "$DEPLOY_DIR/tests:/offline-tests:ro" \
+    "${PERFORMANCE_MOUNTS[@]}" \
     --mount "type=bind,src=$DEPLOY_DIR/overrides/dsv41_guard.py,dst=/usr/local/lib/python3.12/dist-packages/dsv41_guard.py,readonly" \
-    "$RUNTIME_IMAGE" "${arguments[@]}" >/dev/null
+    "${entrypoint_args[@]}" "$RUNTIME_IMAGE" "${entry_command[@]}" "${arguments[@]}" >/dev/null
   printf '%s\n' "$run" > "$STATE_DIR/current-run.txt"
 }

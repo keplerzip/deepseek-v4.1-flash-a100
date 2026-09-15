@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "source_update": "20260915-perf1",
+  "recorded_at": "2026-09-15T11:44:05.622210+08:00",
+  "baseline_release": "1.0.0",
+  "model": "DeepSeek-V4.1-Flash",
+  "context": 262144,
+  "dspark_k": 5,
+  "engram_cpu_offload": true,
+  "new_defaults": {
+    "nccl": "auto",
+    "mhc_fusion": true
+  },
+  "scope": "Build-host CPU checks and offline packaging only; no new A100 result",
+  "checks": {
+    "source_syntax_links_and_checksums": "PASS",
+    "dspark_cpu_contract_tests": 5,
+    "performance_overlay_integrity_tests": 3,
+    "update_transaction_tests": 3,
+    "archive_validation_tests": 5,
+    "actual_pinned_image_cpu_checks": [
+      "SM80 complete tiles and split-4 aux warmup",
+      "registered fake tensor ABI for empty/C1/C32/C56 k5 shapes",
+      "production decoder control flow vs old source using CPU reference ops, including pre-Engram aux",
+      "image padding removed; default placeholder splicing and exact sentinel mask"
+    ],
+    "actual_image_update_apply_and_exact_rollback": "PASS",
+    "failed_start_automatic_rollback": "PASS",
+    "nccl_inherited_restrictions_removed": "PASS",
+    "original_image_archive_all_blobs_and_layer_diff_ids": "PASS"
+  },
+  "small_update": {
+    "filename": "deepseek-v4.1-flash-a100-20260915-perf1.tar.gz",
+    "bytes": 173467,
+    "sha256": "539b4c3b1507e4b34556554c9adb287bb160f86616363ba06e988ef90826e65f",
+    "weights_or_images_included": false
+  },
+  "full_model_gpu_import_tested": false,
+  "new_gpu_math_tested": false,
+  "new_gpu_performance_measured": false,
+  "target_first_start": "SM80 kernel/reference/CUDA-graph test, then model startup, smoke and capacity checks",
+  "historical_gpu_results": "Existing user-reported reports are unchanged",
+  "runtime_image_rebuilt": false,
+  "public_base64_handoff_included": false
+}

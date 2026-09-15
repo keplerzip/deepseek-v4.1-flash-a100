@@ -31,19 +31,22 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 [完整性能报告与方法](docs/performance.md) · [机器可读实测记录](reports/) · [测试代码](deploy/tests/dspark_benchmark.py)
 
+**2026-09-15 性能更新已接入源码：** NCCL 自动选择、保留 SM80 调优的 V4.1 mHC 融合、图像 padding 修复。k=5、256K 和并发公式不变。上述表格仍是更新前实测；本次新增代码尚无目标 A100 速度成绩。[更新、回退与多图对照说明](docs/performance-update-20260915.md)
+
 目标机原始逐请求 JSONL 留在隔离环境，尚未传到构建工作区；仓库记录明确标注“用户回传”。2h/24h 稳定性、满窗口并发驻留、Engram 位置对照和空闲 KV 保留问题均没有在本次发布中宣称已验证。
 
 ## 项目与默认方案
 
 本项目提供 `DeepSeek-V4.1-Flash` 在八卡 A100 上的离线部署、验收和运维工具，是从实际隔离环境交付整理的 **源码发行版**。联网构建侧准备全部资源后，目标机仅用普通用户和 `sudo -n docker` 启动，无需公网下载或在宿主安装 Python 依赖。
 
-| 项目 | v1.0.0 设置 |
+| 项目 | 当前源码设置（基于 v1.0.0） |
 |---|---|
 | 唯一模型 / API 名称 | `DeepSeek-V4.1-Flash` |
 | 上下文 | 262144 token，输入与输出合计 |
 | 并行 | TP=8，PP=1 |
 | 权重 | 官方混合 FP8/FP4，固定 ModelScope revision |
 | DSpark | **固定 k=5**，CUDA Graph |
+| 当前源码性能更新 | NCCL 自动选择、V4.1 mHC 融合；首次启用先做 SM80 kernel 检查 |
 | Engram | 主存卸载 |
 | KV | `fp8_ds_mla`，prefix caching 与命中 token 明细 |
 | 并发公式 | `C=max(32, 2*floor(effective_KV_tokens/262144))` |
@@ -86,6 +89,7 @@ bash ./deploy.sh 2>&1 | tee runtime/first-deploy.log
 
 - [准备离线包](docs/building.md) · [部署](docs/deployment.md) · [运维与恢复](docs/operations.md)
 - [性能报告](docs/performance.md) · [KV 缓存](docs/cache.md) · [故障定位](docs/troubleshooting.md)
+- [20260915 性能更新与回退](docs/performance-update-20260915.md)
 - [协议、NewAPI 与 CLI](docs/clients.md) · [固定实现](docs/architecture.md)
 - [上游致谢](docs/acknowledgements.md) · [变更记录](CHANGELOG.md)
 

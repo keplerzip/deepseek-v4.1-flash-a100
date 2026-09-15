@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 
@@ -23,6 +24,7 @@ def main():
     p.add_argument('--archive',type=Path,required=True)
     p.add_argument('--inspect',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True,help='new deploy directory')
+    p.add_argument('--link-archive',action='store_true',help='hardlink the verified archive on the same filesystem to avoid a second large copy')
     a=p.parse_args()
     if a.output.exists(): p.error('Output already exists; do not overwrite a deployed service')
     report=verify(a.archive,json.loads(a.inspect.read_text()))
@@ -30,7 +32,10 @@ def main():
     if a.output.resolve().is_relative_to(source.resolve()): p.error('Output must be outside the source deploy tree')
     shutil.copytree(source,a.output,ignore=shutil.ignore_patterns('runtime','images','__pycache__','*.pyc'))
     images=a.output/'images';images.mkdir()
-    shutil.copyfile(a.archive,images/'runtime-image.tar')
+    if a.link_archive:
+        os.link(a.archive,images/'runtime-image.tar')
+    else:
+        shutil.copyfile(a.archive,images/'runtime-image.tar')
     # Detect an archive changing during the copy, before freezing its checksum.
     if digest(images/'runtime-image.tar')!=report['archive_sha256']:
         raise RuntimeError('Copied image archive differs; incomplete output retained for inspection')

@@ -12,4 +12,6 @@ jobs:
           python-version: '3.12'
       - run: python build/check_source.py
       - run: python deploy/tests/dspark_cpu.py
+      - run: python deploy/tests/performance_cpu.py
       - run: python build/test_archive.py
+      - run: python build/test_update.py

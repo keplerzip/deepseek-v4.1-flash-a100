@@ -23,5 +23,12 @@
   "host_permission": "ordinary deployment owner; sudo -n docker only",
   "service_layout": "all service files and runtime under /ai/services/deepseek-v4.1-flash-a100; existing Docker storage retained",
   "container_write_identity": "operator UID/GID",
-  "deployment_policy": "fixed native DSpark k=5"
+  "deployment_policy": "fixed native DSpark k=5",
+  "source_update": "20260915-perf1",
+  "performance_defaults": {
+    "nccl": "auto",
+    "mhc_fusion": true
+  },
+  "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
+  "performance_overlay_sha256": "7b96a8d7f491665275c31c6192c00aafa0bef89c1b4a66c2c22ab7a9fbb1c986"
 }

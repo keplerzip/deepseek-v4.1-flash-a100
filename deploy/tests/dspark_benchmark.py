@@ -1,5 +1,6 @@
 """Paired fixed-request benchmark. GPU results are created only by live HTTP."""
 import argparse
+import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 import hashlib
@@ -10,7 +11,7 @@ import statistics
 import threading
 import time
 
-from acceptance import Client, MODEL, sse_chat
+from acceptance import Client, MODEL, sse_chat, vision_request
 
 
 def digest(value):
@@ -34,6 +35,20 @@ def workload(seed, mode, phase, index):
         'temperature': 0, 'seed': 42, 'max_tokens': 1024, 'ignore_eos': True,
         'stream': True, 'stream_options': {'include_usage': True},
         'chat_template_kwargs': {'thinking': mode == 'high', 'reasoning_effort': 'high'}}
+
+
+def template_workload(template, mode):
+    """Keep the same conversation/images while controlling benchmark sampling."""
+    if template.get('model', MODEL) != MODEL or not isinstance(template.get('messages'), list):
+        raise ValueError('Request file must be a Chat Completions body for DeepSeek-V4.1-Flash')
+    body = copy.deepcopy(template)
+    for key in ('max_completion_tokens', 'stop', 'reasoning_effort', 'thinking'):
+        body.pop(key, None)
+    body.update(model=MODEL, temperature=0, seed=42, max_tokens=1024, ignore_eos=True,
+                n=1, stream=True, stream_options={'include_usage': True})
+    body['chat_template_kwargs'] = {**body.get('chat_template_kwargs', {}),
+        'thinking': mode == 'high', 'reasoning_effort': 'high'}
+    return body
 
 
 def parse_metrics(text):
@@ -90,7 +105,19 @@ def main():
     p.add_argument('--seed', required=True)
     p.add_argument('--mode', choices=['off', 'high'], required=True)
     p.add_argument('--k', type=int, choices=[5], default=5)
+    source = p.add_mutually_exclusive_group()
+    source.add_argument('--request-file', type=Path, help='Private Chat body; preserved images/history, controlled 1024-token sampling')
+    source.add_argument('--images', type=int, choices=(1, 5, 8), help='Small bundled OCR fixtures, not a real screenshot-history benchmark')
     a = p.parse_args()
+    template = json.loads(a.request_file.read_text()) if a.request_file else None
+    if a.images:
+        template = vision_request(a.images, 'chat')
+        template['messages'][0]['content'][0]['text'] = (
+            'Explain a robust screenshot OCR and document processing pipeline in Python. '
+            'Use the attached images as examples. Include code, edge cases and tests. Continue in detail.')
+
+    def make_workload(phase, index):
+        return template_workload(template, a.mode) if template is not None else workload(a.seed, a.mode, phase, index)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     client = Client(a.base_url, '', timeout=600)
     rows, errors, phases = [], [], {}
@@ -103,8 +130,14 @@ def main():
         'started_at': datetime.datetime.now().astimezone().isoformat(),
         'timing_note': 'completion tokens include reasoning; SSE chunks are not tokens. Decode estimate=(usage completion_tokens-1)/(last-first token-bearing event). Also report completion_tokens/total HTTP duration.',
         'engram_cpu_offload': True, 'trace_file': trace.name}
-    bodies = [workload(a.seed, a.mode, phase, i) for phase, n in [('warmup', 2), ('single', 5), ('load', 200)] for i in range(n)]
-    report['request_set_sha256'] = digest(bodies)
+    if template is None:
+        bodies = [make_workload(phase, i) for phase, n in [('warmup', 2), ('single', 5), ('load', 200)] for i in range(n)]
+        report['request_set_sha256'] = digest(bodies)
+    else:
+        report['request_set_sha256'] = digest({'repeated_body': make_workload('single', 0), 'layout': [2, 5, 200]})
+    report['workload_source'] = 'private_request_file' if a.request_file else 'small_image_fixtures' if a.images else 'synthetic_text'
+    report['fixture_images'] = a.images
+    report['cache_policy'] = 'two warmups; repeated conversation shares prefix cache' if template is not None else 'distinct request prefixes'
 
     def save():
         temp = a.output.with_suffix('.tmp')
@@ -112,7 +145,7 @@ def main():
         temp.replace(a.output)
 
     def one(phase, index):
-        body = workload(a.seed, a.mode, phase, index)
+        body = make_workload(phase, index)
         start = time.monotonic()
         try:
             stream = client.request('/v1/chat/completions', body)

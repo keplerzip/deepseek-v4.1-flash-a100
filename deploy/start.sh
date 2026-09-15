@@ -19,6 +19,15 @@ remove_own "$FRONTEND_NAME"
 remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
+if [[ "$PERF_MHC" == 1 ]]; then
+  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
+  if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
+    printf 'Checking the new SM80 mHC kernels once before model loading; no weights are loaded by this check.\n'
+    bash "$DEPLOY_DIR/tests/performance-kernels.sh"
+    printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
+    mv -- "$STATE_DIR/performance-kernels-approved.txt.tmp" "$STATE_DIR/performance-kernels-approved.txt"
+  fi
+fi
 make_secret
 if docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
   [[ $(docker network inspect --format '{{.Internal}} {{index .Labels "dsv41.owner"}}' "$NETWORK_NAME") == 'true offline-delivery' ]] || fail 'Existing network has a different owner or permits external routing'

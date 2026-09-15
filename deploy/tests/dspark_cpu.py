@@ -70,6 +70,20 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(delta['accepted_fraction_of_rounds_by_position']['6'], .04)
         self.assertEqual(delta['accepted_per_draft'], 2)
 
+    def test_private_history_benchmark_preserves_images_without_mutating_input(self):
+        body = {'model': 'DeepSeek-V4.1-Flash', 'messages': [
+            {'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,AAAA'}}]},
+            {'role': 'assistant', 'content': 'Previous analysis'},
+            {'role': 'user', 'content': 'Continue the explanation'}], 'max_tokens': 256}
+        original = copy.deepcopy(body)
+        result = bench.template_workload(body, 'high')
+        self.assertEqual(body, original)
+        self.assertEqual(result['messages'], original['messages'])
+        self.assertEqual(result['max_tokens'], 1024)
+        self.assertTrue(result['chat_template_kwargs']['thinking'])
+        with self.assertRaises(ValueError):
+            bench.template_workload({**body, 'model': 'alias'}, 'high')
+
     def test_capacity_formula_is_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
