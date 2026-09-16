@@ -20,7 +20,7 @@ class OverlayChecks(unittest.TestCase):
         for row in MANIFEST['files']:
             # For vision only, a pristine fixture is not shipped. Populate the
             # updated bytes, which both old and rebuilt-image checks accept.
-            variant = 'baseline' if not patched and row['group'] == 'mhc' else 'patched'
+            variant = 'baseline' if not patched and row['group'] != 'vision' else 'patched'
             if variant == 'baseline' and row['base_sha256'] is None:
                 continue
             dest = site / row['path']
@@ -33,12 +33,24 @@ class OverlayChecks(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmp:
                 site = self.fixture(Path(tmp), patched)
                 enabled = perf.plan(DEPLOY, site, Path('/target/deploy'), True)
-                disabled = perf.plan(DEPLOY, site, Path('/target/deploy'), False)
-                self.assertEqual(len(enabled['files']), 7)
-                self.assertEqual(len(disabled['files']), 6)
+                disabled = perf.plan(DEPLOY, site, Path('/target/deploy'), False, False, False)
+                self.assertEqual(len(enabled['files']), 11)
+                self.assertEqual(len(disabled['files']), 8)
                 restored = [r for r in disabled['files'] if r['variant'] == 'baseline']
-                self.assertEqual({r['path'].rsplit('/', 1)[-1] for r in restored}, {'model.py', 'dspark.py'})
+                self.assertEqual({r['path'].rsplit('/', 1)[-1] for r in restored},
+                                 {'model.py', 'dspark.py', 'sparse_attn_indexer.py', 'moe_align_block_size.py'})
                 self.assertTrue(all(r['source'].startswith('/target/deploy/') for r in enabled['files']))
+
+    def test_independent_group_switches_restore_matching_callers(self):
+        from itertools import product
+        with tempfile.TemporaryDirectory() as tmp:
+            site = self.fixture(Path(tmp), True)
+            by_path = {r['path']: r for r in MANIFEST['files']}
+            for mhc, indexer, moe in product((False, True), repeat=3):
+                result = perf.plan(DEPLOY, site, Path('/target/deploy'), mhc, indexer, moe)
+                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True)
+                for row in result['files']:
+                    self.assertEqual(row['variant'], 'patched' if switches[by_path[row['path']]['group']] else 'baseline')
 
     def test_modified_image_is_rejected_before_mount_plan(self):
         with tempfile.TemporaryDirectory() as tmp:

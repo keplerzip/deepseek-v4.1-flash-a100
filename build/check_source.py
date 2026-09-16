@@ -30,6 +30,14 @@ def main():
     assert cfg['served_model_name']=='DeepSeek-V4.1-Flash' and cfg['max_model_len']==262144
     assert json.loads((ROOT/'release.json').read_text())['default_dspark_k']==5
     assert json.loads((ROOT/'release.json').read_text())['allowed_dspark_k']==[5]
+    release=json.loads((ROOT/'release.json').read_text())
+    update=json.loads((ROOT/'deploy/manifests/update.json').read_text())
+    overlay=json.loads((ROOT/'deploy/overrides/performance/manifest.json').read_text())
+    assert (ROOT/'VERSION').read_text().strip()==release['release']==update['release']==overlay['release']
+    assert release['source_update']==update['id']==overlay['id']
+    assert update['cumulative'] and not update['requires_prior_update']
+    assert release['runtime_tag']==update['compatible_initial_image']
+    assert release['performance_overlay_sha256']==hashlib.sha256((ROOT/'deploy/overrides/performance/manifest.json').read_bytes()).hexdigest()
     forbidden=['base64.sh','deploy/apply-hotfix.sh','deploy/scripts/hotfix_ops.py',
                'deploy/configs/dspark-k7.json','deploy/overrides/vllm_speculative.py']
     assert not any((ROOT/name).exists() for name in forbidden)

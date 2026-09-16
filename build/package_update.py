@@ -2,6 +2,7 @@
 """Create a small update from deploy source, with no images, weights or state."""
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import shutil
 import tarfile
@@ -17,12 +18,19 @@ def main():
     if a.output.exists():
         p.error('Output already exists')
     a.output.parent.mkdir(parents=True, exist_ok=True)
+    version = json.loads((ROOT / 'deploy/manifests/update.json').read_text())
     with tempfile.TemporaryDirectory(dir=a.output.parent) as tmp:
-        stage = Path(tmp) / 'deepseek-v4.1-flash-a100-20260915-perf1'
+        stage = Path(tmp) / ('deepseek-v4.1-flash-a100-' + version['delivery_version'] + '-update')
         shutil.copytree(ROOT / 'deploy', stage / 'deploy',
                         ignore=shutil.ignore_patterns('runtime', 'images', '__pycache__', '*.pyc'))
         shutil.copyfile(ROOT / 'build/update-entry.sh', stage / 'install.sh')
-        shutil.copyfile(ROOT / 'docs/performance-update-20260915.md', stage / 'README.zh-CN.md')
+        shutil.copyfile(ROOT / version['readme_source'], stage / 'README.zh-CN.md')
+        for name in ('LICENSE', 'NOTICE'):
+            shutil.copyfile(ROOT / name, stage / name)
+        shutil.copytree(ROOT / 'licenses', stage / 'licenses')
+        (stage / 'reports').mkdir()
+        for name in ('dspark-k5-k7.user-reported.json', 'acceptance-20260913.user-reported.json'):
+            shutil.copyfile(ROOT / 'reports' / name, stage / 'reports' / name)
         rows = []
         for f in sorted(stage.rglob('*')):
             if f.is_symlink():

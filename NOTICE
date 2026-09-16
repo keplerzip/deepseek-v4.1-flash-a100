@@ -21,3 +21,10 @@ See docs/acknowledgements.md for project links and attribution scope.
 (commit 5372e72a9884c141874465f0eb8054a4a81da6bb), and the V4.1 image padding
 correction from PR #56554 by Isotr0py. The mHC epilogues retain vLLM's
 SGLang-derived implementation. Copyright and Apache-2.0 notices are retained.
+
+R1.1 / 20260916-perf2 adapts candidate-only indexer scoring from
+Danylo Storozhev / Zanooda/deepseek-v4.1-flash-cmp170hx,
+commit 2445d7db07a2023f1d0a4bbb5b1ee4154b299590 (Apache-2.0), and stable
+MoE alignment from Tokha233/deepseek-v4.1-flash-a100-turbo,
+commit fae324ae62ac5cef31b7d38f5d369618e1cae1fa (Apache-2.0).
+Derived files are in deploy/overrides/performance. Original notices remain.

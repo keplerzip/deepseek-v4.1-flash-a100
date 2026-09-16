@@ -1,5 +1,5 @@
 {
-  "release": "1.0.0",
+  "release": "1.1.0",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
   "image_limit_per_prompt": 999,
@@ -26,11 +26,15 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260915-perf1",
+  "source_update": "20260916-perf2",
   "performance_defaults": {
     "nccl": "auto",
-    "mhc_fusion": true
+    "mhc_fusion": true,
+    "compact_indexer": true,
+    "stable_moe_align": true
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
-  "performance_overlay_sha256": "7b96a8d7f491665275c31c6192c00aafa0bef89c1b4a66c2c22ab7a9fbb1c986"
+  "performance_overlay_sha256": "afd2c6fc767763d20869c1b266c3c907c0962cc6bdf5fd6ceee67344f8709e80",
+  "delivery_version": "R1.1",
+  "git_tag": "v1.1.0"
 }

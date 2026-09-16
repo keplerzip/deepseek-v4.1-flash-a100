@@ -19,10 +19,10 @@ remove_own "$FRONTEND_NAME"
 remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
-if [[ "$PERF_MHC" == 1 ]]; then
-  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
+if [[ "$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN" != 000 ]]; then
+  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
   if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking the new SM80 mHC kernels once before model loading; no weights are loaded by this check.\n'
+    printf 'Checking enabled R1.1 SM80 kernels once before model loading; no model weights are loaded.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
     mv -- "$STATE_DIR/performance-kernels-approved.txt.tmp" "$STATE_DIR/performance-kernels-approved.txt"

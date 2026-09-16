@@ -8,6 +8,8 @@
 | `bash tests/local-access.sh` | 本机与 Docker bridge 的免密访问 |
 | `bash tests/guard-schema.sh` | 客户端工具 JSON Schema 合同检查 |
 | `bash tests/vision-schema.sh` | 同镜像验证三协议图片请求参数和 Responses detail 字段；无需 GPU、不重启 |
+| `bash tests/performance-kernels.sh` | R1.1 单卡 SM80 索引/MoE/mHC 数值与图重放检查；启用的组首次启动自动执行 |
+| `bash tests/performance-benchmark.sh` | 固定 k5 的 off/high、C1/C32 对照，支持 `--images 8` 与 `--request-file /state/benchmark-chat.json` |
 | `bash tests/cache-retention.sh seed` / `check` | 固定前缀的空闲保留诊断 |
 | `bash tests/newapi-test.sh` | 已有外部网关的手动验收，需要其连接设置 |
 | `bash tests/offline-rebuild.sh` | 维护窗口重建派生 GPU 缓存，会重启模型 |
@@ -17,3 +19,5 @@
 图片验收覆盖 Chat Completions 的 1/2/4/5/8 图，以及 Responses、Messages 的 5 图。Responses 的每个 input_image 显式提供 detail: auto，避免固定镜像请求 schema 在推理前拒绝。参数校验通过不替代目标机的多图 OCR 实测。
 
 extended.sh / extended.py 提供 full-window、稳定性等扩展测试，调用参数见脚本。长时测试不是默认启动步骤，公开历史报告未声称已完成 24h 验收。
+
+R1.1 算子检查最长 30 分钟，超时退出并删除其检查容器。紧凑索引检查包括打包请求偏移、候选 -1、因果边界、TP query 切片、分页与图重放；MoE 与旧稳定排序逐项精确比较。CPU 调度测试与 SM80 离线编译分别记录，均不能替代这项 GPU 数值检查。通过算子检查后仍需 run-all.sh 与真实多图历史验收。

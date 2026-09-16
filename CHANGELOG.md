@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 / R1.1 — 2026-09-16
+
+- Deliver cumulative source update `20260916-perf2`, installable over the initial R1 offline runtime or intermediate patches, without transferring weights or a new container image.
+- Adapt compact candidate-only indexer scoring from Zanooda@2445d7d to the pinned TP query-sharded SM80 path. Keep source-layer/full scoring and short-width fallbacks; exclude DCP/PCP and FP4 KV paths.
+- Adapt stable MoE alignment from Tokha233@fae324a without disabling deterministic routing order. Include reference, CUDA graph and dispatch checks; target GPU correctness and speed remain pending.
+- Add release/update metadata, independent diagnostic switches, timeout cleanup, and transactional backup/rollback. Preserve the original model, k=5, Engram RAM, context, API identity and local-only access.
 
 - Add `20260915-perf1`: unset forced NCCL Ring/Simple, port V4.1 delayed mHC fusion and draft auxiliary-state reuse from vLLM #56633 while retaining SM80 launch tuning and cuBLAS fallback. New CUDA math requires target acceptance.
 - Port the V4.1 image-sentinel padding correction from #56554. Keep k=5, context 262144, image limit 999 and the measured KV concurrency formula.

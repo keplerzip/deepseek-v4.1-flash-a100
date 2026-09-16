@@ -78,10 +78,12 @@ def apply(payload, target):
             raise ValueError('Update payload checksum mismatch: ' + name)
         changes[name] = (path.read_bytes(), stat.S_IMODE(path.stat().st_mode))
     changes['manifests/deploy.sha256'] = ((payload / 'manifests/deploy.sha256').read_bytes(), 0o644)
+    version = json.loads(changes['manifests/update.json'][0])
     env_path = inside(target, 'deployment.env')
     lines = env_path.read_text().splitlines()
-    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC='))]
-    changes['deployment.env'] = (('\n'.join(lines + ['PERF_NCCL=auto', 'PERF_MHC=1']) + '\n').encode(), 0o600)
+    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC=', 'PERF_INDEXER=', 'PERF_MOE_ALIGN='))]
+    defaults = ['PERF_NCCL=auto', 'PERF_MHC=1', 'PERF_INDEXER=1', 'PERF_MOE_ALIGN=1']
+    changes['deployment.env'] = (('\n'.join(lines + defaults) + '\n').encode(), 0o600)
     for name in ('runtime/selected-config.json', 'runtime/tuning-active.json'):
         path = inside(target, name)
         if path.exists():
@@ -94,7 +96,10 @@ def apply(payload, target):
     backup_rel = 'runtime/update-backups/' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S') + '-' + uuid.uuid4().hex[:8]
     backup = inside(target, backup_rel)
     backup.mkdir(parents=True)
-    receipt = {'status': 'PREPARED', 'update': '20260915-perf1', 'backup': backup_rel, 'files': []}
+    prior = target / 'manifests/update.json'
+    receipt = {'status': 'PREPARED', 'update': version['id'], 'release': version['release'],
+               'previous_update': json.loads(prior.read_text())['id'] if prior.is_file() else 'initial-or-pre-R1.1',
+               'backup': backup_rel, 'files': []}
     for name, (data, mode) in sorted(changes.items()):
         dest = inside(target, name)
         existed = dest.exists()
@@ -118,7 +123,8 @@ def apply(payload, target):
     encoded = (json.dumps(receipt, indent=2) + '\n').encode()
     atomic(backup / 'receipt.json', encoded)
     atomic(target / 'runtime/latest-update.json', encoded)
-    print(json.dumps({'status': 'APPLIED', 'backup': backup_rel, 'files': len(changes)}))
+    print(json.dumps({'status': 'APPLIED', 'release': version['release'], 'update': version['id'],
+                      'backup': backup_rel, 'files': len(changes)}))
 
 
 def main():

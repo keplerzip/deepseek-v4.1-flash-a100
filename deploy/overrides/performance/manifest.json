@@ -1,5 +1,5 @@
 {
-  "id": "20260915-perf1",
+  "id": "20260916-perf2",
   "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
   "upstream_prs": [
     {
@@ -53,7 +53,44 @@
       "group": "vision",
       "base_sha256": "e0c7583efa9baa95302398daa61604e0f656ecf9f1b072c5715e5ed5a5c54599",
       "patched_sha256": "260cc131e5607665fe830d0c80cd2a615391623357ee3ced3847956ad46cf621"
+    },
+    {
+      "path": "vllm/model_executor/layers/sparse_attn_indexer.py",
+      "group": "indexer",
+      "base_sha256": "fb063e263c21b2aed10abf23c3db0d68756a90973b8f3731e61cf3cb615bec3f",
+      "patched_sha256": "57673fae3551856fddec5111b4eb20193ca62a146225e17099a4466099b77d4f"
+    },
+    {
+      "path": "vllm/v1/attention/ops/mqa_logits_candidates_triton.py",
+      "group": "indexer",
+      "base_sha256": null,
+      "patched_sha256": "50ef8e3acece494950d373f237a8abafdf34a6cefd4de555f0854d54c4a5e379"
+    },
+    {
+      "path": "vllm/model_executor/layers/fused_moe/moe_align_block_size.py",
+      "group": "moe_align",
+      "base_sha256": "9b7159e7c97c0474f7274c6226d66271545f2b3a2aef5aa57149313aecbeed96",
+      "patched_sha256": "ba030058d9a1b3d6c866be47f36c607822487a5ce25c1ec8f1f4601f40e0e745"
+    },
+    {
+      "path": "vllm/model_executor/layers/fused_moe/stable_moe_align.py",
+      "group": "moe_align",
+      "base_sha256": null,
+      "patched_sha256": "fadc531b3bd92e1801c25c1759da7862ce32ad263b641f93351ae51fb9d597cf"
     }
   ],
-  "gpu_validated": false
+  "gpu_validated": false,
+  "release": "1.1.0",
+  "upstream_sources": [
+    {
+      "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx",
+      "commit": "2445d7db07a2023f1d0a4bbb5b1ee4154b299590",
+      "component": "compact candidate-only indexer"
+    },
+    {
+      "url": "https://github.com/Tokha233/deepseek-v4.1-flash-a100-turbo",
+      "commit": "fae324ae62ac5cef31b7d38f5d369618e1cae1fa",
+      "component": "fused stable MoE alignment"
+    }
+  ]
 }

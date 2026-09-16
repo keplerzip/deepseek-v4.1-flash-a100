@@ -12,10 +12,11 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def plan(deploy, site, host_deploy, mhc):
+def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True):
     root = deploy / 'overrides/performance'
     manifest = json.loads((root / 'manifest.json').read_text())
     rows = []
+    enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True}
     for item in manifest['files']:
         name = item['path']
         rel = Path(name)
@@ -26,7 +27,7 @@ def plan(deploy, site, host_deploy, mhc):
         if actual not in {item['base_sha256'], item['patched_sha256']}:
             raise ValueError('Unsupported image source for performance overlay: ' + name)
         # Turning fusion off restores both layer ABIs, even in rebuilt images.
-        variant = 'baseline' if item['group'] == 'mhc' and not mhc else 'patched'
+        variant = 'patched' if enabled[item['group']] else 'baseline'
         if variant == 'baseline' and item['base_sha256'] is None:
             continue
         source = root / variant / rel
@@ -38,7 +39,8 @@ def plan(deploy, site, host_deploy, mhc):
             raise ValueError('Unsupported delimiter in deployment path')
         rows.append({'source': str(host_source), 'target': str(target),
                      'path': name, 'sha256': expected, 'variant': variant})
-    return {'id': manifest['id'], 'mhc_fusion': bool(mhc), 'files': rows,
+    return {'id': manifest['id'], 'mhc_fusion': bool(mhc),
+            'compact_indexer': bool(indexer), 'stable_moe_align': bool(moe_align), 'files': rows,
             'manifest_sha256': digest(root / 'manifest.json')}
 
 
@@ -48,10 +50,12 @@ def main():
     parser.add_argument('--site', type=Path, default=Path(sysconfig.get_paths()['purelib']))
     parser.add_argument('--host-deploy', type=Path, required=True)
     parser.add_argument('--mhc', type=int, choices=(0, 1), default=1)
+    parser.add_argument('--indexer', type=int, choices=(0, 1), default=1)
+    parser.add_argument('--moe-align', type=int, choices=(0, 1), default=1)
     parser.add_argument('--nccl', choices=('auto', 'legacy'), default='auto')
     parser.add_argument('--record', type=Path)
     args = parser.parse_args()
-    result = plan(args.deploy, args.site, args.host_deploy, args.mhc)
+    result = plan(args.deploy, args.site, args.host_deploy, args.mhc, args.indexer, args.moe_align)
     result['nccl_selection'] = args.nccl
     if args.record:
         args.record.write_text(json.dumps(result, indent=2) + '\n')

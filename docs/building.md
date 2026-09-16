@@ -1,6 +1,6 @@
 # 构建与完整离线包
 
-GitHub v1.0.0 发布源码，不托管约 510 GB 权重、运行镜像或宿主恢复二进制。以下准备发生在**联网构建机**；完成后目标机运行不依赖公网。使用 Python 3.10+、已有 Docker 和足够磁盘空间。
+GitHub 发布版本化源码，不托管约 510 GB 权重、运行镜像或宿主恢复二进制。R1.1 / v1.1.0 另提供相对初始 R1 的小累计更新包，复用原镜像和权重。以下准备发生在**联网构建机**；完成后目标机运行不依赖公网。使用 Python 3.10+、已有 Docker 和足够磁盘空间。
 
 ## 1. 准备固定模型快照
 
@@ -35,7 +35,7 @@ python3 build/assemble.py \
 
 在同一文件系统内整理现有交付，可加 `--link-archive` 保留一份镜像数据；组装校验完成后可删除旧目录中的链接。此模式下两个路径指向同一归档，应保持只读。
 
-当前性能更新放在 `deploy/overrides/performance/`，启动时验证基底与覆盖文件 SHA256，再只读挂载进原镜像。无需重新制作大镜像即可获得此更新。向已有隔离实例交付小包时运行 `python3 build/package_update.py --output /data/dsv41-perf1.tar.gz`；目标用包内 install.sh 应用。详细边界与回退见 [性能更新](performance-update-20260915.md)。
+当前性能更新放在 `deploy/overrides/performance/`，启动时验证基底与覆盖文件 SHA256，再只读挂载进原镜像。无需重新制作大镜像即可获得此更新。向已有隔离实例交付累计小包时运行 `python3 build/package_update.py --output /data/deepseek-v4.1-flash-a100-R1.1-update.tar.gz`；目标用包内 install.sh 应用，不需要先安装 perf1。详细边界与回退见 [R1.1 更新](performance-update-20260916.md)。
 
 将整个 transfer 下的项目目录拷到隔离机，由普通操作者持有文件。若只压缩 deploy，则模型另行复制一份，避免在归档里再占约 510 GB。最后按 [部署说明](deployment.md) 启动。
 
@@ -47,6 +47,7 @@ python3 deploy/tests/dspark_cpu.py
 python3 deploy/tests/performance_cpu.py
 python3 build/test_archive.py
 python3 build/test_update.py
+python3 build/test_runtime.py --output validation/r11-runtime
 ```
 
-这些是 CPU 检查；不会生成 GPU TPS。公开仓库的 deploy/manifests/deploy.sha256 是源码参考清单，包含历史镜像归档期望值，未补齐镜像时部署校验会失败。assemble.py 会针对实际输出重新生成完整清单。
+最后一项使用已安装的固定镜像，验证实际 CPU 控制流和无需 GPU 的 SM80 cubin 编译；它不会执行 CUDA 数值检查或生成 GPU TPS。其余检查仅需 Python 标准库。公开仓库的 deploy/manifests/deploy.sha256 是源码参考清单，包含历史镜像归档期望值，未补齐镜像时完整部署校验会失败。累计小包安装器则复用并核对已导入的镜像，不要求镜像归档仍在磁盘。assemble.py 会针对新完整输出重新生成清单。

@@ -29,7 +29,7 @@ run_manager() {
 sudo -n docker run --rm --pull never --network none --user "$(id -u):$(id -g)" \
   --entrypoint /usr/bin/python3 -e PYTHONDONTWRITEBYTECODE=1 \
   -v "$root/deploy:/deploy:ro" "$image" /deploy/scripts/performance.py \
-  --host-deploy "$target" --mhc 1 --nccl auto >/dev/null
+  --host-deploy "$target" --mhc 1 --indexer 1 --moe-align 1 --nccl auto >/dev/null
 if [[ "$restart" == true ]]; then bash "$target/stop.sh"; fi
 if ! run_manager --apply /update/deploy; then
   if [[ "$restart" == true ]]; then bash "$target/start.sh" || true; fi

@@ -20,3 +20,7 @@
 ## 20260915 性能更新
 
 感谢 zyongye 与 vLLM 维护者提供 [#56633](https://github.com/vllm-project/vllm/pull/56633) 的 delayed mHC 融合与 DSpark 辅助状态优化，以及 Isotr0py 提供 [#56554](https://github.com/vllm-project/vllm/pull/56554) 的图像 padding 修复。本项目将其适配到固定的 SM80 backport，保留既有 A100 调优；新增 kernel 仍需目标 GPU 验收。mHC epilogue 的 SGLang 来源与原版权声明一并保留。
+
+## R1.1 / 20260916-perf2
+
+感谢 Danylo Storozhev / [Zanooda 的 CMP170HX 项目](https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx/tree/2445d7db07a2023f1d0a4bbb5b1ee4154b299590) 的紧凑候选索引实现，以及 [Tokha233 的 A100 Turbo 项目](https://github.com/Tokha233/deepseek-v4.1-flash-a100-turbo/tree/fae324ae62ac5cef31b7d38f5d369618e1cae1fa) 的稳定 MoE 排序融合。前者移植到本项目固定基底的 TP query sharding 路径，后者保持原稳定排序语义；两者均保留 Apache-2.0 声明。引用其实现不等于将其硬件、整套参数或速度结果用于本项目背书。
