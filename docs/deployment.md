@@ -4,7 +4,7 @@
 
 实测机：8×A100-SXM4-80GB、NVSwitch NV12、双路 EPYC 7742、约 2 TiB RAM；Ubuntu 22.04.4，内核 5.15.0-94，NVIDIA 580.159.04，Docker 29.5.1，Container Toolkit 1.19.0。这是参考环境，不代表任意版本组合都经过验证。
 
-预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 384 GiB 当前可用主存作为基础检查；R1.2 按本机约 2 TiB RAM 设计，DP 副本与加载峰值仍须实测。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
+预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 512 GiB 当前可用主存作为基础检查；R1.2 两份 Engram 表预算约 378 GiB，按本机约 2 TiB RAM 设计，加载峰值仍须实测。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
 
 ## 资源与目录
 
