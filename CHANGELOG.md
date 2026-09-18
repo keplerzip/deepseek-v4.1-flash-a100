@@ -1,5 +1,14 @@
 # Changelog
 
+## R1.2 / v1.2.0 — 2026-09-18
+
+- 同一 DeepSeek-V4.1-Flash 权重，TP4×DP2＋EP8、DSpark5、256K、视觉和三协议。
+- dense BF16 ≥32 行、custom EP8 AG/RS、8-warp sparse decode、符合条件的共享专家重叠；主干 EPLB 与草稿隔离。
+- DP attention padding 修正、逐池 KV 标定、每池四个 worker 的 graph/replay 验证、会话缓存亲和路由。
+- 修复 DSML 拼写兼容；更新和回退覆盖旧 TP8 调优文件。
+- 累计包复用初始镜像；历史报告保留。A100 GPU 数值、容量、速度与稳定性待目标机验证，不宣称提速百分比。
+
+
 ## 1.1.0 / R1.1 — 2026-09-16
 
 - Deliver cumulative source update `20260916-perf2`, installable over the initial R1 offline runtime or intermediate patches, without transferring weights or a new container image.

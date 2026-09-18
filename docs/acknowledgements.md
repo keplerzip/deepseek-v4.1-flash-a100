@@ -24,3 +24,9 @@
 ## R1.1 / 20260916-perf2
 
 感谢 Danylo Storozhev / [Zanooda 的 CMP170HX 项目](https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx/tree/2445d7db07a2023f1d0a4bbb5b1ee4154b299590) 的紧凑候选索引实现，以及 [Tokha233 的 A100 Turbo 项目](https://github.com/Tokha233/deepseek-v4.1-flash-a100-turbo/tree/fae324ae62ac5cef31b7d38f5d369618e1cae1fa) 的稳定 MoE 排序融合。前者移植到本项目固定基底的 TP query sharding 路径，后者保持原稳定排序语义；两者均保留 Apache-2.0 声明。引用其实现不等于将其硬件、整套参数或速度结果用于本项目背书。
+
+## R1.2 / 20260918-perf3
+
+继续感谢 Tokha233/deepseek-v4.1-flash-a100-turbo@fae324ae62ac5cef31b7d38f5d369618e1cae1fa 的 TP4×DP2＋EP8 部署经验、dense BF16 分派、custom AG/RS、DP 草稿 metadata 与 EPLB 隔离补丁。其公开整模数据来自 A800，不能作为本项目 A100 的实测。R1.2 保留图文能力，未启用该项目的 language-model-only。
+
+感谢 wtdcode/vllm-backport 的 [a5bb095f](https://github.com/wtdcode/vllm-backport/commit/a5bb095f0b97d513ac0c657c2c481334e9302ad8)（8-warp decode）、[9925c45a](https://github.com/wtdcode/vllm-backport/commit/9925c45ab4c0740dfc8e77b4715f665e8b205447)（CUDA shared-expert overlap）与 [#89](https://github.com/wtdcode/vllm-backport/pull/89)（DSML 拼写兼容）。源码清单逐文件固定原始与派生哈希；CPU/编译检查不替代 GPU 验收。

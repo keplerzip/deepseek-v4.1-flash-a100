@@ -973,6 +973,11 @@ class DeepseekV4MixtureOfExperts(MixtureOfExperts):
         self.num_routed_experts = example_moe.n_routed_experts
         self.num_shared_experts = example_moe.n_shared_experts
         self.num_redundant_experts = example_moe.n_redundant_experts
+        if not example_moe.use_mega_moe:
+            expert_map = example_moe.experts.expert_map_manager
+            self.num_physical_experts = expert_map.global_num_experts
+            self.num_local_physical_experts = expert_map.local_num_experts
+            assert self.num_physical_experts == self.num_logical_experts + self.num_redundant_experts
 
     def update_physical_experts_metadata(
         self,

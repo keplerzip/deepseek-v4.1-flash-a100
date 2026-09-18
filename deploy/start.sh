@@ -19,15 +19,16 @@ remove_own "$FRONTEND_NAME"
 remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
-if [[ "$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN" != 000 ]]; then
+{
   performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
   if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking enabled R1.1 SM80 kernels once before model loading; no model weights are loaded.\n'
+    printf 'Checking R1.2 SM80 kernels and EP8 communication once before model loading.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
+    bash "$DEPLOY_DIR/tests/performance-ep8.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
     mv -- "$STATE_DIR/performance-kernels-approved.txt.tmp" "$STATE_DIR/performance-kernels-approved.txt"
   fi
-fi
+}
 make_secret
 if docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
   [[ $(docker network inspect --format '{{.Internal}} {{index .Labels "dsv41.owner"}}' "$NETWORK_NAME") == 'true offline-delivery' ]] || fail 'Existing network has a different owner or permits external routing'
@@ -35,7 +36,9 @@ else
   docker network create --internal --label dsv41.owner=offline-delivery "$NETWORK_NAME" >/dev/null
 fi
 concurrency=32
-if [[ -f "$STATE_DIR/capacity.json" ]]; then concurrency=$(op get /state/capacity.json required_concurrency); fi
+if [[ -f "$STATE_DIR/capacity.json" ]] && [[ $(op get /state/capacity.json topology 2>/dev/null || true) == TP4-DP2-EP8 ]]; then
+  concurrency=$(op get /state/capacity.json required_concurrency)
+fi
 config=/deploy/configs/runtime.json
 [[ ! -f "$STATE_DIR/selected-config.json" ]] || config=/state/selected-config.json
 [[ ! -f "$STATE_DIR/tuning-active.json" ]] || config=/state/tuning-active.json
@@ -69,8 +72,10 @@ for attempt in 1 2 3 4 5 6; do
     continue
   fi
   op graphs --resolved "/state/$run/resolved.json" --directory "/state/$run/observations" --concurrency "$concurrency" --output "/state/$run/graphs.json"
-  docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py --suite smoke \
-    --base-url http://127.0.0.1:8000 --key-file /state/api-key.txt --output "/state/$run/smoke.json"
+  for dp_rank in 0 1; do
+    docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py --suite smoke --dp-rank "$dp_rank" \
+      --base-url http://127.0.0.1:8000 --key-file /state/api-key.txt --output "/state/$run/smoke-dp$dp_rank.json"
+  done
   op replays --resolved "/state/$run/resolved.json" --directory "/state/$run/observations" --concurrency "$concurrency" --output "/state/$run/replays.json"
   if [[ "$mode" == none ]]; then
     if [[ ${2:-} == --full-offline-proof ]]; then

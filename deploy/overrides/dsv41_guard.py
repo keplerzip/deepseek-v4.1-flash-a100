@@ -1,5 +1,6 @@
 """Local-only media, exact model identity and auth for auxiliary API routes."""
 import hmac
+import hashlib
 import json
 import os
 
@@ -8,6 +9,35 @@ ALLOWED_PATHS = {'/health', '/version', '/metrics', '/v1/models', '/v1/chat/comp
                  '/v1/responses', '/v1/messages', '/v1/messages/count_tokens', '/tokenize',
                  '/detokenize', '/reset_prefix_cache', '/server_info'}
 MAX_BODY = 128 * 1024 * 1024
+
+
+def dp_affinity(payload, headers, size):
+    """Keep a conversation's prefix on one DP pool without storing its text."""
+    explicit = dict(headers).get(b'x-data-parallel-rank')
+    if explicit is not None:
+        if explicit not in [str(i).encode() for i in range(size)]:
+            raise ValueError('X-data-parallel-rank is outside the configured DP pools')
+        return int(explicit)
+    key = payload.get('prompt_cache_key')
+    if isinstance(key, str) and key:
+        stable = ('cache-key', key)
+    elif payload.get('previous_response_id'):
+        # Let the native stateful Responses path choose its engine. A caller
+        # can explicitly pin it with prompt_cache_key or the rank header.
+        return None
+    else:
+        messages = payload.get('messages', payload.get('input'))
+        if isinstance(messages, str):
+            stable = ('first-user', messages)
+        elif isinstance(messages, list):
+            first = next((m for m in messages if isinstance(m, dict) and m.get('role') == 'user'), None)
+            if first is None:
+                return None
+            stable = ('first-user', first.get('content'))
+        else:
+            return None
+    data = json.dumps(stable, sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()
+    return int.from_bytes(hashlib.blake2b(data, digest_size=8).digest(), 'big') % size
 
 
 def check_media(value):
@@ -74,6 +104,7 @@ class OfflineGuard:
             if not event.get('more_body'):
                 break
         body = b''.join(pieces)
+        rank = None
         if body:
             try:
                 payload = json.loads(body)
@@ -82,6 +113,13 @@ class OfflineGuard:
                 if payload.get('model', MODEL) != MODEL:
                     raise ValueError('The only served model is '+MODEL)
                 check_media(payload)
+                if path in {'/v1/chat/completions', '/v1/responses', '/v1/messages'}:
+                    size = int(os.environ.get('DSV41_DP_SIZE', '1'))
+                    if size > 1:
+                        rank = dp_affinity(payload, scope['headers'], size)
+                        if rank is not None:
+                            headers = [(k, v) for k, v in scope['headers'] if k != b'x-data-parallel-rank']
+                            scope = dict(scope, headers=headers + [(b'x-data-parallel-rank', str(rank).encode())])
             except (ValueError, TypeError) as exc:
                 return await reject(400, str(exc))
         sent = False
@@ -92,4 +130,8 @@ class OfflineGuard:
                 return await receive()
             sent = True
             return {'type':'http.request','body':body,'more_body':False}
-        return await self.app(scope, replay, send)
+        async def send_with_rank(event):
+            if rank is not None and event['type'] == 'http.response.start':
+                event = dict(event, headers=list(event.get('headers', [])) + [(b'x-dsv41-dp-rank', str(rank).encode())])
+            await send(event)
+        return await self.app(scope, replay, send_with_rank)

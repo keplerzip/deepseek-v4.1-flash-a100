@@ -1,5 +1,6 @@
 """Paired fixed-request benchmark. GPU results are created only by live HTTP."""
 import argparse
+from collections import Counter
 import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
@@ -156,6 +157,7 @@ def main():
             assert not re.search(r'<[｜|]?DSML[｜|]?', text), 'Unparsed DSML in output'
             details = usage.get('completion_tokens_details') or {}
             return {'phase': phase, 'index': index, 'status': 'PASS', 'request_sha256': digest(body),
+                'data_parallel_rank': stream.get('_dp_rank'),
                 'input_tokens': usage['prompt_tokens'], 'output_tokens': usage['completion_tokens'],
                 'reasoning_tokens': details.get('reasoning_tokens'),
                 'cached_tokens': (usage.get('prompt_tokens_details') or {}).get('cached_tokens', 0),
@@ -217,6 +219,7 @@ def main():
         load = [r for r in rows if r['phase'] == 'load' and r['status'] == 'PASS']
         report.update(status='FAIL' if errors or len(rows) != 207 else 'PASS', errors=errors,
             completed_requests=len([r for r in rows if r['status']=='PASS']),
+            load_requests_by_dp=dict(Counter(str(r['data_parallel_rank']) for r in load)),
             single_decode_median=statistics.median([r['decode_tps'] for r in single]) if single else None,
             single_decode_min=min([r['decode_tps'] for r in single], default=None),
             single_decode_max=max([r['decode_tps'] for r in single], default=None),

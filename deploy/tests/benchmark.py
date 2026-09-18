@@ -1,5 +1,6 @@
 """Repeatable real HTTP/SSE timing; counts come from server usage, not SSE chunks."""
 import argparse
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import hashlib
@@ -47,6 +48,7 @@ def main():
             duration=arrivals[-1]-arrivals[0]
             assert duration>0
             return {'index':index,'status':'PASS','input_tokens':usage['prompt_tokens'],
+                    'data_parallel_rank':stream.get('_dp_rank'),
                     'output_tokens':usage['completion_tokens'],'cached_tokens':usage.get('prompt_tokens_details',{}).get('cached_tokens',0),
                     'ttft_seconds':arrivals[0],'end_to_end_seconds':stream['elapsed'],
                     'decode_seconds':duration,'decode_tokens_per_second':(usage['completion_tokens']-1)/duration,
@@ -79,6 +81,7 @@ def main():
     failed=[r for r in rows if r['status']=='FAIL']
     report.update(status='FAIL' if failed else 'PASS',failed_requests=len(failed),load_completed_requests=len(load),
                   load_seconds=load_seconds,requested_duration_hours=a.duration_hours,
+                  load_requests_by_dp=dict(Counter(str(r['data_parallel_rank']) for r in load)),
                   duration_satisfied=load_seconds>=a.duration_hours*3600,
                   single_decode_median=statistics.median([r['decode_tokens_per_second'] for r in single]) if single else None,
                   load_output_tokens_per_second=sum(r['output_tokens'] for r in load)/load_seconds,

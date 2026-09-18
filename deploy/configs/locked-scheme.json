@@ -1,12 +1,12 @@
 {
-  "release": "1.0.0",
+  "release": "1.2.0",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
   "native_dspark_block_size": 5,
   "context": 262144,
-  "tensor_parallel_size": 8,
+  "tensor_parallel_size": 4,
   "engram_cpu_offload": true,
-  "concurrency_formula": "max(32,2*(effective_kv_tokens//262144))",
+  "concurrency_formula": "max(32,2*sum(dp_effective_kv_tokens//262144))",
   "base_image": "lazymio/vllm-backport@sha256:349690323ab9aba712111529ed1ca60730199205d8202f67895ffde85b451be3",
   "upstream_source": "https://github.com/wtdcode/vllm-backport",
   "upstream_revision": "a350766628514d597670d2a5217777fdee2ba7f4",
@@ -25,11 +25,22 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260915-perf1",
+  "source_update": "20260918-perf3",
   "performance_defaults": {
     "nccl": "auto",
-    "mhc_fusion": true
+    "mhc_fusion": true,
+    "compact_indexer": true,
+    "stable_moe_align": true,
+    "dense_bf16_min_tokens": 32,
+    "custom_ep8_collectives": true,
+    "cuda_sparse_decode_warps": 8,
+    "cuda_shared_expert_overlap": "eligible_layers_only",
+    "eplb_target_only": true
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
-  "performance_overlay_sha256": "7b96a8d7f491665275c31c6192c00aafa0bef89c1b4a66c2c22ab7a9fbb1c986"
+  "performance_overlay_sha256": "30ebabd9fb41a2412918f2b4658f72f640668638b3718bc5597036bd117a6a16",
+  "delivery_version": "R1.2",
+  "git_tag": "v1.2.0",
+  "data_parallel_size": 2,
+  "expert_parallel_size": 8
 }

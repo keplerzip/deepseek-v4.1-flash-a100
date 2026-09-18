@@ -12,10 +12,15 @@ docker exec -d "$ENGINE_NAME" /usr/bin/python3 /offline-tests/monitor.py \
 trap 'touch "$STATE_DIR/$run/monitor.stop"' EXIT
 base=http://127.0.0.1:8000
 for suite in full long; do
-  docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py \
-    --suite "$suite" --base-url "$base" --key-file /state/api-key.txt \
-    --concurrency "$concurrency" --output "/state/$run/$suite.json"
+  for dp_rank in 0 1; do
+    docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py \
+      --suite "$suite" --base-url "$base" --key-file /state/api-key.txt --dp-rank "$dp_rank" \
+      --concurrency "$((concurrency/2))" --output "/state/$run/$suite-dp$dp_rank.json"
+  done
 done
+docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py \
+  --suite parallel --base-url "$base" --key-file /state/api-key.txt \
+  --concurrency "$concurrency" --output "/state/$run/global-concurrency.json"
 if ((concurrency>32)); then
   docker exec "$ENGINE_NAME" /usr/bin/python3 /offline-tests/acceptance.py \
     --suite parallel --base-url "$base" --key-file /state/api-key.txt \

@@ -34,8 +34,8 @@ class OverlayChecks(unittest.TestCase):
                 site = self.fixture(Path(tmp), patched)
                 enabled = perf.plan(DEPLOY, site, Path('/target/deploy'), True)
                 disabled = perf.plan(DEPLOY, site, Path('/target/deploy'), False, False, False)
-                self.assertEqual(len(enabled['files']), 11)
-                self.assertEqual(len(disabled['files']), 8)
+                self.assertEqual(len(enabled['files']), len(MANIFEST['files']))
+                self.assertEqual(len(disabled['files']), len(MANIFEST['files']) - 3)
                 restored = [r for r in disabled['files'] if r['variant'] == 'baseline']
                 self.assertEqual({r['path'].rsplit('/', 1)[-1] for r in restored},
                                  {'model.py', 'dspark.py', 'sparse_attn_indexer.py', 'moe_align_block_size.py'})
@@ -48,7 +48,7 @@ class OverlayChecks(unittest.TestCase):
             by_path = {r['path']: r for r in MANIFEST['files']}
             for mhc, indexer, moe in product((False, True), repeat=3):
                 result = perf.plan(DEPLOY, site, Path('/target/deploy'), mhc, indexer, moe)
-                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True)
+                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True, r12=True)
                 for row in result['files']:
                     self.assertEqual(row['variant'], 'patched' if switches[by_path[row['path']]['group']] else 'baseline')
 

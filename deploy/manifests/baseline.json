@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "baseline_id": "deepseek-v4.1-flash-a100-v1.1.0-source",
-  "release": "1.1.0",
+  "baseline_id": "deepseek-v4.1-flash-a100-v1.2.0-source",
+  "release": "1.2.0",
   "served_model_name": "DeepSeek-V4.1-Flash",
   "context": 262144,
-  "concurrency_formula": "max(32,2*(effective_kv_tokens//262144))",
-  "tensor_parallel_size": 8,
+  "concurrency_formula": "max(32,2*sum(dp_effective_kv_tokens//262144))",
+  "tensor_parallel_size": 4,
   "pipeline_parallel_size": 1,
   "dspark_k": 5,
   "engram_cpu_offload": true,
@@ -19,21 +19,28 @@
     "codex": "0.154.0",
     "opencode": "1.18.30"
   },
-  "target_gpu_acceptance": "R1.1_NOT_RUN_ON_BUILD_HOST",
+  "target_gpu_acceptance": "R1.2_NOT_RUN_ON_BUILD_HOST",
   "host_permission": "ordinary deployment owner; sudo -n docker only",
   "service_layout": "all service files and runtime under /ai/services/deepseek-v4.1-flash-a100; existing Docker storage retained",
   "container_write_identity": "operator UID/GID",
   "deployment_policy": "fixed native DSpark k=5",
-  "source_update": "20260916-perf2",
+  "source_update": "20260918-perf3",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
     "compact_indexer": true,
-    "stable_moe_align": true
+    "stable_moe_align": true,
+    "dense_bf16_min_tokens": 32,
+    "custom_ep8_collectives": true,
+    "cuda_sparse_decode_warps": 8,
+    "cuda_shared_expert_overlap": "eligible_layers_only",
+    "eplb_target_only": true
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
-  "performance_overlay_sha256": "afd2c6fc767763d20869c1b266c3c907c0962cc6bdf5fd6ceee67344f8709e80",
-  "delivery_version": "R1.1",
-  "git_tag": "v1.1.0",
-  "historical_gpu_reports": "User-reported R1 reference results retained in reports/; not R1.1 measurements"
+  "performance_overlay_sha256": "30ebabd9fb41a2412918f2b4658f72f640668638b3718bc5597036bd117a6a16",
+  "delivery_version": "R1.2",
+  "git_tag": "v1.2.0",
+  "historical_gpu_reports": "User-reported R1 reference results; not R1.2 measurements",
+  "data_parallel_size": 2,
+  "expert_parallel_size": 8
 }

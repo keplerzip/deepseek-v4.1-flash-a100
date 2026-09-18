@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "release": "1.2.0",
+  "delivery_version": "R1.2",
+  "source_update": "20260918-perf3",
+  "recorded_at": "2026-09-18T08:58:44.436881+00:00",
+  "scope": "Build-host controls, CPU reference flow, offline SM80 compilation, actual-image cumulative install and exact rollback; no GPU execution",
+  "model": "DeepSeek-V4.1-Flash",
+  "context": 262144,
+  "dspark_k": 5,
+  "tensor_parallel_size": 4,
+  "data_parallel_size": 2,
+  "expert_parallel_size": 8,
+  "vision_enabled": true,
+  "engram_cpu_offload": true,
+  "reused_image": "deepseek-v4.1-flash-a100:20260913-r1",
+  "reused_image_id": "sha256:29e46788ca2667042d06b496e92f6d38c7b50bee16f5b1d211e9229e68907403",
+  "checks": {
+    "dspark_contract_tests": 5,
+    "overlay_integrity_tests": 4,
+    "r12_routing_and_capacity_tests": 3,
+    "update_transaction_tests": 4,
+    "archive_validation_tests": 5,
+    "r11_indexer_dispatch_tests": 3,
+    "mhc_control_flow_and_image_padding_cpu": "PASS",
+    "r12_dense_DP_EPLB_DSML_and_Responses_CPU": "PASS",
+    "original_image_cli_schema": "PASS",
+    "vision_schema_cases": 9,
+    "missing_responses_image_detail_regression": "PASS",
+    "asgi_guard_cases": 11,
+    "triton_sm80_compile_variants": 25,
+    "new_8warp_sm80_compile_variants": 6,
+    "source_syntax_links_and_checksums": "PASS",
+    "cumulative_install_and_exact_rollback": [
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.1.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      }
+    ]
+  },
+  "runtime_evidence_sha256": {
+    "guard-schema.log": "d3790f07e162371507a310df42fe0ef565d7ec7115bb0a7bffe350b05754bff5",
+    "r11-cpu.log": "114f5362df4656316fb454abbddf97cabef264f9864bed94ba49f962b2ae73db",
+    "r12-cpu.log": "b720ebbaed48e659ad552feefa8eeef835b0841ff8ab96edd31315352d5dacaf",
+    "r12-sm80-compile.json": "d6279a3698723be7d864690ffb70c91522743b19156ecc4caabea9eafea51fd2",
+    "r12-sm80-compile.log": "159dc93e580cad2d889df01f6a97712ba27ec25fae5cdba1b46c5ba934590d30",
+    "runtime-cpu.log": "019cf87802ad44999358288092e1917e26916fa32afd7e41e575f56fcaa2e351",
+    "sm80-compile.json": "896d5793d0ab6d2ce8144a51f4a7d5a8d10b24d7ab2750e66b750c5cecc4c673",
+    "sm80-compile.log": "d2d7930411d11abdcb6b4d0599f9166d2720c1e49231706f859c8197d5692797",
+    "vision-schema.log": "3f42df104a7ed31a1a11b78d8b9bff5f701bac2e18b41c4ff6d966964976694d"
+  },
+  "deploy_manifest_sha256": "3323a77bcc9a2c92cf106f66cafd5c230e5c2a849647de8fad5d46dbde7e39a8",
+  "performance_overlay_sha256": "30ebabd9fb41a2412918f2b4658f72f640668638b3718bc5597036bd117a6a16",
+  "new_gpu_math_tested": false,
+  "new_gpu_performance_measured": false,
+  "full_model_gpu_import_tested": false,
+  "base_image_rebuilt": false,
+  "model_changed": false,
+  "base64_included": false,
+  "target_acceptance": "Required: new GPU math and EP8 collectives, full V4.1 loading and both DP pool graph replay, independent capacity calibration, three protocols, multimodal cache usage, long context, speed and stability",
+  "installer_test_payload_manifest_sha256": "3323a77bcc9a2c92cf106f66cafd5c230e5c2a849647de8fad5d46dbde7e39a8",
+  "small_update": {
+    "filename": "deepseek-v4.1-flash-a100-R1.2-update.tar.gz",
+    "cumulative_from_initial": true,
+    "prior_update_required": false,
+    "contains_image": false,
+    "contains_weights": false
+  }
+}

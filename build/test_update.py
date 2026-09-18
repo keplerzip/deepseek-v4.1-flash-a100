@@ -23,6 +23,10 @@ class UpdateChecks(unittest.TestCase):
         (target / 'runtime/selected-config.json').write_text(json.dumps(selected))
         (target / 'runtime/keep.log').write_text('operator evidence')
         rows = []
+        config = payload / 'configs/runtime.json'
+        config.parent.mkdir()
+        config.write_bytes((ROOT / 'deploy/configs/runtime.json').read_bytes())
+        rows.append(hashlib.sha256(config.read_bytes()).hexdigest() + '  configs/runtime.json\n')
         for name in ('existing.py', 'new.py'):
             p = payload / name
             p.write_text('new source\n')
@@ -45,6 +49,7 @@ class UpdateChecks(unittest.TestCase):
             self.assertIn('PERF_INDEXER=1\n', env)
             self.assertIn('PERF_MOE_ALIGN=1\n', env)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['speculative_config']['num_speculative_tokens'], 5)
+            self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['data_parallel_size'], 2)
             receipt = json.loads((target / 'runtime/latest-update.json').read_text())
             self.assertEqual(receipt['release'], '1.1.0')
             manager.restore(target, target / receipt['backup'], receipt)

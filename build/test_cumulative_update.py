@@ -27,7 +27,8 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     rows = []
-    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.0.0', True)):
+    version_expected = json.loads((ROOT / 'deploy/manifests/update.json').read_text())
+    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.0.0', True)):
         with tempfile.TemporaryDirectory(prefix='r11-upgrade-') as temp:
             tmp = Path(temp)
             old = subprocess.check_output(['git','archive',ref,'deploy'], cwd=ROOT)
@@ -44,7 +45,7 @@ def main():
             evidence.write_text('preserve operator evidence\n')
             original=files(target)
             subprocess.run(['tar','-xzf',str(args.archive.resolve()),'-C',str(tmp)],check=True)
-            package=tmp/'deepseek-v4.1-flash-a100-R1.1-update'
+            package=tmp/('deepseek-v4.1-flash-a100-' + version_expected['delivery_version'] + '-update')
             command=['bash',str(package/'install.sh'),str(target)]+(['--restart'] if restart_failure else [])
             result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=120)
             if restart_failure:
@@ -53,7 +54,7 @@ def main():
             else:
                 assert result.returncode==0,result.stdout
                 version=json.loads((target/'manifests/update.json').read_text())
-                assert version['release']=='1.1.0' and version['cumulative']
+                assert version['release']==version_expected['release'] and version['cumulative']
                 assert 'CONTAINERD_ROOT_DIR=/kept/containerd' in (target/'deployment.env').read_text()
                 subprocess.run(['sudo','-n','docker','run','--rm','--pull','never','--network','none',
                     '--user',f'{os.getuid()}:{os.getgid()}',

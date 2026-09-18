@@ -3,7 +3,6 @@ set -euo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/../scripts/common.sh"
 require_operator
 resolve_image
-[[ "$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN" != 000 ]] || fail 'Enable a performance kernel group to test it'
 run="performance-kernels-$(date -u +%Y%m%dT%H%M%S)-$$"
 mkdir -p "$STATE_DIR/$run"
 prepare_performance "$run"
@@ -17,6 +16,7 @@ timeout --signal=TERM --kill-after=15s 1800s sudo -n docker run --rm --pull neve
   --entrypoint /usr/bin/python3 -e PYTHONDONTWRITEBYTECODE=1 \
   -e VLLM_DSV41_CAND_LOGITS="$PERF_INDEXER" -e VLLM_FUSED_STABLE_MOE_ALIGN="$PERF_MOE_ALIGN" \
   -e VLLM_DETERMINISTIC_MOE_ALIGN=1 \
+  -e VLLM_AMPERE_DENSE_BF16_MIN_TOKENS=32 -e VLLM_DISABLE_SHARED_EXPERTS_STREAM=0 \
   -v "$STATE_DIR:/state" -v "$DEPLOY_DIR:/deploy:ro" -v "$DEPLOY_DIR/tests:/offline-tests:ro" "$RUNTIME_IMAGE" \
   -u /offline-tests/performance_kernels.py --output "/state/$run/kernels.json" \
   --mhc "$PERF_MHC" --indexer "$PERF_INDEXER" --moe-align "$PERF_MOE_ALIGN" \

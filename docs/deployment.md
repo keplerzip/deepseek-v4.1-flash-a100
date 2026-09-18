@@ -4,7 +4,7 @@
 
 实测机：8×A100-SXM4-80GB、NVSwitch NV12、双路 EPYC 7742、约 2 TiB RAM；Ubuntu 22.04.4，内核 5.15.0-94，NVIDIA 580.159.04，Docker 29.5.1，Container Toolkit 1.19.0。这是参考环境，不代表任意版本组合都经过验证。
 
-预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 384 GiB 当前可用主存作为 Engram 加载预算。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
+预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 384 GiB 当前可用主存作为基础检查；R1.2 按本机约 2 TiB RAM 设计，DP 副本与加载峰值仍须实测。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
 
 ## 资源与目录
 
@@ -38,3 +38,5 @@ bash ./tests/run-all.sh 2>&1 | tee runtime/acceptance.log
 ```
 
 run-all 包含功能、长输入与负载测试，避免同时运行其他压测。成功 smoke 不是 24h 稳定性或满窗口并发验收。
+
+R1.2 的更新安装、目标机检查与回退见 [累计更新说明](performance-update-20260918.md)。首次多卡检查覆盖新增 EP8 集合通信，不重复此前的完整基础探针。

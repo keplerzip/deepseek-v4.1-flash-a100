@@ -29,7 +29,8 @@ def check_moe(report):
     torch.manual_seed(101)
     for n, experts, block, mapped in ((0, 256, 16, False), (6, 256, 16, False),
             (192, 256, 32, False), (336, 256, 64, False), (4096, 256, 16, False),
-            (65, 7, 16, True), (257, 32, 32, True)):
+            (65, 7, 16, True), (257, 32, 32, True),
+            (168, 384, 16, True), (140, 128, 16, True)):
         started = time.monotonic()
         ids = torch.randint(-2, experts+3, (n, 8), device='cuda', dtype=torch.int32)
         mapping = None

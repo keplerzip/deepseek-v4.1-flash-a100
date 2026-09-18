@@ -85,11 +85,15 @@ def main():
         if not torch.cuda.is_available() or torch.cuda.get_device_capability() != (8, 0):
             raise RuntimeError('This test must execute on an SM80 GPU; CPU is not a passing result')
         from performance_r11_kernels import check_moe, check_indexer
+        from performance_r12_kernels import check_dense, check_shared, check_sparse
         for enabled, name, check in ((a.indexer, 'compact-indexer', check_indexer),
                                     (a.moe_align, 'stable-moe-align', check_moe),
-                                    (a.mhc, 'mhc', check_mhc)):
+                                    (a.mhc, 'mhc', check_mhc),
+                                    (True, 'dense-bf16', check_dense),
+                                    (True, 'shared-expert-overlap', check_shared),
+                                    (True, 'sparse-decode-8-warps', check_sparse)):
             if enabled:
-                print('[R1.1 kernels] Starting '+name, flush=True)
+                print('[R1.2 kernels] Starting '+name, flush=True)
                 check(report)
         report.update(status='PASS', gpu=torch.cuda.get_device_name(),
                       scope='Enabled SM80 kernel reference checks and graph replay; no model speed result')

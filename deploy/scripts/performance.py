@@ -16,22 +16,22 @@ def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True):
     root = deploy / 'overrides/performance'
     manifest = json.loads((root / 'manifest.json').read_text())
     rows = []
-    enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True}
+    enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True, 'r12': True}
     for item in manifest['files']:
         name = item['path']
         rel = Path(name)
-        if rel.is_absolute() or '..' in rel.parts or not name.startswith('vllm/'):
+        if rel.is_absolute() or '..' in rel.parts or not (name.startswith('vllm/') or name == 'dsv41_capacity.py'):
             raise ValueError('Invalid performance overlay path')
         target = site / rel
         actual = digest(target) if target.exists() else None
-        if actual not in {item['base_sha256'], item['patched_sha256']}:
+        if actual not in {item['base_sha256'], item.get('baseline_sha256', item['base_sha256']), item['patched_sha256']}:
             raise ValueError('Unsupported image source for performance overlay: ' + name)
         # Turning fusion off restores both layer ABIs, even in rebuilt images.
         variant = 'patched' if enabled[item['group']] else 'baseline'
         if variant == 'baseline' and item['base_sha256'] is None:
             continue
         source = root / variant / rel
-        expected = item['base_sha256'] if variant == 'baseline' else item['patched_sha256']
+        expected = item.get('baseline_sha256', item['base_sha256']) if variant == 'baseline' else item['patched_sha256']
         if digest(source) != expected:
             raise ValueError('Performance payload checksum mismatch: ' + str(source))
         host_source = host_deploy / source.relative_to(deploy)
@@ -41,6 +41,9 @@ def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True):
                      'path': name, 'sha256': expected, 'variant': variant})
     return {'id': manifest['id'], 'mhc_fusion': bool(mhc),
             'compact_indexer': bool(indexer), 'stable_moe_align': bool(moe_align), 'files': rows,
+            'topology': 'TP4-DP2-EP8', 'dense_bf16_min_tokens': 32,
+            'custom_ep8_collectives': True, 'cuda_sparse_decode_warps': 8,
+            'cuda_shared_expert_overlap': True, 'eplb_target_only': True,
             'manifest_sha256': digest(root / 'manifest.json')}
 
 

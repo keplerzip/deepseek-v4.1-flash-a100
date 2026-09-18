@@ -25,7 +25,7 @@ else:
     selected_model = parsed.model_tag or parsed.model
     assert selected_model == '/models/DeepSeek-V4.1-Flash', selected_model
     assert parsed.served_model_name == ['DeepSeek-V4.1-Flash'], parsed.served_model_name
-    assert parsed.max_model_len == 262144 and parsed.max_num_seqs >= 32
+    assert parsed.max_model_len == 262144 and parsed.max_num_seqs * parsed.data_parallel_size >= 32
     print(json.dumps({'status': 'PASS', 'scope': 'CLI parse only with CPU platform defaults; no engine or GPU validation',
                       'argument_count': len(arguments), 'model': selected_model,
                       'max_model_len': parsed.max_model_len, 'max_num_seqs': parsed.max_num_seqs}))

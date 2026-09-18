@@ -17,7 +17,11 @@ def write(path, value):
 
 
 def resolve(config, concurrency, fixed_blocks=None):
-    expected = {'model':'/models/'+MODEL,'served_model_name':MODEL,'tensor_parallel_size':8,
+    expected = {'model':'/models/'+MODEL,'served_model_name':MODEL,'tensor_parallel_size':4,
+                'data_parallel_size':2,'data_parallel_size_local':2,'enable_expert_parallel':True,
+                'all2all_backend':'allgather_reducescatter','enable_eplb':True,
+                'eplb_config':{'window_size':1000,'step_interval':3000,'num_redundant_experts':0,
+                               'use_async':True,'log_balancedness':True,'log_balancedness_interval':500},
                 'pipeline_parallel_size':1,'max_model_len':LENGTH,'tokenizer_mode':'deepseek_v41',
                 'kv_cache_dtype':'fp8_ds_mla','engram_config':{'cpu_offload':True},
                 'tool_call_parser':'deepseek_v41','reasoning_parser':'deepseek_v41',
@@ -41,19 +45,21 @@ def resolve(config, concurrency, fixed_blocks=None):
         raise ValueError('Memory utilization is outside the bounded tuning matrix')
     if config['max_num_batched_tokens'] not in [4096,8192,16384]:
         raise ValueError('Batch-token budget is outside the bounded tuning matrix')
-    result = dict(config, max_num_seqs=concurrency)
+    # The user-facing C is global; vLLM's scheduler limit is per DP engine.
+    local_concurrency = concurrency // expected['data_parallel_size']
+    result = dict(config, max_num_seqs=local_concurrency)
     if fixed_blocks is not None:
         if fixed_blocks<=0:raise ValueError('Fixed KV pool must be positive')
         result['num_gpu_blocks_override']=fixed_blocks
-    result['max_num_batched_tokens'] = max(result['max_num_batched_tokens'], (((k+1)*concurrency+127)//128)*128)
-    batches = {1,2,4,8,16,32,concurrency}
+    result['max_num_batched_tokens'] = max(result['max_num_batched_tokens'], (((k+1)*local_concurrency+127)//128)*128)
+    batches = {1,2,4,8,16,32,local_concurrency}
     rung = 64
-    while rung < concurrency:
+    while rung < local_concurrency:
         batches.add(rung)
         rung *= 2
-    batches = sorted(b for b in batches if b <= concurrency)
+    batches = sorted(b for b in batches if b <= local_concurrency)
     shapes = sorted({size*b for size in [k,k+1] for b in batches})
-    result['compilation_config'] = {'cudagraph_mode':'FULL_AND_PIECEWISE',
+    result['compilation_config'] = {'mode':0, 'cudagraph_mode':'FULL_DECODE_ONLY',
             'cudagraph_capture_sizes':shapes,'max_cudagraph_capture_size':max(shapes)}
     args = [result['model'],'--host','0.0.0.0','--port','8000','--middleware','dsv41_guard.OfflineGuard']
     for key,value in result.items():
@@ -78,8 +84,9 @@ def capacity(directory, configured):
             latest[row['pid']] = row
     rows = list(latest.values())
     for row in rows:
-        if row['max_model_len'] != LENGTH or row['configured_max_num_seqs'] != configured:
+        if row['max_model_len'] != LENGTH or row['configured_max_num_seqs'] != configured//2:
             raise ValueError('Stale or mismatching capacity record')
+        validate_topology(row)
         blocks = sum(g['full_window_blocks'] for g in row['groups'])
         if blocks != row['blocks_per_full_window'] or blocks <= 0:
             raise ValueError('KV group accounting mismatch')
@@ -87,8 +94,20 @@ def capacity(directory, configured):
             raise ValueError('Full-window arithmetic mismatch')
         if row['pool_blocks']*LENGTH//blocks != row['effective_kv_tokens']:
             raise ValueError('Effective KV token arithmetic mismatch')
-    effective = min(r['effective_kv_tokens'] for r in rows)
-    windows = effective//LENGTH
+    # Each DP engine has a distinct KV pool. TP ranks are shards, never extra
+    # pools. Floors must be taken per DP: fractional windows cannot be joined.
+    pools = []
+    for rank in (0, 1):
+        local = [r for r in rows if r['data_parallel_rank'] == rank]
+        if not local:
+            raise ValueError(f'Missing capacity record for DP rank {rank}')
+        effective = min(r['effective_kv_tokens'] for r in local)
+        pools.append({'data_parallel_rank':rank, 'effective_kv_tokens':effective,
+                      'full_windows':effective//LENGTH})
+    if any(p['full_windows'] < 1 for p in pools):
+        raise ValueError('Each DP pool must fit at least one full 256K window')
+    windows = sum(p['full_windows'] for p in pools)
+    effective = sum(p['effective_kv_tokens'] for p in pools)
     required = max(32,2*windows)
     if windows < 1:
         raise ValueError('Cannot fit even one full 256K window')
@@ -96,26 +115,40 @@ def capacity(directory, configured):
             'max_model_len':LENGTH,'full_windows':windows,'effective_kv_tokens':effective,
             'configured_concurrency':configured,'required_concurrency':required,
             'minimum_pool_blocks':min(r['pool_blocks'] for r in rows),
-            'formula':'max(32,2*(effective_kv_tokens//262144))','tp_capacity_multiplier':1,
+            'formula':'max(32,2*sum(dp_effective_kv_tokens//262144))','tp_capacity_multiplier':1,
+            'topology':'TP4-DP2-EP8','data_parallel_size':2,'tensor_parallel_size':4,
+            'per_dp_max_num_seqs':configured//2,'pools':pools,
             'records':rows,'scope':'actual initialized KV groups; full-context correctness and stress are separate gates'}
+
+
+def validate_topology(row):
+    if (row.get('data_parallel_size') != 2 or row.get('tensor_parallel_size') != 4
+            or row.get('expert_parallel_enabled') is not True or row.get('data_parallel_rank') not in (0, 1)):
+        raise ValueError('Missing or mismatching TP4 DP2 EP8 telemetry')
+
+
+def eight_workers(rows):
+    for row in rows:
+        validate_topology(row)
+    return all(len({r['pid'] for r in rows if r['data_parallel_rank'] == dp}) == 4 for dp in (0, 1)) and len({r['pid'] for r in rows}) == 8
 
 
 def graphs(directory, concurrency, k=5):
     if type(k) is not int or k != 5: raise ValueError("Graph validation requires fixed k=5")
     rows = [json.loads(p.read_text()) for p in directory.glob('*.json')]
     drafts = [r for r in rows if r.get('kind') == 'dspark']
-    if len({r['pid'] for r in drafts}) != 8:
+    if not eight_workers(drafts):
         raise ValueError('Need draft-load records from all eight workers')
     if any(r['num_speculative_tokens'] != k or r['draft_query_per_request'] != k or not r['fused_markov_built'] or not r['local_argmax'] for r in drafts):
         raise ValueError('DSpark path does not match the fixed route')
     captures = [r for r in rows if r.get('kind') == 'graph-capture' and not r['memory_estimation_probe']]
     for query in [k,k+1]:
         eligible = [r for r in captures if r['decode_query_len'] == query]
-        pids = {r['pid'] for r in eligible if any(d['num_tokens'] == query*concurrency and d['mode'] == 'FULL' for d in r['captured_full_graphs'])}
-        if len(pids) != 8:
+        matching = [r for r in eligible if any(d['num_tokens'] == query*(concurrency//2) and d['mode'] == 'FULL' for d in r['captured_full_graphs'])]
+        if not eight_workers(matching):
             raise ValueError(f'Missing full CUDA graph at query={query}, C={concurrency} on eight workers')
     return {'status':'PASS','scope':'draft load and completed graph capture; replay and accepted drafts need successful requests',
-            'concurrency':concurrency,'draft_workers':8,'num_speculative_tokens':k,'target_shape':(k+1)*concurrency,'draft_shape':k*concurrency}
+            'concurrency':concurrency,'per_dp_concurrency':concurrency//2,'draft_workers':8,'num_speculative_tokens':k,'target_shape':(k+1)*(concurrency//2),'draft_shape':k*(concurrency//2)}
 
 
 def replays(directory, concurrency, k=5):
@@ -128,8 +161,7 @@ def replays(directory, concurrency, k=5):
         valid = [r for r in rows if r.get('kind')=='graph-replay'
                  and (r['pid'],r['manager_id']) in real and r['decode_query_len']==query
                  and r['descriptor']['mode']=='FULL']
-        pids = {r['pid'] for r in valid}
-        if len(pids)!=8: raise ValueError(f'Missing actual FULL graph replay on eight workers: query={query}')
+        if not eight_workers(valid): raise ValueError(f'Missing actual FULL graph replay on both DP groups: query={query}')
         counts[str(query)] = sorted({r['descriptor']['num_tokens'] for r in valid})
     return {'status':'PASS','scope':'FULL target and draft graph replay on eight workers; pair with successful requests',
             'concurrency':concurrency,'num_speculative_tokens':k,'replayed_token_shapes':counts}

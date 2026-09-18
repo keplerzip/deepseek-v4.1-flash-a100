@@ -28,3 +28,10 @@ commit 2445d7db07a2023f1d0a4bbb5b1ee4154b299590 (Apache-2.0), and stable
 MoE alignment from Tokha233/deepseek-v4.1-flash-a100-turbo,
 commit fae324ae62ac5cef31b7d38f5d369618e1cae1fa (Apache-2.0).
 Derived files are in deploy/overrides/performance. Original notices remain.
+
+R1.2 / 20260918-perf3 further adapts dense BF16 dispatch, EP8 AG/RS,
+DP draft attention metadata and EPLB isolation from the same pinned Tokha233
+revision. It incorporates wtdcode/vllm-backport sparse decode and shared-expert
+changes a5bb095f0b97d513ac0c657c2c481334e9302ad8 and
+9925c45ab4c0740dfc8e77b4715f665e8b205447, plus V4.1 DSML PR #89.
+Upstream GPU reference tests retain their SPDX headers.

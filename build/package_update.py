@@ -25,11 +25,14 @@ def main():
                         ignore=shutil.ignore_patterns('runtime', 'images', '__pycache__', '*.pyc'))
         shutil.copyfile(ROOT / 'build/update-entry.sh', stage / 'install.sh')
         shutil.copyfile(ROOT / version['readme_source'], stage / 'README.zh-CN.md')
+        (stage / 'docs').mkdir()
+        shutil.copyfile(ROOT / version['readme_source'], stage / 'docs' / 'R1.2.zh-CN.md')
         for name in ('LICENSE', 'NOTICE'):
             shutil.copyfile(ROOT / name, stage / name)
         shutil.copytree(ROOT / 'licenses', stage / 'licenses')
         (stage / 'reports').mkdir()
-        for name in ('dspark-k5-k7.user-reported.json', 'acceptance-20260913.user-reported.json'):
+        for name in ('dspark-k5-k7.user-reported.json', 'acceptance-20260913.user-reported.json',
+                     'r12-weight-budget.json', 'performance-update-20260918.build.json'):
             shutil.copyfile(ROOT / 'reports' / name, stage / 'reports' / name)
         rows = []
         for f in sorted(stage.rglob('*')):

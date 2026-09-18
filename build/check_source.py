@@ -28,6 +28,10 @@ def main():
     assert cfg['speculative_config']['num_speculative_tokens']==5
     assert cfg['limit_mm_per_prompt']=={'image':999}
     assert cfg['served_model_name']=='DeepSeek-V4.1-Flash' and cfg['max_model_len']==262144
+    assert cfg['tensor_parallel_size']==4 and cfg['data_parallel_size']==cfg['data_parallel_size_local']==2
+    assert cfg['enable_expert_parallel'] and cfg['enable_eplb']
+    assert cfg['eplb_config']['num_redundant_experts']==0
+    assert not cfg.get('language_model_only',False)
     assert json.loads((ROOT/'release.json').read_text())['default_dspark_k']==5
     assert json.loads((ROOT/'release.json').read_text())['allowed_dspark_k']==[5]
     release=json.loads((ROOT/'release.json').read_text())
@@ -35,6 +39,10 @@ def main():
     overlay=json.loads((ROOT/'deploy/overrides/performance/manifest.json').read_text())
     assert (ROOT/'VERSION').read_text().strip()==release['release']==update['release']==overlay['release']
     assert release['source_update']==update['id']==overlay['id']
+    for name in ('deploy/configs/locked-scheme.json','deploy/manifests/baseline.json'):
+        fixed=json.loads((ROOT/name).read_text())
+        assert fixed['release']==release['release'] and fixed['tensor_parallel_size']==4 and fixed['data_parallel_size']==2
+        assert fixed['concurrency_formula']==release['concurrency_formula']
     assert update['cumulative'] and not update['requires_prior_update']
     assert release['runtime_tag']==update['compatible_initial_image']
     assert release['performance_overlay_sha256']==hashlib.sha256((ROOT/'deploy/overrides/performance/manifest.json').read_bytes()).hexdigest()

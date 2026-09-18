@@ -88,8 +88,9 @@ def apply(payload, target):
         path = inside(target, name)
         if path.exists():
             config = json.loads(path.read_text())
-            config['speculative_config']['num_speculative_tokens'] = 5
-            config['limit_mm_per_prompt'] = {'image': 999}
+            # TP8 tuning receipts cannot silently override the R1.2 topology.
+            # Save the original in the transaction; use the new fixed scheme.
+            config = json.loads(changes['configs/runtime.json'][0])
             if config != json.loads(path.read_text()):
                 changes[name] = ((json.dumps(config, indent=2) + '\n').encode(), 0o600)
     # Validate all paths and save every original before replacing any source.

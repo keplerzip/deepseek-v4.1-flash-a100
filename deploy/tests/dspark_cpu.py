@@ -16,11 +16,13 @@ import dspark_benchmark as bench
 class ContractTests(unittest.TestCase):
     def test_graph_sizes_and_constraints(self):
         base = json.loads((DEPLOY / 'configs/runtime.json').read_text())
-        for k, shapes in [(5, (280, 336))]:
+        for k, shapes in [(5, (140, 168))]:
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = k
             result, argv = ops.resolve(candidate, 56)
             self.assertEqual(result['max_model_len'], 262144)
+            self.assertEqual(result['max_num_seqs'], 28)
+            self.assertEqual(result['tensor_parallel_size'] * result['data_parallel_size'], 8)
             self.assertEqual(result['engram_config'], {'cpu_offload': True})
             self.assertEqual(result['limit_mm_per_prompt'], {'image': 999})
             self.assertEqual(json.loads(argv[argv.index('--limit-mm-per-prompt')+1]), {'image': 999})
@@ -39,13 +41,17 @@ class ContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             for pid in range(8):
+                topology = dict(data_parallel_rank=pid//4, data_parallel_size=2, tensor_parallel_size=4, expert_parallel_enabled=True)
                 (directory / f'draft-{pid}.json').write_text(json.dumps({'kind': 'dspark', 'pid': pid,
+                    **topology,
                     'num_speculative_tokens': 5, 'draft_query_per_request': 5, 'fused_markov_built': True, 'local_argmax': True}))
                 for query in (5, 6):
                     (directory / f'capture-{pid}-{query}.json').write_text(json.dumps({'kind': 'graph-capture',
+                        **topology,
                         'pid': pid, 'manager_id': query, 'memory_estimation_probe': False, 'decode_query_len': query,
-                        'captured_full_graphs': [{'num_tokens': query*56, 'mode': 'FULL'}]}))
+                        'captured_full_graphs': [{'num_tokens': query*28, 'mode': 'FULL'}]}))
                     (directory / f'replay-{pid}-{query}.json').write_text(json.dumps({'kind': 'graph-replay',
+                        **topology,
                         'pid': pid, 'manager_id': query, 'decode_query_len': query, 'descriptor': {'mode': 'FULL', 'num_tokens': query}}))
             self.assertEqual(ops.graphs(directory, 56, 5)['status'], 'PASS')
             self.assertEqual(ops.replays(directory, 56, 5)['status'], 'PASS')
@@ -87,12 +93,20 @@ class ContractTests(unittest.TestCase):
     def test_capacity_formula_is_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 262144, 'configured_max_num_seqs': 56,
+            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 262144, 'configured_max_num_seqs': 28,
+                   'data_parallel_rank':0, 'data_parallel_size':2, 'tensor_parallel_size':4, 'expert_parallel_enabled':True,
                    'groups': [{'full_window_blocks': 10}], 'blocks_per_full_window': 10,
-                   'pool_blocks': 280, 'full_windows': 28, 'effective_kv_tokens': 28*262144}
+                   'pool_blocks': 149, 'full_windows': 14, 'effective_kv_tokens': 149*262144//10}
             (directory / 'capacity-1.json').write_text(json.dumps(row))
+            with self.assertRaisesRegex(ValueError, 'Missing capacity'):
+                ops.capacity(directory, 56)
+            (directory / 'capacity-2.json').write_text(json.dumps(dict(row, pid=2, data_parallel_rank=1)))
             self.assertEqual(ops.capacity(directory, 56)['required_concurrency'], 56)
             self.assertEqual(ops.capacity(directory, 56)['tp_capacity_multiplier'], 1)
+            # 14.9 + 14.9 windows is 28 resident full windows, NOT 29.
+            self.assertEqual(ops.capacity(directory, 56)['full_windows'], 28)
+            (directory / 'capacity-3.json').write_text(json.dumps(dict(row, pid=3)))
+            self.assertEqual(ops.capacity(directory, 56)['required_concurrency'], 56)
 
 
 if __name__ == '__main__':

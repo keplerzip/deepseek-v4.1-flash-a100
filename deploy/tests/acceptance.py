@@ -17,15 +17,18 @@ LENGTH = 262144
 
 
 class Client:
-    def __init__(self, base, key, timeout=3600):
+    def __init__(self, base, key, timeout=3600, dp_rank=None):
         self.base = base.rstrip('/')
         self.key = key.strip()
         self.timeout = timeout
+        self.dp_rank = dp_rank
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
     def request(self, path, body=None, raw=False):
         headers = {'Content-Type':'application/json','Authorization':'Bearer '+self.key,'x-api-key':self.key,
                    'anthropic-version':'2023-06-01'}
+        if self.dp_rank is not None:
+            headers['X-data-parallel-rank'] = str(self.dp_rank)
         req = urllib.request.Request(self.base+path,data=None if body is None else json.dumps(body).encode(),headers=headers)
         started = time.monotonic()
         with self.opener.open(req,timeout=self.timeout) as response:
@@ -40,10 +43,12 @@ class Client:
                     if data and data != b'[DONE]':
                         events.append(json.loads(data))
                         arrivals.append(time.monotonic()-started)
-                return {'events':events,'event_times':arrivals,'elapsed':time.monotonic()-started}
+                return {'events':events,'event_times':arrivals,'elapsed':time.monotonic()-started,
+                        '_dp_rank':response.headers.get('X-DSV41-DP-Rank')}
             result = json.load(response)
             result['_elapsed'] = time.monotonic()-started
             result['_gateway_request_id'] = response.headers.get('X-Request-Id')
+            result['_dp_rank'] = response.headers.get('X-DSV41-DP-Rank')
             return result
 
     def chat(self, text, **kwargs):
@@ -110,7 +115,7 @@ def vision_request(count, protocol='chat'):
 
 
 def run(args):
-    client = Client(args.base_url,args.key_file.read_text())
+    client = Client(args.base_url,args.key_file.read_text(), dp_rank=getattr(args, 'dp_rank', None))
     report = {'model':MODEL,'max_model_len':LENGTH,'suite':args.suite,'started_at':datetime.datetime.now().astimezone().isoformat(),
               'base_url':args.base_url,'scope':'real HTTP requests; GPU path proven separately by runtime observations',
               'tests':[],'status':'RUNNING'}
@@ -148,6 +153,49 @@ def run(args):
         text,usage,arrivals = sse_chat(stream)
         assert text.strip() == 'OFFLINE_READY', text
         return {'text':text.strip(),'usage':usage,'first_token_seconds':arrivals[0]}
+
+    def protocol_cache(protocol):
+        text = 'Cache probe '+uuid.uuid4().hex+'\n' + '\n'.join(
+            f'Record {i}: stable offline prefix data for protocol cache verification.' for i in range(1024))
+        text += '\nReply only CACHE_READY.'
+        body = {'model':MODEL, 'temperature':0, 'chat_template_kwargs':{'thinking':False}}
+        if protocol == 'responses':
+            path = '/v1/responses'
+            body.update(input=[{'role':'user','content':text}], max_output_tokens=32, store=False)
+        elif protocol == 'messages':
+            path = '/v1/messages'
+            body.update(messages=[{'role':'user','content':text}], max_tokens=32, thinking={'type':'disabled'})
+        else:
+            path = '/v1/chat/completions'
+            body.update(messages=[{'role':'user','content':text}], max_tokens=32)
+        def usage(reply, streaming):
+            if not streaming:
+                assert not reply.get('error'), reply
+                return reply['usage']
+            merged = {}
+            for event in reply['events']:
+                assert event.get('type') != 'error' and not event.get('error'), event
+                if protocol == 'responses' and event.get('type') == 'response.completed':
+                    merged.update(event['response']['usage'])
+                elif protocol == 'messages':
+                    merged.update(event.get('message', {}).get('usage', {}))
+                    merged.update(event.get('usage', {}))
+                elif protocol == 'chat':
+                    merged.update(event.get('usage') or {})
+            assert merged, 'Missing SSE usage'
+            return merged
+        def cached(value):
+            if protocol == 'responses': return value['input_tokens_details']['cached_tokens']
+            if protocol == 'messages': return value['cache_read_input_tokens']
+            return value['prompt_tokens_details']['cached_tokens']
+        cold = usage(client.request(path, body), False)
+        hot = usage(client.request(path, body), False)
+        stream_body = dict(body, stream=True)
+        if protocol == 'chat': stream_body['stream_options'] = {'include_usage':True}
+        streamed = usage(client.request(path, stream_body), True)
+        assert cached(hot) > cached(cold) and cached(streamed) > cached(cold), (cold, hot, streamed)
+        return {'protocol':protocol, 'dp_rank':client.dp_rank, 'cold_cached_tokens':cached(cold),
+                'hot_cached_tokens':cached(hot), 'sse_cached_tokens':cached(streamed)}
 
     def cache():
         salt = uuid.uuid4().hex
@@ -317,6 +365,8 @@ def run(args):
         test('offline-input-rejections',rejects)
     if args.suite in ['full','gateway']:
         for api in ['chat','responses','messages']:
+            test(f'{api}-cache-JSON-and-SSE',lambda a=api:protocol_cache(a))
+        for api in ['chat','responses','messages']:
             for streaming in [False,True]: test(f'{api}-tools-stream={streaming}',lambda a=api,s=streaming:tools(a,s))
         for count in [1,2,4,5,8]: test(f'vision-{count}',lambda n=count:vision(n))
         for api in ['responses','messages']: test(f'vision-5-{api}',lambda a=api:vision(5,a))
@@ -337,4 +387,5 @@ if __name__ == '__main__':
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--suite',choices=['smoke','full','long','parallel','gateway'],default='full')
     p.add_argument('--concurrency',type=int,default=32)
+    p.add_argument('--dp-rank',type=int,choices=(0,1))
     raise SystemExit(run(p.parse_args()))

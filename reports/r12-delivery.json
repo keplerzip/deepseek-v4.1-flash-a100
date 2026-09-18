@@ -1,0 +1,18 @@
+{
+  "status": "CHECKSUM_AND_CONTENTS_VERIFIED",
+  "release": "1.2.0",
+  "delivery_version": "R1.2",
+  "model": "DeepSeek-V4.1-Flash",
+  "filename": "deepseek-v4.1-flash-a100-R1.2-update.tar.gz",
+  "bytes": 494377,
+  "sha256": "cfc128b1f4073bea87026af45c7a1e636ce869ea1422dc56832aaad21dba873c",
+  "verified_files": 136,
+  "deploy_payload_matches_tested_manifest": true,
+  "cumulative_from_initial": true,
+  "includes_model": false,
+  "includes_container_image": false,
+  "includes_base64": false,
+  "new_gpu_math_tested": false,
+  "new_gpu_performance_measured": false,
+  "recorded_at": "2026-09-18T08:58:45.120902+00:00"
+}
