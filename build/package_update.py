@@ -4,6 +4,8 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import posixpath
+import re
 import shutil
 import tarfile
 import tempfile
@@ -24,16 +26,20 @@ def main():
         shutil.copytree(ROOT / 'deploy', stage / 'deploy',
                         ignore=shutil.ignore_patterns('runtime', 'images', '__pycache__', '*.pyc'))
         shutil.copyfile(ROOT / 'build/update-entry.sh', stage / 'install.sh')
-        shutil.copyfile(ROOT / version['readme_source'], stage / 'README.zh-CN.md')
-        (stage / 'docs').mkdir()
-        shutil.copyfile(ROOT / version['readme_source'], stage / 'docs' / 'R1.2.zh-CN.md')
-        for name in ('LICENSE', 'NOTICE'):
+        readme = (ROOT / version['readme_source']).read_text()
+        def relocate(match):
+            link = match.group(1)
+            if '://' in link or link.startswith('#'):
+                return match.group(0)
+            return '](' + posixpath.normpath(str(Path(version['readme_source']).parent / link)) + ')'
+        (stage / 'README.zh-CN.md').write_text(re.sub(r'\]\(([^)]+)\)', relocate, readme))
+        # Keep the documentation's relative references usable after transfer.
+        for name in ('docs', 'reports', 'build', 'examples'):
+            shutil.copytree(ROOT / name, stage / name,
+                            ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+        for name in ('LICENSE', 'NOTICE', 'VERSION', 'release.json', 'CHANGELOG.md', 'README.md'):
             shutil.copyfile(ROOT / name, stage / name)
         shutil.copytree(ROOT / 'licenses', stage / 'licenses')
-        (stage / 'reports').mkdir()
-        for name in ('dspark-k5-k7.user-reported.json', 'acceptance-20260913.user-reported.json',
-                     'r12-weight-budget.json', 'performance-update-20260918.build.json'):
-            shutil.copyfile(ROOT / 'reports' / name, stage / 'reports' / name)
         rows = []
         for f in sorted(stage.rglob('*')):
             if f.is_symlink():

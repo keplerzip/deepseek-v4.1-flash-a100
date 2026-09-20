@@ -15,10 +15,12 @@ timeout --signal=TERM --kill-after=15s 1800s sudo -n docker run --rm --pull neve
   "${CONTAINER_USER_ARGS[@]}" "${PERFORMANCE_MOUNTS[@]}" \
   --entrypoint /usr/bin/python3 -e PYTHONDONTWRITEBYTECODE=1 \
   -e VLLM_DSV41_CAND_LOGITS="$PERF_INDEXER" -e VLLM_FUSED_STABLE_MOE_ALIGN="$PERF_MOE_ALIGN" \
+  -e VLLM_DSV41_STACKED_DRAFT_KV="$PERF_DSPARK_KV" -e VLLM_DSV41_REUSE_TOPK_RAGGED="$PERF_TOPK_REUSE" \
   -e VLLM_DETERMINISTIC_MOE_ALIGN=1 \
   -e VLLM_AMPERE_DENSE_BF16_MIN_TOKENS=32 -e VLLM_DISABLE_SHARED_EXPERTS_STREAM=0 \
   -v "$STATE_DIR:/state" -v "$DEPLOY_DIR:/deploy:ro" -v "$DEPLOY_DIR/tests:/offline-tests:ro" "$RUNTIME_IMAGE" \
   -u /offline-tests/performance_kernels.py --output "/state/$run/kernels.json" \
   --mhc "$PERF_MHC" --indexer "$PERF_INDEXER" --moe-align "$PERF_MOE_ALIGN" \
+  --dspark-kv "$PERF_DSPARK_KV" --topk-reuse "$PERF_TOPK_REUSE" \
   2>&1 | tee "$STATE_DIR/$run/kernels.log"
 printf 'Kernel report: %s/%s/kernels.json\n' "$STATE_DIR" "$run"

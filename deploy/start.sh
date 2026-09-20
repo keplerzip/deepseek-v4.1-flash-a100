@@ -20,9 +20,9 @@ remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
 {
-  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
+  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
   if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking R1.2 SM80 kernels and EP8 communication once before model loading.\n'
+    printf 'Checking R1.3 SM80 kernels, DSpark KV loading, ragged index reuse and EP8 communication once before model loading.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
     bash "$DEPLOY_DIR/tests/performance-ep8.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"

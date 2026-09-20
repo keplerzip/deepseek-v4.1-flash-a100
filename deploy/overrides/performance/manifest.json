@@ -1,5 +1,5 @@
 {
-  "id": "20260918-perf3",
+  "id": "20260920-perf4",
   "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
   "upstream_prs": [
     {
@@ -34,7 +34,8 @@
       "path": "vllm/models/deepseek_v4_1/nvidia/dspark.py",
       "group": "mhc",
       "base_sha256": "7645489aea921148c9bfb5a0b18e3f9073af1b10b0d51a7b70a881bd848038bf",
-      "patched_sha256": "c399b20bf9c94d609a16128f64e1013ac0662e039374809378c6b456013df25d"
+      "patched_sha256": "796db7379bcc34d31f4aebcd77abe4ea260d5201d110d8d34f4c7127cfd76c1b",
+      "baseline_sha256": "93bbdbd1895aa71f43589a7140a856e0454671158db310516f33ae49d885ed0b"
     },
     {
       "path": "vllm/models/deepseek_v4_1/nvidia/model.py",
@@ -183,10 +184,17 @@
       "base_sha256": "dc720ca7038f73581f5576b0c5c56e086167fea3323f29f2d76bbacdb5b5b6db",
       "baseline_sha256": "dc720ca7038f73581f5576b0c5c56e086167fea3323f29f2d76bbacdb5b5b6db",
       "patched_sha256": "d9751fbfd5e73ad0fdda15087640caf1ecaaefb2ef26d87e81c3cd070655048d"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/amd/rocm.py",
+      "group": "r13",
+      "base_sha256": "b74d9d75b29b81530b0f458f7d87d80bc6907949f4b94d22b70c649f9b521bea",
+      "baseline_sha256": "b74d9d75b29b81530b0f458f7d87d80bc6907949f4b94d22b70c649f9b521bea",
+      "patched_sha256": "160dd9b8d8796f74205da2083edd7f56f8183d481d88850a728ce5072ffed10f"
     }
   ],
   "gpu_validated": false,
-  "release": "1.2.0",
+  "release": "1.3.0",
   "upstream_sources": [
     {
       "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx",
@@ -221,6 +229,18 @@
       "r12": true,
       "commit": "19a4e635aa46e4e58342b836833c163c60af8552",
       "component": "V4.1 DSML spelling variants; pinned comparison archived locally"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57627",
+      "commit": "f0defc90f6645242ee61bccecd6146f385cff4b7",
+      "r13": true,
+      "component": "stacked DSpark KV projection; SM80 merged loader and independent fallback"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57434",
+      "commit": "bea2fcdfcf2ef385db7b93352d98c7ee35739126",
+      "r13": true,
+      "component": "Ampere inherited ragged top-k reuse; additional buffer/geometry guards"
     }
   ]
 }

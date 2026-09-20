@@ -21,10 +21,12 @@ def main():
     checks = [(['/deploy/tests/performance_runtime_cpu.py'], 'runtime-cpu.log'),
               (['/deploy/tests/performance_r11_cpu.py'], 'r11-cpu.log'),
               (['/deploy/tests/performance_r12_cpu.py'], 'r12-cpu.log'),
+              (['/deploy/tests/performance_r13_cpu.py'], 'r13-cpu.log'),
               (['/deploy/tests/vision_schema.py'], 'vision-schema.log'),
               (['/deploy/tests/guard_schema.py', '--guard-path', '/deploy/overrides/dsv41_guard.py'], 'guard-schema.log'),
               (['/build/compile_r11_kernels.py', '--output', '/results/sm80-compile.json'], 'sm80-compile.log'),
-              (['/build/compile_r12_kernels.py', '--output', '/results/r12-sm80-compile.json'], 'r12-sm80-compile.log')]
+              (['/build/compile_r12_kernels.py', '--output', '/results/r12-sm80-compile.json'], 'r12-sm80-compile.log'),
+              (['/build/compile_r13_kernels.py', '--output', '/results/r13-sm80-compile.json'], 'r13-sm80-compile.log')]
     for command, logfile in checks:
         if a.checks is not None and Path(logfile).stem not in a.checks:
             continue

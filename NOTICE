@@ -35,3 +35,10 @@ revision. It incorporates wtdcode/vllm-backport sparse decode and shared-expert
 changes a5bb095f0b97d513ac0c657c2c481334e9302ad8 and
 9925c45ab4c0740dfc8e77b4715f665e8b205447, plus V4.1 DSML PR #89.
 Upstream GPU reference tests retain their SPDX headers.
+
+R1.3 / 20260920-perf4 adapts vLLM PR #57627 by Juntian777
+(commit f0defc90f6645242ee61bccecd6146f385cff4b7), stacked DSpark context KV
+projections, and PR #57434 by Fangzhou-Ai
+(commit bea2fcdfcf2ef385db7b93352d98c7ee35739126), per-step ragged top-k reuse.
+The fixed-image MXFP8 loader and SM80 inherited attention path are retained,
+with additional buffer-identity guards. Original Apache-2.0 SPDX notices remain.

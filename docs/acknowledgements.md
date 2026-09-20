@@ -30,3 +30,7 @@
 继续感谢 Tokha233/deepseek-v4.1-flash-a100-turbo@fae324ae62ac5cef31b7d38f5d369618e1cae1fa 的 TP4×DP2＋EP8 部署经验、dense BF16 分派、custom AG/RS、DP 草稿 metadata 与 EPLB 隔离补丁。其公开整模数据来自 A800，不能作为本项目 A100 的实测。R1.2 保留图文能力，未启用该项目的 language-model-only。
 
 感谢 wtdcode/vllm-backport 的 [a5bb095f](https://github.com/wtdcode/vllm-backport/commit/a5bb095f0b97d513ac0c657c2c481334e9302ad8)（8-warp decode）、[9925c45a](https://github.com/wtdcode/vllm-backport/commit/9925c45ab4c0740dfc8e77b4715f665e8b205447)（CUDA shared-expert overlap）与 [#89](https://github.com/wtdcode/vllm-backport/pull/89)（DSML 拼写兼容）。源码清单逐文件固定原始与派生哈希；CPU/编译检查不替代 GPU 验收。
+
+## R1.3 / 20260920-perf4
+
+感谢 Juntian777 的 [vLLM #57627](https://github.com/vllm-project/vllm/pull/57627)（`f0defc90f6645242ee61bccecd6146f385cff4b7`）与 Fangzhou-Ai 的 [vLLM #57434](https://github.com/vllm-project/vllm/pull/57434)（`bea2fcdfcf2ef385db7b93352d98c7ee35739126`）。本版分别适配 DSpark context KV 合并投影和跨层 ragged top-k 复用，针对固定原镜像保留原生 scale 加载、SM80 继承路径和更严格的输入缓冲区检查；不宣称上游其他 GPU 的测试结果适用于本机。修改仍使用 Apache-2.0，并保留原文件 SPDX。

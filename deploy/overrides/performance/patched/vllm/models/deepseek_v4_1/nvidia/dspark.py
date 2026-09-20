@@ -11,6 +11,7 @@ include the future query tokens in the top-k indices for each query token.
 """
 
 from collections.abc import Iterable
+import os
 
 import regex as re
 import torch
@@ -32,7 +33,7 @@ from vllm.model_executor.layers.fused_moe import (
     fused_moe_make_expert_params_mapping,
 )
 from vllm.model_executor.layers.layernorm import RMSNorm
-from vllm.model_executor.layers.linear import ReplicatedLinear
+from vllm.model_executor.layers.linear import MergedColumnParallelLinear, ReplicatedLinear
 from vllm.model_executor.layers.logits_processor import LogitsProcessor
 from vllm.model_executor.layers.vocab_parallel_embedding import (
     ParallelLMHead,
@@ -120,6 +121,22 @@ class DSparkDeepseekV4Model(nn.Module):
             ]
         )
 
+        # R1.3, adapted from vLLM #57627. The context needs only Wkv;
+        # retain each layer's original fused projection for its attention.
+        self.context_wkv_proj = None
+        if os.environ.get("VLLM_DSV41_STACKED_DRAFT_KV", "1") == "1":
+            self.context_wkv_proj = MergedColumnParallelLinear(
+                config.hidden_size,
+                [config.head_dim] * self.num_dspark_layers,
+                bias=False,
+                return_bias=False,
+                quant_config=vllm_config.quant_config,
+                prefix=maybe_prefix(prefix, "context_wkv_proj"),
+                disable_tp=True,
+            )
+        logger.info_once("R1.3 DSpark stacked context KV: %s",
+                         self.context_wkv_proj is not None)
+
         # Heads: final norm, and the Markov + confidence heads.
         # Loaded from the "final" MTP layer weights (mtp.*) in the target
         # checkpoint. v4.1 has no learned hc_head: the hc copies are
@@ -171,6 +188,11 @@ class DSparkDeepseekV4Model(nn.Module):
         place draft layers in different groups). ``None`` (or a ``None`` entry)
         runs the projection to reserve workspace but writes nothing (profiling).
         """
+        all_kv = None
+        if self.context_wkv_proj is not None:
+            all_kv = self.context_wkv_proj(main_x).view(
+                main_x.shape[0], self.num_dspark_layers, self.config.head_dim
+            )
         for i, layer in enumerate(self.layers):
             slot_mapping = (
                 None if context_slot_mappings is None else context_slot_mappings[i]
@@ -178,8 +200,11 @@ class DSparkDeepseekV4Model(nn.Module):
             attn = layer.attn
             # Optimized DSV4 MLA path: wkv part of the fused wq_a|wkv projection
             # (q_lora part discarded), then RoPE/quant/insert via the fused op.
-            qr_kv, _ = attn.fused_wqa_wkv(main_x)
-            kv = qr_kv[..., attn.q_lora_rank :]
+            if all_kv is None:
+                qr_kv, _ = attn.fused_wqa_wkv(main_x)
+                kv = qr_kv[..., attn.q_lora_rank :]
+            else:
+                kv = all_kv[:, i, :]
             kv = attn.kv_norm(kv)
             if slot_mapping is None:
                 continue
@@ -446,6 +471,7 @@ class DSparkDeepseekV4ForCausalLM(nn.Module):
         params_dict = dict(self.named_parameters())
         loaded_params: set[str] = set()
         loaded_confidence_head = False
+        loaded_context_shards: set[tuple[str, int]] = set()
 
         tp_size = get_tensor_model_parallel_world_size()
         tp_rank = get_tensor_model_parallel_rank()
@@ -501,6 +527,20 @@ class DSparkDeepseekV4ForCausalLM(nn.Module):
                         break
                 continue
 
+            # Duplicate the original checkpoint KV shards, including their
+            # native 32x32 scales, through the real merged-linear loader.
+            # Do not concatenate Marlin-repacked tensors after loading.
+            match = re.fullmatch(r"model\.layers\.(\d+)\.attn\.wkv\.(.+)", name)
+            if match is not None and self.model.context_wkv_proj is not None:
+                shard = int(match.group(1))
+                if not 0 <= shard < self.model.num_dspark_layers:
+                    raise ValueError("DSpark context KV shard outside draft layers")
+                context_name = f"model.context_wkv_proj.{match.group(2)}"
+                param = params_dict[context_name]
+                param.weight_loader(param, loaded_weight, shard)
+                loaded_params.add(context_name)
+                loaded_context_shards.add((context_name, shard))
+
             # Stacked rules only apply to decoder-layer weights. Head-stack params
             # (main_proj/norm/markov_head/confidence_head) load directly —
             # otherwise e.g. "markov_w1" would collide with the "w1" shard rule.
@@ -527,6 +567,17 @@ class DSparkDeepseekV4ForCausalLM(nn.Module):
                 weight_loader = getattr(param, "weight_loader", default_weight_loader)
                 weight_loader(param, loaded_weight)
                 loaded_params.add(name)
+
+        if self.model.context_wkv_proj is not None:
+            expected_context_shards = {
+                (name, shard)
+                for name in params_dict
+                if name.startswith("model.context_wkv_proj.")
+                for shard in range(self.model.num_dspark_layers)
+            }
+            missing_context = expected_context_shards - loaded_context_shards
+            if missing_context:
+                raise ValueError(f"Incomplete DSpark context KV weights: {sorted(missing_context)}")
 
         if self.model.confidence_head is not None and not loaded_confidence_head:
             self.model.confidence_head = None

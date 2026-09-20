@@ -48,6 +48,8 @@ class UpdateChecks(unittest.TestCase):
             self.assertIn('PERF_MHC=1\n', env)
             self.assertIn('PERF_INDEXER=1\n', env)
             self.assertIn('PERF_MOE_ALIGN=1\n', env)
+            self.assertIn('PERF_DSPARK_KV=1\n', env)
+            self.assertIn('PERF_TOPK_REUSE=1\n', env)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['speculative_config']['num_speculative_tokens'], 5)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['data_parallel_size'], 2)
             receipt = json.loads((target / 'runtime/latest-update.json').read_text())

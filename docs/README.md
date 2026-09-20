@@ -4,4 +4,6 @@
 
 性能与边界见 [性能报告](performance.md)、[缓存](cache.md)、[故障定位](troubleshooting.md)。网关和客户端见 [协议接入](clients.md)，实现与来源见 [架构](architecture.md)、[致谢](acknowledgements.md)。
 
+- [R1.3：DSpark KV 合并投影与索引复用](performance-update-20260920.md)
 - [R1.2：TP4 DP2 EP8 累计更新](performance-update-20260918.md)
+- [2026-09-20：A100 新方案与底层优化复核](performance-review-20260920.md)

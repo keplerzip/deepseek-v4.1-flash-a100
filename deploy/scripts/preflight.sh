@@ -25,7 +25,7 @@ grep -q NV12 "$STATE_DIR/gpu-topology.txt" || fail 'Expected NVSwitch NV12 topol
 available_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
 # DP2 has two TP-sharded table replicas (~378 GiB combined), before loading
 # temporaries. This guard is a floor for this 2 TiB target, not a peak bound.
-((available_kib >= 512*1024*1024)) || fail 'R1.2 DP2 Engram loading budget requires at least 512 GiB currently available host RAM'
+((available_kib >= 512*1024*1024)) || fail 'DP2 Engram loading budget requires at least 512 GiB currently available host RAM'
 if ! own_container "$ENGINE_NAME"; then
   active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
   [[ -z "$active" ]] || fail 'Target GPUs are occupied; release the existing inference service in your maintenance window'

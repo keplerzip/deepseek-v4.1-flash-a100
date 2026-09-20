@@ -48,9 +48,18 @@ class OverlayChecks(unittest.TestCase):
             by_path = {r['path']: r for r in MANIFEST['files']}
             for mhc, indexer, moe in product((False, True), repeat=3):
                 result = perf.plan(DEPLOY, site, Path('/target/deploy'), mhc, indexer, moe)
-                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True, r12=True)
+                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True, r12=True, r13=True)
                 for row in result['files']:
                     self.assertEqual(row['variant'], 'patched' if switches[by_path[row['path']]['group']] else 'baseline')
+
+    def test_r13_diagnostic_switches_are_recorded_independently(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            site = self.fixture(Path(tmp), True)
+            result = perf.plan(DEPLOY, site, Path('/target/deploy'), True,
+                               dspark_kv=False, topk_reuse=True)
+            self.assertFalse(result['stacked_dspark_context_kv'])
+            self.assertTrue(result['reuse_topk_ragged'])
+            self.assertEqual(result['topology'], 'TP4-DP2-EP8')
 
     def test_modified_image_is_rejected_before_mount_plan(self):
         with tempfile.TemporaryDirectory() as tmp:

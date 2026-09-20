@@ -81,14 +81,15 @@ def apply(payload, target):
     version = json.loads(changes['manifests/update.json'][0])
     env_path = inside(target, 'deployment.env')
     lines = env_path.read_text().splitlines()
-    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC=', 'PERF_INDEXER=', 'PERF_MOE_ALIGN='))]
-    defaults = ['PERF_NCCL=auto', 'PERF_MHC=1', 'PERF_INDEXER=1', 'PERF_MOE_ALIGN=1']
+    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC=', 'PERF_INDEXER=', 'PERF_MOE_ALIGN=', 'PERF_DSPARK_KV=', 'PERF_TOPK_REUSE='))]
+    defaults = ['PERF_NCCL=auto', 'PERF_MHC=1', 'PERF_INDEXER=1', 'PERF_MOE_ALIGN=1',
+                'PERF_DSPARK_KV=1', 'PERF_TOPK_REUSE=1']
     changes['deployment.env'] = (('\n'.join(lines + defaults) + '\n').encode(), 0o600)
     for name in ('runtime/selected-config.json', 'runtime/tuning-active.json'):
         path = inside(target, name)
         if path.exists():
             config = json.loads(path.read_text())
-            # TP8 tuning receipts cannot silently override the R1.2 topology.
+            # TP8 tuning receipts cannot silently override the current topology.
             # Save the original in the transaction; use the new fixed scheme.
             config = json.loads(changes['configs/runtime.json'][0])
             if config != json.loads(path.read_text()):

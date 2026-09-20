@@ -1,5 +1,5 @@
 {
-  "release": "1.2.0",
+  "release": "1.3.0",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
   "image_limit_per_prompt": 999,
@@ -26,7 +26,7 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260918-perf3",
+  "source_update": "20260920-perf4",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
@@ -36,12 +36,14 @@
     "custom_ep8_collectives": true,
     "cuda_sparse_decode_warps": 8,
     "cuda_shared_expert_overlap": "eligible_layers_only",
-    "eplb_target_only": true
+    "eplb_target_only": true,
+    "stacked_dspark_context_kv": true,
+    "reuse_topk_ragged": true
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
-  "performance_overlay_sha256": "30ebabd9fb41a2412918f2b4658f72f640668638b3718bc5597036bd117a6a16",
-  "delivery_version": "R1.2",
-  "git_tag": "v1.2.0",
+  "performance_overlay_sha256": "dcc35f50040d1d538bf3aaee693a186480fc589966143da9eb0b846ffd654ed0",
+  "delivery_version": "R1.3",
+  "git_tag": "v1.3.0",
   "data_parallel_size": 2,
   "expert_parallel_size": 8
 }
