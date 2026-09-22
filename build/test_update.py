@@ -54,6 +54,7 @@ class UpdateChecks(unittest.TestCase):
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['speculative_config']['num_speculative_tokens'], 5)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['data_parallel_size'], 2)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['max_model_len'], 1048576)
+            self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['gpu_memory_utilization'], 0.92)
             receipt = json.loads((target / 'runtime/latest-update.json').read_text())
             self.assertEqual(receipt['release'], '1.1.0')
             manager.restore(target, target / receipt['backup'], receipt)

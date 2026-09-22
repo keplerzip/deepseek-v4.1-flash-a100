@@ -1,6 +1,6 @@
 # 实现与固定版本
 
-交付版本 **R1.5** 对应项目 / Git 标签 **v1.5.0**，累计更新编号 **20260922-context1m**，性能覆盖沿用 **20260922-perf5 / 1.4.0**。参考运行镜像仍为 `deepseek-v4.1-flash-a100:20260913-r1`，保留其名称和字节以复用初始交付。模型 revision、镜像 digest、覆盖层逐文件哈希与安装收据分别记录；不能单看镜像 tag 判断正在运行哪个更新版本。
+交付版本 **R1.5.1** 对应项目 / Git 标签 **v1.5.1**，累计更新编号 **20260922-context1m-gpu92**，性能覆盖沿用 **20260922-perf5 / 1.4.0**。参考运行镜像仍为 `deepseek-v4.1-flash-a100:20260913-r1`，保留其名称和字节以复用初始交付。模型 revision、镜像 digest、覆盖层逐文件哈希与安装收据分别记录；不能单看镜像 tag 判断正在运行哪个更新版本。
 
 [release.json](../release.json) 固定 SM80 基础镜像 `lazymio/vllm-backport@sha256:349690323ab9aba712111529ed1ca60730199205d8202f67895ffde85b451be3`，核对源码提交 `a350766628514d597670d2a5217777fdee2ba7f4`。参考栈 PyTorch 2.13.0+cu130、CUDA 13.0、NCCL 2.29.7。
 
@@ -21,3 +21,5 @@ R1.3 已将三层 DSpark context Wkv 合并为独立的复制投影，通过原�
 R1.4 在这条继承路径内融合 ragged indptr/pack，仅分派到 1–1024 行的小批；更大的批次保留线性 cumsum。通用 builder 将有效性直接写到持久缓冲，并把压缩序列长度限制在 prefill 分支。`PERF_DECODE_METADATA=0` 恢复三个文件的 R1.3 基线，其余优化不受影响；源码挂载选择、开关和检查签名都可审计。该项不新增权重副本，也不改变 DSpark 接受规则。
 
 R1.5 的 max_model_len 固定为 1048576，模型原始 max_position_embeddings 已支持此长度，不改权重或 RoPE。每池至少可容纳一个完整窗口才允许启动。视觉编码器仍为 eager，详见 [1M 与 CUDA Graph 范围](context-update-20260922.md)。
+
+R1.5.1 将 gpu_memory_utilization 固定为 0.92，原镜像/算子覆盖/访问实现不变。旧调优配置通过安装事务迁移；离线调优仅比较 batch token 预算，避免改变已确认的显存比例。

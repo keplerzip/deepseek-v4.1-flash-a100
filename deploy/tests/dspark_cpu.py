@@ -24,6 +24,7 @@ class ContractTests(unittest.TestCase):
             self.assertEqual(result['max_num_seqs'], 28)
             self.assertEqual(result['tensor_parallel_size'] * result['data_parallel_size'], 8)
             self.assertEqual(result['engram_config'], {'cpu_offload': True})
+            self.assertEqual(result['gpu_memory_utilization'], 0.92)
             self.assertEqual(result['limit_mm_per_prompt'], {'image': 999})
             self.assertEqual(json.loads(argv[argv.index('--limit-mm-per-prompt')+1]), {'image': 999})
             self.assertTrue(set(shapes) <= set(result['compilation_config']['cudagraph_capture_sizes']))
@@ -32,7 +33,7 @@ class ContractTests(unittest.TestCase):
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = invalid
             with self.assertRaises(ValueError): ops.resolve(candidate, 56)
-        for key, value in [('max_model_len', 32768), ('served_model_name', 'alias'), ('engram_config', {'cpu_offload': False}), ('limit_mm_per_prompt', {'image': 4})]:
+        for key, value in [('max_model_len', 32768), ('served_model_name', 'alias'), ('engram_config', {'cpu_offload': False}), ('limit_mm_per_prompt', {'image': 4}), ('gpu_memory_utilization', 0.90), ('gpu_memory_utilization', 0.94)]:
             candidate = copy.deepcopy(base)
             candidate[key] = value
             with self.assertRaises(ValueError): ops.resolve(candidate, 56)

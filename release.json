@@ -1,5 +1,5 @@
 {
-  "release": "1.5.0",
+  "release": "1.5.1",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
   "image_limit_per_prompt": 999,
@@ -26,7 +26,7 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260922-context1m",
+  "source_update": "20260922-context1m-gpu92",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
@@ -44,11 +44,15 @@
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
   "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
-  "delivery_version": "R1.5",
-  "git_tag": "v1.5.0",
+  "delivery_version": "R1.5.1",
+  "git_tag": "v1.5.1",
   "data_parallel_size": 2,
   "expert_parallel_size": 8,
   "performance_overlay_release": "1.4.0",
   "performance_overlay_id": "20260922-perf5",
-  "context_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST"
+  "context_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
+  "gpu_memory_utilization": 0.92,
+  "client_api_key_required": false,
+  "access_policy": "loopback-and-docker-only",
+  "api_port": 8005
 }

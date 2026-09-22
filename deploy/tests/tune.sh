@@ -7,8 +7,8 @@ run="tuning-$(date -u +%Y%m%dT%H%M%S)"
 mkdir -p "$STATE_DIR/$run"
 printf '[]\n' > "$STATE_DIR/$run/matrix.json"
 trap 'rm -f -- "$STATE_DIR/tuning-active.json"' EXIT
-# Interleave memory/batch choices; every launch calibrates C against its own KV.
-for candidate in 0.90:4096 0.90:8192 0.90:16384 0.92:8192 0.94:8192; do
+# Keep the requested 0.92 budget; vary only batch size, baseline first.
+for candidate in 0.92:8192 0.92:4096 0.92:16384; do
   mem=${candidate%:*}; batch=${candidate#*:}; name="m${mem}-b${batch}"
   mkdir -p "$STATE_DIR/$run/$name"
   bash "$DEPLOY_DIR/stop.sh"
@@ -27,7 +27,7 @@ for candidate in 0.90:4096 0.90:8192 0.90:16384 0.92:8192 0.94:8192; do
     fi
   fi
   image_python -c 'import json,sys,pathlib;root=pathlib.Path(sys.argv[1]); name=sys.argv[2]; d=root/name; rows=json.loads((root/"matrix.json").read_text());r={"name":name,"status":sys.argv[3],"config":json.loads((d/"config.json").read_text())}; p=d/"benchmark.json";r["benchmark"]=json.loads(p.read_text()) if p.exists() else {};rows.append(r);(root/"matrix.json").write_text(json.dumps(rows,indent=2)+"\n")' "/state/$run" "$name" "$state"
-  [[ "$candidate" != 0.90:4096 || "$state" == PASS ]] || fail 'Baseline failed; fix its report before tuning'
+  [[ "$candidate" != 0.92:8192 || "$state" == PASS ]] || fail 'Baseline failed; fix its report before tuning'
 done
 image_python /deploy/tests/select_tuning.py "/state/$run"
 bash "$DEPLOY_DIR/stop.sh"

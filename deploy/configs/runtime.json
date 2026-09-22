@@ -18,7 +18,7 @@
   "pipeline_parallel_size": 1,
   "max_model_len": 1048576,
   "max_num_batched_tokens": 8192,
-  "gpu_memory_utilization": 0.9,
+  "gpu_memory_utilization": 0.92,
   "kv_cache_dtype": "fp8_ds_mla",
   "engram_config": {
     "cpu_offload": true

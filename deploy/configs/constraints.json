@@ -12,5 +12,9 @@
   "target_gpu_validation": "NOT_RUN",
   "speed_winner": "NOT_MEASURED",
   "data_parallel_size": 2,
-  "expert_parallel_size": 8
+  "expert_parallel_size": 8,
+  "gpu_memory_utilization": 0.92,
+  "image_limit_per_prompt": 999,
+  "client_api_key_required": false,
+  "access_policy": "loopback-and-docker-only"
 }

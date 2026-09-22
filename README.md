@@ -1,6 +1,6 @@
-# DeepSeek-V4.1-Flash on 8×A100 — R1.5 / v1.5.0
+# DeepSeek-V4.1-Flash on 8×A100 — R1.5.1 / v1.5.1
 
-## 实测性能：历史 256K 基线，R1.5 / 1M 待目标机验证
+## 实测性能：历史 256K 基线，R1.5.1 / 1M 待目标机验证
 
 **8×A100-SXM4-80GB + NVSwitch，256K 上下文，TP8，Engram 主存卸载。** 同机 k5/k7 对照结果如下，最终默认选择 **k=5**。
 
@@ -31,7 +31,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 [完整性能报告与方法](docs/performance.md) · [机器可读实测记录](reports/) · [测试代码](deploy/tests/dspark_benchmark.py)
 
-**R1.5 / v1.5.0：固定 1M（1,048,576 token）总上下文，并发按完整 1M 窗口数重算，至少 C32。** 累计保留 TP4×DP2＋EP8、DSpark k5、R1.4 全部性能优化、视觉与三协议。decode CUDA Graph 已开启；视觉编码器 CUDA Graph 尚未移植。**复用最初镜像和权重，从 R1 至 R1.4 直接安装累计小包**。本版为待目标 GPU 验收的预发布版，上述 TP8 / 256K 数据不代表新版成绩。[下载、升级与回退](docs/context-update-20260922.md)
+**R1.5.1 / v1.5.1：固化显存预算 0.92，固定 1M（1,048,576 token）总上下文，并发按完整 1M 窗口数重算，至少 C32。** 累计保留 TP4×DP2＋EP8、DSpark k5、R1.4 全部性能优化、视觉与三协议。decode CUDA Graph 已开启；视觉编码器 CUDA Graph 尚未移植。**复用最初镜像和权重，从 R1 至 R1.5 直接安装累计小包**。本版为待目标 GPU 验收的预发布版，上述 TP8 / 256K 数据不代表新版成绩。[下载、升级与回退](docs/deployment-update-20260922-gpu92.md)
 
 [权重容量核算](reports/r12-weight-budget.json)来自本地 V4.1 全部 48 个分片头：专家含草稿约 275.7 GiB，由 EP8 分摊；Engram 单份表约 188.8 GiB，DP2 的两份主存表预算约 377.7 GiB；其余权重约 10.7 GiB。DP2 并非复制两份完整模型，但非专家副本与额外 BF16 dense 缓冲会消耗显存，实际 KV 容量必须重测。
 
@@ -41,7 +41,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 本项目提供 `DeepSeek-V4.1-Flash` 在八卡 A100 上的离线部署、验收和运维工具，是从实际隔离环境交付整理的 **源码发行版**。联网构建侧准备全部资源后，目标机仅用普通用户和 `sudo -n docker` 启动，无需公网下载或在宿主安装 Python 依赖。
 
-| 项目 | R1.5 当前设置 |
+| 项目 | R1.5.1 当前设置 |
 |---|---|
 | 唯一模型 / API 名称 | `DeepSeek-V4.1-Flash` |
 | 上下文 | **1048576 token（1M）**，输入与输出合计 |
@@ -49,6 +49,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 | 权重 | 官方混合 FP8/FP4，固定 ModelScope revision |
 | DSpark | **固定 k=5**，主模型与草稿 decode CUDA Graph |
 | 性能更新 | decode 元数据清理、小批 indptr/pack 融合；累计 DSpark context KV 合并、top-k 复用、dense BF16 ≥32 行、EP8 custom AG/RS、8-warp decode、条件共享专家重叠、主干 EPLB、R1.1 优化 |
+| 显存预算 | **固定 0.92**，启动后按实际 KV 自动标定 |
 | Engram | 主存卸载 |
 | KV | `fp8_ds_mla`，prefix caching 与命中 token 明细 |
 | 并发公式 | `C=max(32, 2*sum(floor(KV_tokens_DP_i/1048576)))` |
@@ -57,7 +58,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 | 访问 | `127.0.0.1:8005` 和本机 Docker bridge，客户端免密 |
 | NewAPI | 接已有实例；不安装、不修改网关 |
 
-原 TP8 参考机曾标定 N=28、C=56；R1.5 不沿用这一容量。每个 DP 池先取满 1M 窗口数，两个池求和后计算总 C；每池调度上限为 C/2，不能把 TP rank 重复计入。权重、Docker 镜像、商业 CLI 二进制和目标运行数据均不进入 Git，需在构建侧准备。[构建与离线包](docs/building.md)
+原 TP8 参考机曾标定 N=28、C=56；R1.5.1 不沿用这一容量。每个 DP 池先取满 1M 窗口数，两个池求和后计算总 C；每池调度上限为 C/2，不能把 TP rank 重复计入。权重、Docker 镜像、商业 CLI 二进制和目标运行数据均不进入 Git，需在构建侧准备。[构建与离线包](docs/building.md)
 
 ## 快速开始
 
@@ -91,7 +92,7 @@ bash ./deploy.sh 2>&1 | tee runtime/first-deploy.log
 
 - [准备离线包](docs/building.md) · [部署](docs/deployment.md) · [运维与恢复](docs/operations.md)
 - [性能报告](docs/performance.md) · [KV 缓存](docs/cache.md) · [故障定位](docs/troubleshooting.md)
-- [R1.5：1M 累计更新与回退](docs/context-update-20260922.md) · [R1.4 历史优化](docs/performance-update-20260922.md) · [R1.3 历史方案](docs/performance-update-20260920.md) · [R1.2 历史方案](docs/performance-update-20260918.md) · [R1.1 历史更新](docs/performance-update-20260916.md) · [perf1 历史说明](docs/performance-update-20260915.md)
+- [R1.5.1：0.92 固定方案与累计升级](docs/deployment-update-20260922-gpu92.md) · [R1.5：1M 容量说明](docs/context-update-20260922.md) · [R1.4 历史优化](docs/performance-update-20260922.md) · [R1.3 历史方案](docs/performance-update-20260920.md) · [R1.2 历史方案](docs/performance-update-20260918.md) · [R1.1 历史更新](docs/performance-update-20260916.md) · [perf1 历史说明](docs/performance-update-20260915.md)
 - [协议、NewAPI 与 CLI](docs/clients.md) · [固定实现](docs/architecture.md)
 - [上游致谢](docs/acknowledgements.md) · [变更记录](CHANGELOG.md)
 

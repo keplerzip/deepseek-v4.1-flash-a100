@@ -16,7 +16,7 @@ winner=min(eligible,key=lambda r:r['benchmark']['load_latency_p50'])
 if winner['benchmark']['load_latency_p50']>base['benchmark']['load_latency_p50']*.97:winner=base
 report={'status':'SELECTED_PENDING_FULL_ACCEPTANCE','winner':winner['name'],'config':winner['config'],
         'rule':'C32 median completion time, >=3% improvement, C1 decode regression <=5%; fixed k5 and exact C formula',
-        'scope':'bounded batch/memory matrix; not a claim of global optimality; full-context, final-C, quality and stability gates remain',
+        'scope':'bounded batch matrix at fixed memory utilization 0.92; not a claim of global optimality; full-context, final-C, quality and stability gates remain',
         'candidates':rows}
 (directory/'selection.json').write_text(json.dumps(report,indent=2)+'\n')
 (directory/'selected-config.json').write_text(json.dumps(winner['config'],indent=2)+'\n')

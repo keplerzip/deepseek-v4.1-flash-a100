@@ -42,8 +42,8 @@ def resolve(config, concurrency, fixed_blocks=None):
         raise ValueError('DSpark contract changed')
     if not (32 <= concurrency and concurrency % 2 == 0):
         raise ValueError('Invalid concurrency; no silent clamping is performed')
-    if config['gpu_memory_utilization'] not in [0.90,0.92,0.94]:
-        raise ValueError('Memory utilization is outside the bounded tuning matrix')
+    if config['gpu_memory_utilization'] != 0.92:
+        raise ValueError('This deployment is fixed to gpu_memory_utilization=0.92')
     if config['max_num_batched_tokens'] not in [4096,8192,16384]:
         raise ValueError('Batch-token budget is outside the bounded tuning matrix')
     # The user-facing C is global; vLLM's scheduler limit is per DP engine.

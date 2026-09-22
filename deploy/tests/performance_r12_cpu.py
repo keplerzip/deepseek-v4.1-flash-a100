@@ -118,6 +118,7 @@ def main():
     assert parsed.tensor_parallel_size == 4 and parsed.max_num_seqs == 28
     assert parsed.enable_expert_parallel and parsed.enable_eplb
     assert not parsed.language_model_only and parsed.max_model_len == 1048576
+    assert parsed.gpu_memory_utilization == 0.92
     print(json.dumps(dict(status='PASS', gpu_executed=False,
         checks=['DP graph/eager padding control', 'dense dispatch including permuted bias',
                 'EPLB draft isolation and E8M0 storage identity', 'DSML variants', 'Responses engine DP routing',

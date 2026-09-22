@@ -44,11 +44,14 @@ def main():
     assert release['performance_overlay_id']==overlay['id']
     constraints=json.loads((ROOT/'deploy/configs/constraints.json').read_text())
     assert release['context']==constraints['max_model_len']==cfg['max_model_len']
+    assert release['gpu_memory_utilization']==constraints['gpu_memory_utilization']==cfg['gpu_memory_utilization']==0.92
+    assert release['client_api_key_required'] is False
     assert release['concurrency_formula']==constraints['concurrency_formula']
     for name in ('deploy/configs/locked-scheme.json','deploy/manifests/baseline.json'):
         fixed=json.loads((ROOT/name).read_text())
         assert fixed['release']==release['release'] and fixed['tensor_parallel_size']==4 and fixed['data_parallel_size']==2
         assert fixed['context']==release['context']
+        assert fixed['gpu_memory_utilization']==0.92
         assert fixed['concurrency_formula']==release['concurrency_formula']
     assert update['cumulative'] and not update['requires_prior_update']
     assert release['runtime_tag']==update['compatible_initial_image']
