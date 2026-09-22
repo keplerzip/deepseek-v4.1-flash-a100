@@ -42,3 +42,10 @@ projections, and PR #57434 by Fangzhou-Ai
 (commit bea2fcdfcf2ef385db7b93352d98c7ee35739126), per-step ragged top-k reuse.
 The fixed-image MXFP8 loader and SM80 inherited attention path are retained,
 with additional buffer-identity guards. Original Apache-2.0 SPDX notices remain.
+
+R1.4 / 20260922-perf5 adapts vLLM PR #57885 by Woosuk Kwon
+(commit 73ce1d9220507a4d06412983e6cb599ed163eb43), redundant sparse metadata
+removal, and PR #57860 by nehaprakriya
+(commit 2031422bfd952cc65fc1a46a9b570f6f04dc318d), fused ragged indptr/pack.
+The local SM80 port adds a bounded small-batch dispatch, empty-input handling,
+and an independent fallback retaining R1.3 reuse. Apache-2.0 notices remain.

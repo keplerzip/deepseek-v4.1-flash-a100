@@ -48,7 +48,8 @@ class OverlayChecks(unittest.TestCase):
             by_path = {r['path']: r for r in MANIFEST['files']}
             for mhc, indexer, moe in product((False, True), repeat=3):
                 result = perf.plan(DEPLOY, site, Path('/target/deploy'), mhc, indexer, moe)
-                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True, r12=True, r13=True)
+                switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True,
+                                r12=True, r13=True, decode_metadata=True)
                 for row in result['files']:
                     self.assertEqual(row['variant'], 'patched' if switches[by_path[row['path']]['group']] else 'baseline')
 
@@ -69,6 +70,21 @@ class OverlayChecks(unittest.TestCase):
             changed.write_text('unexpected image version')
             with self.assertRaisesRegex(ValueError, 'Unsupported image source'):
                 perf.plan(DEPLOY, site, Path('/target/deploy'), True)
+
+    def test_r14_switch_restores_r13_including_cross_layer_reuse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            site = self.fixture(Path(tmp), True)
+            on = perf.plan(DEPLOY, site, Path('/target/deploy'), True)
+            off = perf.plan(DEPLOY, site, Path('/target/deploy'), True, decode_metadata=False)
+            self.assertTrue(on['decode_metadata_fusion'])
+            self.assertFalse(off['decode_metadata_fusion'])
+            self.assertTrue(off['reuse_topk_ragged'])
+            changed = [b for a, b in zip(on['files'], off['files']) if a['sha256'] != b['sha256']]
+            self.assertEqual({r['path'].rsplit('/', 1)[-1] for r in changed},
+                             {'rocm.py', 'indexer.py', 'sparse_swa.py'})
+            baseline = (OVERLAY/'baseline/vllm/models/deepseek_v4_1/amd/rocm.py').read_text()
+            self.assertIn('def _decode_topk_ragged(', baseline)
+            self.assertNotIn('_pack_global_topk_ragged_fused_kernel', baseline)
 
     def test_modified_payload_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -81,9 +81,9 @@ def apply(payload, target):
     version = json.loads(changes['manifests/update.json'][0])
     env_path = inside(target, 'deployment.env')
     lines = env_path.read_text().splitlines()
-    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC=', 'PERF_INDEXER=', 'PERF_MOE_ALIGN=', 'PERF_DSPARK_KV=', 'PERF_TOPK_REUSE='))]
+    lines = [s for s in lines if not s.startswith(('PERF_NCCL=', 'PERF_MHC=', 'PERF_INDEXER=', 'PERF_MOE_ALIGN=', 'PERF_DSPARK_KV=', 'PERF_TOPK_REUSE=', 'PERF_DECODE_METADATA='))]
     defaults = ['PERF_NCCL=auto', 'PERF_MHC=1', 'PERF_INDEXER=1', 'PERF_MOE_ALIGN=1',
-                'PERF_DSPARK_KV=1', 'PERF_TOPK_REUSE=1']
+                'PERF_DSPARK_KV=1', 'PERF_TOPK_REUSE=1', 'PERF_DECODE_METADATA=1']
     changes['deployment.env'] = (('\n'.join(lines + defaults) + '\n').encode(), 0o600)
     for name in ('runtime/selected-config.json', 'runtime/tuning-active.json'):
         path = inside(target, name)

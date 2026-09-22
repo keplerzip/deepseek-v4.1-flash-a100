@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "id": "20260920-perf4",
-  "release": "1.3.0",
-  "delivery_version": "R1.3",
-  "git_tag": "v1.3.0",
+  "id": "20260922-perf5",
+  "release": "1.4.0",
+  "delivery_version": "R1.4",
+  "git_tag": "v1.4.0",
   "cumulative": true,
   "compatible_initial_image": "deepseek-v4.1-flash-a100:20260913-r1",
   "requires_prior_update": false,
   "includes_weights": false,
   "includes_container_image": false,
-  "readme_source": "docs/performance-update-20260920.md",
+  "readme_source": "docs/performance-update-20260922.md",
   "target_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST"
 }

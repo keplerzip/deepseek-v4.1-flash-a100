@@ -1,0 +1,104 @@
+{
+  "release": "1.4.0",
+  "delivery_version": "R1.4",
+  "source_update": "20260922-perf5",
+  "publication_status": "prerelease_pending_target_GPU_acceptance",
+  "recorded_at": "2026-09-22T06:12:42.845433+00:00",
+  "archive": "deepseek-v4.1-flash-a100-R1.4-update.tar.gz",
+  "archive_bytes": 739101,
+  "archive_sha256": "d90922e9a1bd8721d7b9850824181b2610f46183c6e01c71c1bc95450326d46f",
+  "archive_file_checks": 213,
+  "archive_relative_documentation_links": "PASS",
+  "deploy_manifest_sha256": "ac1ad71fb59c3445dadc5b65800e88ef74067ec80386944093b617b2bf4b4919",
+  "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
+  "cumulative_installer_and_rollback": {
+    "status": "PASS",
+    "archive_sha256": "d90922e9a1bd8721d7b9850824181b2610f46183c6e01c71c1bc95450326d46f",
+    "gpu_executed": false,
+    "cases": [
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.1.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.2.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.3.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.2.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.3.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      }
+    ]
+  },
+  "cumulative_from_initial": true,
+  "requires_R1_2_first": false,
+  "includes_model_weights": false,
+  "includes_image": false,
+  "base64_included": false,
+  "fixed_model": "DeepSeek-V4.1-Flash",
+  "dspark_k": 5,
+  "context": 262144,
+  "TP": 4,
+  "DP": 2,
+  "EP": 8,
+  "performance_optimizations": [
+    "persistent_SWA_validity_output",
+    "prefill_only_compressed_lengths",
+    "bounded_fused_ragged_indptr_pack",
+    "cumulative_R1_3_and_earlier_optimizations"
+  ],
+  "target_GPU_tested": false,
+  "target_speed_measured": false,
+  "newapi_modified": false,
+  "release_url": "https://github.com/keplerzip/deepseek-v4.1-flash-a100/releases/tag/v1.4.0",
+  "receipt_note": "Produced after testing this exact final archive; this receipt is published separately and is not a member of that archive.",
+  "requires_R1_3_first": false,
+  "fused_indptr_max_rows": 1024,
+  "new_feature_default": "PERF_DECODE_METADATA=1",
+  "local_full_delivery_source_synced": true,
+  "local_full_delivery_model_or_image_rewritten": false
+}

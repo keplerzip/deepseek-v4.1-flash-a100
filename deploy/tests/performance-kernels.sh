@@ -22,5 +22,6 @@ timeout --signal=TERM --kill-after=15s 1800s sudo -n docker run --rm --pull neve
   -u /offline-tests/performance_kernels.py --output "/state/$run/kernels.json" \
   --mhc "$PERF_MHC" --indexer "$PERF_INDEXER" --moe-align "$PERF_MOE_ALIGN" \
   --dspark-kv "$PERF_DSPARK_KV" --topk-reuse "$PERF_TOPK_REUSE" \
+  --decode-metadata "$PERF_DECODE_METADATA" \
   2>&1 | tee "$STATE_DIR/$run/kernels.log"
 printf 'Kernel report: %s/%s/kernels.json\n' "$STATE_DIR" "$run"

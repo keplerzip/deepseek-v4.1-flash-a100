@@ -321,6 +321,59 @@ def _pack_global_topk_ragged_kernel(
     tl.store(global_topk_ragged_ptr + out_start + offset, slot_ids, mask=mask)
 
 
+@triton.jit
+def _pack_global_topk_ragged_fused_kernel(
+    global_topk_ragged_ptr,
+    topk_indptr_ptr,
+    topk_lens_ptr,
+    num_tokens,
+    topk_indices_ptr,
+    topk_indices_stride,
+    token_to_req_indices_ptr,
+    block_table_ptr,
+    block_table_stride,
+    block_size,
+    topk,
+    BLOCK_SIZE: tl.constexpr,
+    NTOK_PAD: tl.constexpr,
+):
+    token_idx = tl.program_id(0)
+    block_idx = tl.program_id(1)
+    offset = block_idx * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
+
+    # R1.4, adapted from vLLM #57860. Each program computes its prefix
+    # directly from lengths; no inter-program dependency on indptr writes.
+    rows = tl.arange(0, NTOK_PAD)
+    lengths = tl.load(topk_lens_ptr + rows, mask=rows < num_tokens, other=0)
+    out_start = tl.sum(tl.where(rows < token_idx, lengths, 0), axis=0)
+    out_len = tl.load(topk_lens_ptr + token_idx)
+    if block_idx == 0:
+        if token_idx == 0:
+            tl.store(topk_indptr_ptr, 0)
+        tl.store(topk_indptr_ptr + token_idx + 1, out_start + out_len)
+    # Write every indptr entry even for padded/empty rows, before returning.
+    if block_idx * BLOCK_SIZE >= out_len:
+        return
+
+    req_idx = tl.load(token_to_req_indices_ptr + token_idx)
+    mask = (offset < out_len) & (offset < topk)
+    local_idx = tl.load(
+        topk_indices_ptr + token_idx * topk_indices_stride + offset,
+        mask=mask,
+        other=-1,
+    )
+    valid = mask & (local_idx >= 0)
+    block_indices = local_idx // block_size
+    block_numbers = tl.load(
+        block_table_ptr + req_idx * block_table_stride + block_indices,
+        mask=valid,
+        other=0,
+    )
+    block_offsets = local_idx % block_size
+    slot_ids = tl.where(valid, block_numbers * block_size + block_offsets, -1)
+    tl.store(global_topk_ragged_ptr + out_start + offset, slot_ids, mask=mask)
+
+
 def compute_global_topk_ragged_indices_and_indptr(
     topk_indices: torch.Tensor,
     token_to_req_indices: torch.Tensor,
@@ -328,11 +381,13 @@ def compute_global_topk_ragged_indices_and_indptr(
     block_size: int,
     is_valid_token: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    topk_indices = topk_indices.reshape(topk_indices.shape[0], -1).contiguous()
+    topk_indices = topk_indices.flatten(start_dim=1).contiguous()
     num_tokens = topk_indices.shape[0]
     topk = topk_indices.shape[1]
 
     topk_lens = torch.empty(num_tokens, dtype=torch.int32, device=topk_indices.device)
+    if num_tokens == 0:
+        return (topk_lens, torch.zeros(1, dtype=torch.int32, device=topk_indices.device), topk_lens)
     _compute_topk_lens_kernel[(num_tokens,)](
         topk_lens,
         topk_indices,
@@ -342,7 +397,13 @@ def compute_global_topk_ragged_indices_and_indptr(
         TRITON_BLOCK_SIZE=1024,
     )
 
-    topk_indptr = _build_indptr_from_lengths(topk_lens)
+    # The fused prefix is quadratic in row count. Bound it to small decode
+    # batches; larger batches and zero-width input retain the R1.3 scan.
+    fuse_indptr = num_tokens <= 1024 and topk > 0
+    topk_indptr = (
+        torch.empty(num_tokens + 1, dtype=torch.int32, device=topk_indices.device)
+        if fuse_indptr else _build_indptr_from_lengths(topk_lens)
+    )
     global_topk_ragged = torch.empty(
         num_tokens * topk,
         dtype=torch.int32,
@@ -350,6 +411,14 @@ def compute_global_topk_ragged_indices_and_indptr(
     )
     if global_topk_ragged.numel() > 0:
         block = 128
+        if fuse_indptr:
+            _pack_global_topk_ragged_fused_kernel[(num_tokens, triton.cdiv(topk, block))](
+                global_topk_ragged, topk_indptr, topk_lens, num_tokens,
+                topk_indices, topk_indices.stride(0), token_to_req_indices,
+                block_table, block_table.stride(0), block_size, topk,
+                BLOCK_SIZE=block, NTOK_PAD=triton.next_power_of_2(num_tokens),
+            )
+            return global_topk_ragged, topk_indptr, topk_lens
         _pack_global_topk_ragged_kernel[(num_tokens, triton.cdiv(topk, block))](
             global_topk_ragged,
             topk_indptr,

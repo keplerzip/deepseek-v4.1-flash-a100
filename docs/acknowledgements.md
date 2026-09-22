@@ -34,3 +34,7 @@
 ## R1.3 / 20260920-perf4
 
 感谢 Juntian777 的 [vLLM #57627](https://github.com/vllm-project/vllm/pull/57627)（`f0defc90f6645242ee61bccecd6146f385cff4b7`）与 Fangzhou-Ai 的 [vLLM #57434](https://github.com/vllm-project/vllm/pull/57434)（`bea2fcdfcf2ef385db7b93352d98c7ee35739126`）。本版分别适配 DSpark context KV 合并投影和跨层 ragged top-k 复用，针对固定原镜像保留原生 scale 加载、SM80 继承路径和更严格的输入缓冲区检查；不宣称上游其他 GPU 的测试结果适用于本机。修改仍使用 Apache-2.0，并保留原文件 SPDX。
+
+## R1.4 / 20260922-perf5
+
+感谢 Woosuk Kwon / WoosukKwon 的 [vLLM #57885](https://github.com/vllm-project/vllm/pull/57885)（`73ce1d9220507a4d06412983e6cb599ed163eb43`）及 nehaprakriya 的 [#57860](https://github.com/vllm-project/vllm/pull/57860)（`2031422bfd952cc65fc1a46a9b570f6f04dc318d`）。本版移植稀疏注意力冗余元数据清理和 ragged indptr/pack 融合，针对 A100 实际继承路径增加 1024 行上限、空输入处理及独立回退，继续保留 R1.3 索引复用。代码保留 Apache-2.0 SPDX；其他 GPU 的微基准不作为本机提速承诺。

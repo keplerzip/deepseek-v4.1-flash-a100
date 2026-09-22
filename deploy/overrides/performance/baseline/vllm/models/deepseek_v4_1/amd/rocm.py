@@ -5,6 +5,8 @@ import functools
 from dataclasses import dataclass
 from typing import cast
 
+import os
+
 import torch
 
 from vllm.distributed import (
@@ -13,7 +15,7 @@ from vllm.distributed import (
 )
 from vllm.forward_context import get_forward_context
 from vllm.logger import init_logger
-from vllm.models.deepseek_v4_1.attention import DeepseekV4Attention
+from vllm.models.deepseek_v4_1.attention import DeepseekV4Attention, _replace_layer_index
 from vllm.models.deepseek_v4_1.common.ops import dequantize_and_gather_k_cache
 from vllm.models.deepseek_v4_1.sparse_mla import (
     DeepseekV4FlashMLAMetadata,
@@ -498,6 +500,17 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
         self._fused_compressor_weight: torch.Tensor | None
         self.register_buffer("_fused_compressor_weight", None, persistent=False)
         self._fused_compressor_split_sizes: tuple[int, int] | None = None
+        # R1.3: Ampere inherits this same Triton path. The index-producing
+        # layer owns the cache and invalidates it on every eager/captured step.
+        self._reuse_topk_ragged = os.environ.get("VLLM_DSV41_REUSE_TOPK_RAGGED", "1") == "1"
+        self._topk_ragged_cache: dict[tuple, tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = {}
+        self._index_source_prefix: str | None = None
+        if self._reuse_topk_ragged and self.compress_ratio > 0:
+            assert self.index_source_layer_id is not None
+            self._index_source_prefix = _replace_layer_index(self.prefix, self.index_source_layer_id)
+            if self._index_source_prefix not in self._static_forward_context:
+                raise NotImplementedError("Index source is outside this rank; cannot reuse ragged metadata")
+        logger.info_once("R1.3 Ampere/ROCm ragged top-k reuse: %s", self._reuse_topk_ragged)
 
     @classmethod
     def get_padded_num_q_heads(cls, num_heads: int) -> int:
@@ -730,6 +743,51 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
                 output=output[:num_decode_tokens],
             )
 
+    def _decode_topk_ragged(
+        self,
+        swa_metadata: DeepseekV4ROCMAiterSparseSWAMetadata,
+        attn_metadata: DeepseekV4FlashMLAMetadata,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Reuse this step's pack only for identical input buffers and geometry.
+
+        The owner runs before every consumer of its indices. Capture records
+        the build once and all consumers read those graph-owned output buffers.
+        Replays execute the recorded build; no Python cache crosses replay steps.
+        """
+        assert swa_metadata.is_valid_token is not None
+        assert self.topk_indices_buffer is not None
+        tokens, requests = swa_metadata.num_decode_tokens, swa_metadata.num_decodes
+        source = None
+        if self._reuse_topk_ragged:
+            assert self._index_source_prefix is not None
+            source = self._static_forward_context[self._index_source_prefix]
+            if source is self:
+                source._topk_ragged_cache.clear()
+            # Unlike a ratio-only key, this also isolates distinct KV groups,
+            # validity masks or block-table views without reading GPU values.
+            key = (
+                self.compress_ratio, attn_metadata.block_size, tokens, requests,
+                self.topk_indices_buffer.data_ptr(), self.topk_indices_buffer.stride(),
+                attn_metadata.block_table.data_ptr(), attn_metadata.block_table.stride(),
+                tuple(attn_metadata.block_table.shape),
+                swa_metadata.token_to_req_indices.data_ptr(),
+                swa_metadata.token_to_req_indices.stride(),
+                swa_metadata.is_valid_token.data_ptr(), swa_metadata.is_valid_token.stride(),
+            )
+            cached = source._topk_ragged_cache.get(key)
+            if cached is not None:
+                return cached
+        built = compute_global_topk_ragged_indices_and_indptr(
+            self.topk_indices_buffer[:tokens],
+            swa_metadata.token_to_req_indices,
+            attn_metadata.block_table[:requests],
+            attn_metadata.block_size // self.compress_ratio,
+            swa_metadata.is_valid_token[:tokens],
+        )
+        if source is not None:
+            source._topk_ragged_cache[key] = built
+        return built
+
     def _forward_decode(
         self,
         q: torch.Tensor,
@@ -746,22 +804,9 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
         topk_ragged_indices = None
         topk_ragged_indptr = None
         if not swa_only:
-            # Local indices filled by the index-source layer's indexer.
             assert attn_metadata is not None
-            assert swa_metadata.is_valid_token is not None
-            assert self.topk_indices_buffer is not None
-            block_size = attn_metadata.block_size // self.compress_ratio
-            is_valid = swa_metadata.is_valid_token[:num_decode_tokens]
-            (
-                topk_ragged_indices,
-                topk_ragged_indptr,
-                topk_lens,
-            ) = compute_global_topk_ragged_indices_and_indptr(
-                self.topk_indices_buffer[:num_decode_tokens],
-                swa_metadata.token_to_req_indices,
-                attn_metadata.block_table[:num_decodes],
-                block_size,
-                is_valid,
+            topk_ragged_indices, topk_ragged_indptr, topk_lens = self._decode_topk_ragged(
+                swa_metadata, attn_metadata
             )
 
         rocm_sparse_attn_decode(

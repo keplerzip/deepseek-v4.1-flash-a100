@@ -14,10 +14,11 @@ PERF_INDEXER=1
 PERF_MOE_ALIGN=1
 PERF_DSPARK_KV=1
 PERF_TOPK_REUSE=1
+PERF_DECODE_METADATA=1
 while IFS='=' read -r key value; do
   [[ -z "$key" || "$key" == \#* ]] && continue
   case "$key" in
-    MODEL_DIR|BIND_HOST|API_PORT|START_TIMEOUT_SECONDS|NEWAPI_BASE_URL|CONTAINERD_ROOT_DIR|PERF_NCCL|PERF_MHC|PERF_INDEXER|PERF_MOE_ALIGN|PERF_DSPARK_KV|PERF_TOPK_REUSE) printf -v "$key" '%s' "$value" ;;
+    MODEL_DIR|BIND_HOST|API_PORT|START_TIMEOUT_SECONDS|NEWAPI_BASE_URL|CONTAINERD_ROOT_DIR|PERF_NCCL|PERF_MHC|PERF_INDEXER|PERF_MOE_ALIGN|PERF_DSPARK_KV|PERF_TOPK_REUSE|PERF_DECODE_METADATA) printf -v "$key" '%s' "$value" ;;
     *) printf 'Unknown deployment setting: %s\n' "$key" >&2; exit 2 ;;
   esac
 done < "$DEPLOY_DIR/deployment.env"
@@ -34,6 +35,7 @@ MODEL_DIR=$(realpath -e -- "$MODEL_DIR")
 [[ "$PERF_MOE_ALIGN" == 0 || "$PERF_MOE_ALIGN" == 1 ]] || { echo 'PERF_MOE_ALIGN must be 0 or 1' >&2; exit 2; }
 [[ "$PERF_DSPARK_KV" == 0 || "$PERF_DSPARK_KV" == 1 ]] || { echo 'PERF_DSPARK_KV must be 0 or 1' >&2; exit 2; }
 [[ "$PERF_TOPK_REUSE" == 0 || "$PERF_TOPK_REUSE" == 1 ]] || { echo 'PERF_TOPK_REUSE must be 0 or 1' >&2; exit 2; }
+[[ "$PERF_DECODE_METADATA" == 0 || "$PERF_DECODE_METADATA" == 1 ]] || { echo 'PERF_DECODE_METADATA must be 0 or 1' >&2; exit 2; }
 IMAGE_TAG=deepseek-v4.1-flash-a100:20260913-r1
 ENGINE_NAME=deepseek-v4.1-flash-engine
 FRONTEND_NAME=deepseek-v4.1-flash-api
@@ -128,6 +130,7 @@ prepare_performance() {
   image_python /deploy/scripts/performance.py --host-deploy "$DEPLOY_DIR" \
     --mhc "$PERF_MHC" --indexer "$PERF_INDEXER" --moe-align "$PERF_MOE_ALIGN" \
     --dspark-kv "$PERF_DSPARK_KV" --topk-reuse "$PERF_TOPK_REUSE" \
+    --decode-metadata "$PERF_DECODE_METADATA" \
     --nccl "$PERF_NCCL" --record "/state/$run/performance.json" \
     > "$STATE_DIR/$run/performance-mounts.nul"
   mapfile -d '' -t PERFORMANCE_MOUNTS < "$STATE_DIR/$run/performance-mounts.nul"
@@ -148,7 +151,7 @@ launch_engine() {
     entrypoint_args=(--entrypoint /usr/bin/env)
     entry_command=(-u NCCL_ALGO -u NCCL_PROTO vllm serve)
   fi
-  printf 'R1.3 TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE"
+  printf 'R1.4 TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s decode-metadata=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE" "$PERF_DECODE_METADATA"
   docker run -d --pull never --name "$ENGINE_NAME" --label dsv41.owner=offline-delivery \
     "${CONTAINER_USER_ARGS[@]}" \
     --gpus all --ipc host --ulimit memlock=-1:-1 --ulimit stack=67108864:67108864 \

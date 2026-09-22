@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
     rows = []
     version_expected = json.loads((ROOT / 'deploy/manifests/update.json').read_text())
-    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.0.0', True), ('v1.2.0', True)):
+    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.3.0', False), ('v1.0.0', True), ('v1.2.0', True), ('v1.3.0', True)):
         with tempfile.TemporaryDirectory(prefix='dsv41-upgrade-') as temp:
             tmp = Path(temp)
             old = subprocess.check_output(['git','archive',ref,'deploy'], cwd=ROOT)
@@ -56,6 +56,7 @@ def main():
                 version=json.loads((target/'manifests/update.json').read_text())
                 assert version['release']==version_expected['release'] and version['cumulative']
                 assert 'CONTAINERD_ROOT_DIR=/kept/containerd' in (target/'deployment.env').read_text()
+                assert 'PERF_DECODE_METADATA=1' in (target/'deployment.env').read_text()
                 subprocess.run(['sudo','-n','docker','run','--rm','--pull','never','--network','none',
                     '--user',f'{os.getuid()}:{os.getgid()}',
                     '--entrypoint','/usr/bin/python3','-e','PYTHONDONTWRITEBYTECODE=1',

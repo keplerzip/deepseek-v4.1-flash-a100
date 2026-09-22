@@ -1,5 +1,5 @@
 {
-  "id": "20260920-perf4",
+  "id": "20260922-perf5",
   "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
   "upstream_prs": [
     {
@@ -187,14 +187,28 @@
     },
     {
       "path": "vllm/models/deepseek_v4_1/amd/rocm.py",
-      "group": "r13",
+      "group": "decode_metadata",
       "base_sha256": "b74d9d75b29b81530b0f458f7d87d80bc6907949f4b94d22b70c649f9b521bea",
-      "baseline_sha256": "b74d9d75b29b81530b0f458f7d87d80bc6907949f4b94d22b70c649f9b521bea",
-      "patched_sha256": "160dd9b8d8796f74205da2083edd7f56f8183d481d88850a728ce5072ffed10f"
+      "baseline_sha256": "160dd9b8d8796f74205da2083edd7f56f8183d481d88850a728ce5072ffed10f",
+      "patched_sha256": "9d9136eec7149ee1fa959f1b3400d618d9bb67070061f320ec9d16e3fed08ff7"
+    },
+    {
+      "path": "vllm/v1/attention/backends/mla/indexer.py",
+      "group": "decode_metadata",
+      "base_sha256": "b2b4ddb0cdb1368647329e848123c628d64d8ef67493cc7772d1754d75755e92",
+      "baseline_sha256": "b2b4ddb0cdb1368647329e848123c628d64d8ef67493cc7772d1754d75755e92",
+      "patched_sha256": "e19319c180ffd64c139f2e38c53acb89db34a69b88600e350c8ff7296a43d0f1"
+    },
+    {
+      "path": "vllm/v1/attention/backends/mla/sparse_swa.py",
+      "group": "decode_metadata",
+      "base_sha256": "15db794abea3be63f610ad210f2fd215d8dee4d596cd47027b7edf698439c206",
+      "baseline_sha256": "15db794abea3be63f610ad210f2fd215d8dee4d596cd47027b7edf698439c206",
+      "patched_sha256": "b2a87a6a91831b7f34df4d502dd7e088f7b9b89e92e5942ccd59ef925b5b19bc"
     }
   ],
   "gpu_validated": false,
-  "release": "1.3.0",
+  "release": "1.4.0",
   "upstream_sources": [
     {
       "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx",
@@ -241,6 +255,18 @@
       "commit": "bea2fcdfcf2ef385db7b93352d98c7ee35739126",
       "r13": true,
       "component": "Ampere inherited ragged top-k reuse; additional buffer/geometry guards"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57885",
+      "commit": "73ce1d9220507a4d06412983e6cb599ed163eb43",
+      "r14": true,
+      "component": "persistent SWA validity output; prefill-only compressed lengths"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57860",
+      "commit": "2031422bfd952cc65fc1a46a9b570f6f04dc318d",
+      "r14": true,
+      "component": "fused ragged indptr/pack; local <=1024-row bound and empty-input handling"
     }
   ]
 }

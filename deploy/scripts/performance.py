@@ -13,11 +13,12 @@ def digest(path):
 
 
 def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True,
-         dspark_kv=True, topk_reuse=True):
+         dspark_kv=True, topk_reuse=True, decode_metadata=True):
     root = deploy / 'overrides/performance'
     manifest = json.loads((root / 'manifest.json').read_text())
     rows = []
-    enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True, 'r12': True, 'r13': True}
+    enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True,
+               'r12': True, 'r13': True, 'decode_metadata': decode_metadata}
     for item in manifest['files']:
         name = item['path']
         rel = Path(name)
@@ -46,6 +47,7 @@ def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True,
             'custom_ep8_collectives': True, 'cuda_sparse_decode_warps': 8,
             'cuda_shared_expert_overlap': True, 'eplb_target_only': True,
             'stacked_dspark_context_kv': bool(dspark_kv), 'reuse_topk_ragged': bool(topk_reuse),
+            'decode_metadata_fusion': bool(decode_metadata), 'fused_indptr_max_rows': 1024,
             'manifest_sha256': digest(root / 'manifest.json')}
 
 
@@ -59,11 +61,12 @@ def main():
     parser.add_argument('--moe-align', type=int, choices=(0, 1), default=1)
     parser.add_argument('--dspark-kv', type=int, choices=(0, 1), default=1)
     parser.add_argument('--topk-reuse', type=int, choices=(0, 1), default=1)
+    parser.add_argument('--decode-metadata', type=int, choices=(0, 1), default=1)
     parser.add_argument('--nccl', choices=('auto', 'legacy'), default='auto')
     parser.add_argument('--record', type=Path)
     args = parser.parse_args()
     result = plan(args.deploy, args.site, args.host_deploy, args.mhc, args.indexer, args.moe_align,
-                  args.dspark_kv, args.topk_reuse)
+                  args.dspark_kv, args.topk_reuse, args.decode_metadata)
     result['nccl_selection'] = args.nccl
     if args.record:
         args.record.write_text(json.dumps(result, indent=2) + '\n')

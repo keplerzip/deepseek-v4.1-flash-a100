@@ -1,0 +1,259 @@
+{
+  "status": "PASS",
+  "release": "1.4.0",
+  "delivery_version": "R1.4",
+  "source_update": "20260922-perf5",
+  "recorded_at": "2026-09-22T06:10:08.020593+00:00",
+  "scope": "Build-host source, CPU controls/native MXFP8 loading, production metadata prefixes/Triton CPU interpretation, original-image protocol schemas and SM80 AOT compilation; no GPU execution",
+  "model": "DeepSeek-V4.1-Flash",
+  "context": 262144,
+  "dspark_k": 5,
+  "tensor_parallel_size": 4,
+  "data_parallel_size": 2,
+  "expert_parallel_size": 8,
+  "vision_enabled": true,
+  "engram_cpu_offload": true,
+  "reused_image": "deepseek-v4.1-flash-a100:20260913-r1",
+  "reused_image_id": "sha256:29e46788ca2667042d06b496e92f6d38c7b50bee16f5b1d211e9229e68907403",
+  "checks": {
+    "dspark_contract_tests": 5,
+    "overlay_integrity_tests": 6,
+    "r12_routing_and_capacity_tests": 3,
+    "update_transaction_tests": 4,
+    "archive_validation_tests": 5,
+    "r11_indexer_dispatch_tests": 3,
+    "mhc_control_flow_and_image_padding_cpu": "PASS",
+    "r12_dense_DP_EPLB_DSML_Responses_and_CLI_CPU": "PASS",
+    "r13_real_merged_MXFP8_loader_cases": 4,
+    "r13_cache_builds_checked_against_reference": 13,
+    "vision_schema_cases": 9,
+    "asgi_guard_cases": 11,
+    "triton_sm80_compile_variants": {
+      "r12-sm80-compile.json": 6,
+      "r13-sm80-compile.json": 6,
+      "r14-sm80-compile.json": 7,
+      "sm80-compile.json": 25
+    },
+    "source_syntax_links_and_checksums": "PASS",
+    "r14_reproduced_from_v13_overlay_files": 52,
+    "r14_production_builder_prefixes": {
+      "status": "PASS",
+      "gpu_executed": false,
+      "whole_builder_executed": false,
+      "cases": [
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 1,
+          "prefill": false,
+          "old_divisions": 0,
+          "new_divisions": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 1,
+          "prefill": true,
+          "old_divisions": 0,
+          "new_divisions": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 4,
+          "prefill": false,
+          "old_divisions": 1,
+          "new_divisions": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 4,
+          "prefill": true,
+          "old_divisions": 1,
+          "new_divisions": 1,
+          "status": "PASS"
+        },
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 8,
+          "prefill": false,
+          "old_divisions": 1,
+          "new_divisions": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "indexer-builder-prefix",
+          "ratio": 8,
+          "prefill": true,
+          "old_divisions": 1,
+          "new_divisions": 1,
+          "status": "PASS"
+        },
+        {
+          "kind": "swa-builder-prefix",
+          "tokens": 0,
+          "persistent_output": true,
+          "old_copies": 1,
+          "new_copies": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "swa-builder-prefix",
+          "tokens": 1,
+          "persistent_output": true,
+          "old_copies": 1,
+          "new_copies": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "swa-builder-prefix",
+          "tokens": 6,
+          "persistent_output": true,
+          "old_copies": 1,
+          "new_copies": 0,
+          "status": "PASS"
+        },
+        {
+          "kind": "swa-builder-prefix",
+          "tokens": 33,
+          "persistent_output": true,
+          "old_copies": 1,
+          "new_copies": 0,
+          "status": "PASS"
+        }
+      ]
+    },
+    "r14_production_triton_CPU_interpretation": {
+      "status": "PASS",
+      "scope": "production Triton CPU interpreter vs independent slot mapping",
+      "gpu_executed": false,
+      "cases": [
+        {
+          "rows": 0,
+          "width": 512,
+          "initially_all_padding": false,
+          "fused": false,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 3,
+          "width": 0,
+          "initially_all_padding": false,
+          "fused": false,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 1,
+          "width": 1,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 2,
+          "width": 17,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 6,
+          "width": 512,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 6,
+          "width": 512,
+          "initially_all_padding": true,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 168,
+          "width": 512,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 336,
+          "width": 129,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 1024,
+          "width": 17,
+          "initially_all_padding": false,
+          "fused": true,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        },
+        {
+          "rows": 1025,
+          "width": 17,
+          "initially_all_padding": false,
+          "fused": false,
+          "changed_inputs_checked": true,
+          "status": "PASS"
+        }
+      ]
+    },
+    "source_checked_files": 208
+  },
+  "runtime_evidence_sha256": {
+    "guard-schema.log": "d3790f07e162371507a310df42fe0ef565d7ec7115bb0a7bffe350b05754bff5",
+    "r11-cpu.log": "bf282eab2dfbbf8bd27f14ab5f1ad168e3d0f93161f93708ffd6024170faa2c3",
+    "r12-cpu.log": "077b20fb0ead2bcb4c41995cc898600b7a18ac4dbef64e44d2d3a78845ba4273",
+    "r12-sm80-compile.json": "d6279a3698723be7d864690ffb70c91522743b19156ecc4caabea9eafea51fd2",
+    "r12-sm80-compile.log": "159dc93e580cad2d889df01f6a97712ba27ec25fae5cdba1b46c5ba934590d30",
+    "r13-cpu.log": "36a489fb9af6b5f3b35e0c193e45bdb79a2c6b1ea7610007ac067d69df9cb624",
+    "r13-sm80-compile.json": "3bff508e4e0478349860f9283424abd5ddcab6d1f21a8cdb916a100d385091c5",
+    "r13-sm80-compile.log": "9a55226d78548d30ebd72d1bcdf11dca93cbb1e453639848a50e828db5a93b38",
+    "r14-cpu.log": "2c7e1166a3ed349238c1b98afba1c7d9ed33e66173f09722ec4ed65f9cab6dd0",
+    "r14-interpreter.log": "cab3a5ee7e12b03384e504b6d1f5bf3ef7957a01e3bd540f2415344c44c7b07a",
+    "r14-sm80-compile.json": "30150efe0bc081e5a09cdc940d091a1c81a1d09ca1711372d30ee2f7f6edb29b",
+    "r14-sm80-compile.log": "f5a8da7beb18ca5bb65fba6ae03fbb74f94ee08fb3aba91a54313d7af6a8d8ce",
+    "runtime-cpu.log": "d812a5fadf0a75418bc5746c7b1776cdaedf798aee5687edd59489d2288c6f35",
+    "sm80-compile.json": "896d5793d0ab6d2ce8144a51f4a7d5a8d10b24d7ab2750e66b750c5cecc4c673",
+    "sm80-compile.log": "d2d7930411d11abdcb6b4d0599f9166d2720c1e49231706f859c8197d5692797",
+    "vision-schema.log": "29aaac877da5ec6c362f42dc870c2c90999f79857cc9b8ae3498f83f4230d0c6"
+  },
+  "deploy_manifest_sha256": "ac1ad71fb59c3445dadc5b65800e88ef74067ec80386944093b617b2bf4b4919",
+  "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
+  "new_gpu_math_tested": false,
+  "new_gpu_performance_measured": false,
+  "full_model_gpu_import_tested": false,
+  "base_image_rebuilt": false,
+  "model_changed": false,
+  "base64_included": false,
+  "target_acceptance": "Required: cumulative GPU numeric checks plus new fused metadata/SWA graph replays, EP8 communication, both DP engines, capacity calibration, protocols, multimodal, long context, speed and stability",
+  "small_update": {
+    "filename": "deepseek-v4.1-flash-a100-R1.4-update.tar.gz",
+    "cumulative_from_initial": true,
+    "prior_update_required": false,
+    "contains_image": false,
+    "contains_weights": false
+  },
+  "artifact_install_and_rollback_evidence": "The final archive is tested after packaging; its SHA256 and actual cumulative installer results are published separately in reports/r14-delivery.json and the release receipt.",
+  "selected_upstream_PRs": [
+    57885,
+    57860
+  ],
+  "deferred_candidates": [
+    "57435 inverse RoPE floating-point fusion",
+    "56625 vision encoder CUDA Graph",
+    "57651 shared Engram RAM table"
+  ]
+}
