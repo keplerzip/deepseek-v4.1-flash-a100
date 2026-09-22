@@ -151,7 +151,7 @@ launch_engine() {
     entrypoint_args=(--entrypoint /usr/bin/env)
     entry_command=(-u NCCL_ALGO -u NCCL_PROTO vllm serve)
   fi
-  printf 'R1.4 TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s decode-metadata=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE" "$PERF_DECODE_METADATA"
+  printf 'R1.5 / 1M TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s decode-metadata=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE" "$PERF_DECODE_METADATA"
   docker run -d --pull never --name "$ENGINE_NAME" --label dsv41.owner=offline-delivery \
     "${CONTAINER_USER_ARGS[@]}" \
     --gpus all --ipc host --ulimit memlock=-1:-1 --ulimit stack=67108864:67108864 \

@@ -1,0 +1,67 @@
+{
+  "status": "PASS",
+  "release": "1.5.0",
+  "delivery_version": "R1.5",
+  "source_update": "20260922-context1m",
+  "recorded_at": "2026-09-22T06:42:51.475702+00:00",
+  "scope": "Build-host source, per-DP capacity/start-seed contracts, offline original-image CPU controls and CLI schema; no GPU execution",
+  "model": "DeepSeek-V4.1-Flash",
+  "context": 1048576,
+  "dspark_k": 5,
+  "tensor_parallel_size": 4,
+  "data_parallel_size": 2,
+  "expert_parallel_size": 8,
+  "concurrency_formula": "max(32,2*sum(dp_effective_kv_tokens//1048576))",
+  "minimum_concurrency": 32,
+  "vision_enabled": true,
+  "engram_cpu_offload": true,
+  "decode_cuda_graph": "FULL_DECODE_ONLY",
+  "vision_encoder_cuda_graph": false,
+  "native_model_config": {
+    "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+    "config_sha256": "8be45ce0476004a3f529fd896115a4a2e800a129ad2d3ec05b16050f52e21879",
+    "max_position_embeddings": 1048576,
+    "rope_or_weights_modified": false
+  },
+  "reused_image": "deepseek-v4.1-flash-a100:20260913-r1",
+  "reused_image_id": "sha256:29e46788ca2667042d06b496e92f6d38c7b50bee16f5b1d211e9229e68907403",
+  "checks": {
+    "source_syntax_links_and_checksums": "PASS",
+    "dspark_capacity_and_start_seed_contract_tests": 8,
+    "overlay_integrity_tests": 6,
+    "r12_routing_and_capacity_tests": 3,
+    "update_transaction_tests": 4,
+    "archive_validation_tests": 5,
+    "original_image_cpu_controls_and_1m_cli": "PASS",
+    "runtime_config_changed_fields": [
+      "max_model_len"
+    ],
+    "performance_overlay_byte_identical_to": "v1.4.0",
+    "historical_installer_checks": "See the separately published r15-delivery.json, produced against the final archive"
+  },
+  "raw_runtime_log_sha256": "04d495a1c57b05e075ca5ad1f47cfd7cf97eb21da3b99858c90e2a565fc1a058",
+  "performance_overlay_id": "20260922-perf5",
+  "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
+  "inherited_kernel_build_evidence": "performance-update-20260922.build.json",
+  "target_acceptance_bundled": {
+    "dp_ranks": [
+      0,
+      1
+    ],
+    "long_input_budgets": [
+      32768,
+      65536,
+      131072,
+      258048,
+      524288,
+      1044480
+    ],
+    "long_output_budget": 4096,
+    "full_window_input_target": 1048064,
+    "full_window_output_budget": 512
+  },
+  "target_gpu_tested": false,
+  "target_1m_capacity_measured": false,
+  "target_speed_measured": false,
+  "newapi_modified": false
+}

@@ -22,7 +22,7 @@ active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 {
   performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE$PERF_DECODE_METADATA|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
   if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking R1.4 SM80 kernels, DSpark KV loading, ragged metadata and EP8 communication once before model loading.\n'
+    printf 'Checking inherited R1.4 SM80 kernels, DSpark KV loading, ragged metadata and EP8 communication before the R1.5 / 1M model launch.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
     bash "$DEPLOY_DIR/tests/performance-ep8.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
@@ -35,10 +35,8 @@ if docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
 else
   docker network create --internal --label dsv41.owner=offline-delivery "$NETWORK_NAME" >/dev/null
 fi
-concurrency=32
-if [[ -f "$STATE_DIR/capacity.json" ]] && [[ $(op get /state/capacity.json topology 2>/dev/null || true) == TP4-DP2-EP8 ]]; then
-  concurrency=$(op get /state/capacity.json required_concurrency)
-fi
+# R1.4's TP4/DP2 capacity still describes 256K and cannot seed a 1M launch.
+concurrency=$(op initial-concurrency /state/capacity.json)
 config=/deploy/configs/runtime.json
 [[ ! -f "$STATE_DIR/selected-config.json" ]] || config=/state/selected-config.json
 [[ ! -f "$STATE_DIR/tuning-active.json" ]] || config=/state/tuning-active.json
@@ -98,5 +96,5 @@ for attempt in 1 2 3 4 5 6; do
 done
 [[ "$completed" == true ]] || fail 'Capacity did not converge within six launches; reports retained, no context or concurrency downgrade applied'
 bash "$DEPLOY_DIR/scripts/local-access.sh"
-printf 'Model: DeepSeek-V4.1-Flash\nContext: 262144\nConcurrency: %s\nAPI port: %s\nClient API key: not required (loopback and Docker bridges only)\n' "$concurrency" "$API_PORT"
+printf 'Model: DeepSeek-V4.1-Flash\nContext: 1048576 (1M, input plus output)\nConcurrency: %s\nAPI port: %s\nClient API key: not required (loopback and Docker bridges only)\n' "$concurrency" "$API_PORT"
 printf 'GPU smoke/capacity passed. Full acceptance, speed selection and stability require tests/run-all.sh.\n'

@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
     rows = []
     version_expected = json.loads((ROOT / 'deploy/manifests/update.json').read_text())
-    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.3.0', False), ('v1.0.0', True), ('v1.2.0', True), ('v1.3.0', True)):
+    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.3.0', False), ('v1.4.0', False), ('v1.0.0', True), ('v1.2.0', True), ('v1.3.0', True), ('v1.4.0', True)):
         with tempfile.TemporaryDirectory(prefix='dsv41-upgrade-') as temp:
             tmp = Path(temp)
             old = subprocess.check_output(['git','archive',ref,'deploy'], cwd=ROOT)
@@ -43,6 +43,10 @@ def main():
             (target/'runtime').mkdir(exist_ok=True)
             evidence=target/'runtime/operator.log'
             evidence.write_text('preserve operator evidence\n')
+            # A real upgrade may have both a tuned old context and old capacity.
+            (target/'runtime/selected-config.json').write_bytes((target/'configs/runtime.json').read_bytes())
+            (target/'runtime/tuning-active.json').write_bytes((target/'configs/runtime.json').read_bytes())
+            old_runtime = {p.name:p.read_bytes() for p in (target/'runtime').glob('*') if p.is_file()}
             original=files(target)
             subprocess.run(['tar','-xzf',str(args.archive.resolve()),'-C',str(tmp)],check=True)
             package=tmp/('deepseek-v4.1-flash-a100-' + version_expected['delivery_version'] + '-update')
@@ -57,6 +61,8 @@ def main():
                 assert version['release']==version_expected['release'] and version['cumulative']
                 assert 'CONTAINERD_ROOT_DIR=/kept/containerd' in (target/'deployment.env').read_text()
                 assert 'PERF_DECODE_METADATA=1' in (target/'deployment.env').read_text()
+                for name in ('selected-config.json', 'tuning-active.json'):
+                    assert json.loads((target/'runtime'/name).read_text())['max_model_len']==1048576
                 subprocess.run(['sudo','-n','docker','run','--rm','--pull','never','--network','none',
                     '--user',f'{os.getuid()}:{os.getgid()}',
                     '--entrypoint','/usr/bin/python3','-e','PYTHONDONTWRITEBYTECODE=1',
@@ -65,6 +71,8 @@ def main():
             restored=files(target)
             assert original==restored, sorted(set(original)^set(restored))
             assert evidence.read_text()=='preserve operator evidence\n'
+            for name, data in old_runtime.items():
+                assert (target/'runtime'/name).read_bytes()==data
             assert json.loads((target/'runtime/latest-update.json').read_text())['status']=='ROLLED_BACK'
             row=dict(from_revision=ref,restart_failure_test=restart_failure,status='PASS',
                      exact_source_and_mode_restored=True,real_service_touched=False)

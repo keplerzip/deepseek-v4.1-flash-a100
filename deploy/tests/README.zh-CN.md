@@ -14,7 +14,7 @@
 | `bash tests/newapi-test.sh` | 已有外部网关的手动验收，需要其连接设置 |
 | `bash tests/offline-rebuild.sh` | 维护窗口重建派生 GPU 缓存，会重启模型 |
 
-结果位于 runtime/ 下相应运行目录。历史 k5/k7 报告包含 off/high、单流和 C32；当前固定 k5 基于已回传结果，不承诺任意请求都更快。GPU 小算子检查通过不是完整模型验收，短请求高并发不等于满 256K 驻留。
+结果位于 runtime/ 下相应运行目录。历史 k5/k7 报告包含 off/high、单流和 C32；当前固定 k5 基于已回传结果，不承诺任意请求都更快。GPU 小算子检查通过不是完整模型验收，短请求高并发不等于满 1M 驻留。
 
 图片验收覆盖 Chat Completions 的 1/2/4/5/8 图，以及 Responses、Messages 的 5 图。Responses 的每个 input_image 显式提供 detail: auto，避免固定镜像请求 schema 在推理前拒绝。参数校验通过不替代目标机的多图 OCR 实测。
 
@@ -29,3 +29,5 @@ run-all.sh 分别固定 DP0 和 DP1 验证 full/long，三协议均检查 JSON/S
 R1.3 新增实际维度的原生 MXFP8 合并 KV 投影/scale 加载、原路径与独立 BF16 参考、修改输入后的图回放；并检查 ragged top-k 在批次缩小/增大、block table 和 mask 改变、旧图与 eager 交替时的物理槽位结果。两个新优化默认开启，CPU 加载与 SM80 编译结果不充当目标 GPU 数值结果。
 
 R1.4 累计保留上述检查，新增 10 组 ragged 融合/大批回退的真实 GPU 对照（空输入、零宽、全 padding、非连续输入、1024/1025 行边界），每组修改输入后图回放 2 次；另有 3 组 SWA 持久有效性缓冲图回放。`PERF_DECODE_METADATA` 控制本版新增组并参与验收签名，关闭后回到 R1.3 元数据实现。构建侧另执行生产 builder 片段与 Triton CPU 解释器对照、SM80 AOT 编译，报告明确不算 GPU 执行。
+
+R1.5 继续使用相同 R1.4 算子覆盖；配置窗口改为 1048576。long 在 DP0/DP1 分别运行 32K、64K、128K、约 256K、512K、1044480 输入预算，另预留 4096 输出 token，逐项核对实际 usage 与 tokenizer。extended full-window 改为 1048064 输入目标加 512 输出预算；完整接纳和完成不等于全部同时驻留，C32 下限仍可能造成长请求排队或抢占。旧 256K 容量不复用，历史报告不改写为 1M 成绩。

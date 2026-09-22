@@ -1,0 +1,118 @@
+{
+  "release": "1.5.0",
+  "delivery_version": "R1.5",
+  "source_update": "20260922-context1m",
+  "publication_status": "prerelease_pending_target_GPU_acceptance",
+  "recorded_at": "2026-09-22T06:45:14.407906+00:00",
+  "archive": "deepseek-v4.1-flash-a100-R1.5-update.tar.gz",
+  "archive_bytes": 743694,
+  "archive_sha256": "fa79ee9481c07d3c09aa743748cae1cf1a02afff764894b50e3bf921e3b7f6a4",
+  "archive_file_checks": 216,
+  "archive_relative_documentation_links": "PASS",
+  "deploy_manifest_sha256": "182c808bfb3b82a74164d4795055bfee52ca5f07b246a6dd9f17f5200619615d",
+  "performance_overlay_id": "20260922-perf5",
+  "performance_overlay_release": "1.4.0",
+  "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
+  "cumulative_installer_and_rollback": {
+    "status": "PASS",
+    "archive_sha256": "fa79ee9481c07d3c09aa743748cae1cf1a02afff764894b50e3bf921e3b7f6a4",
+    "gpu_executed": false,
+    "cases": [
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.1.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.2.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.3.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.4.0",
+        "restart_failure_test": false,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.0.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.2.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.3.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      },
+      {
+        "from_revision": "v1.4.0",
+        "restart_failure_test": true,
+        "status": "PASS",
+        "exact_source_and_mode_restored": true,
+        "real_service_touched": false
+      }
+    ]
+  },
+  "cumulative_from_initial": true,
+  "requires_prior_update": false,
+  "includes_model_weights": false,
+  "includes_image": false,
+  "base64_included": false,
+  "fixed_model": "DeepSeek-V4.1-Flash",
+  "dspark_k": 5,
+  "context": 1048576,
+  "TP": 4,
+  "DP": 2,
+  "EP": 8,
+  "concurrency_formula": "max(32,2*sum(dp_effective_kv_tokens//1048576))",
+  "minimum_concurrency": 32,
+  "decode_cuda_graph": "FULL_DECODE_ONLY",
+  "vision_encoder_cuda_graph": false,
+  "target_GPU_tested": false,
+  "target_1m_capacity_measured": false,
+  "target_speed_measured": false,
+  "newapi_modified": false,
+  "release_url": "https://github.com/keplerzip/deepseek-v4.1-flash-a100/releases/tag/v1.5.0",
+  "receipt_note": "Produced after testing this exact final archive; published separately, not a member of that archive.",
+  "local_delivery_source_synced": true,
+  "local_delivery_model_state": "metadata_only; 48 weight shards remain intentionally deleted on build host",
+  "local_model_or_image_rewritten": false,
+  "published_R1_4_archive_unchanged": true
+}

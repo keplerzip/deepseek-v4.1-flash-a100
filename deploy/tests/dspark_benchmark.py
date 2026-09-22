@@ -12,7 +12,7 @@ import statistics
 import threading
 import time
 
-from acceptance import Client, MODEL, sse_chat, vision_request
+from acceptance import Client, MODEL, LENGTH, sse_chat, vision_request
 
 
 def digest(value):
@@ -125,7 +125,7 @@ def main():
     trace = a.output.with_suffix('.jsonl')
     trace.write_text('')
     report = {'status': 'RUNNING', 'model': MODEL, 'k': a.k, 'thinking': a.mode == 'high',
-        'reasoning_effort': 'high' if a.mode == 'high' else None, 'context': 262144,
+        'reasoning_effort': 'high' if a.mode == 'high' else None, 'context': LENGTH,
         'concurrency': 32, 'output_tokens_per_request': 1024, 'warmups': 2, 'single_samples': 5,
         'load_requests': 200, 'seed': a.seed, 'sampling_seed': 42, 'temperature': 0,
         'started_at': datetime.datetime.now().astimezone().isoformat(),

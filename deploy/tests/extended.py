@@ -85,7 +85,7 @@ def main():
         after=metrics(client)
         return {'submitted':count,'completed':len(rows),'seconds':time.monotonic()-started,'requests':rows,
                 'preemption_delta':after.get('vllm:num_preemptions_total',0)-before.get('vllm:num_preemptions_total',0),
-                'scope':'independent near-full 256K requests; admission/completion proof, C is not simultaneous KV residency'}
+                'scope':'independent near-full 1M requests; admission/completion proof, C is not simultaneous KV residency'}
     def suite(name,round_no):
         target=a.output.parent/f'round-{round_no}-{name}.json'
         proc=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name('acceptance.py')),

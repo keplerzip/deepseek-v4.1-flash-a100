@@ -4,6 +4,7 @@
 
 性能与边界见 [性能报告](performance.md)、[缓存](cache.md)、[故障定位](troubleshooting.md)。网关和客户端见 [协议接入](clients.md)，实现与来源见 [架构](architecture.md)、[致谢](acknowledgements.md)。
 
+- [R1.5：原权重 1M、容量公式、累计升级与 CUDA Graph 范围](context-update-20260922.md)
 - [R1.4：decode 元数据融合累计更新、安装与回退](performance-update-20260922.md)
 - [R1.3：DSpark KV 合并投影与索引复用](performance-update-20260920.md)
 - [R1.2：TP4 DP2 EP8 累计更新](performance-update-20260918.md)

@@ -6,7 +6,8 @@ from pathlib import Path
 import sys
 
 MODEL = 'DeepSeek-V4.1-Flash'
-LENGTH = 262144
+LENGTH = 1048576
+CAPACITY_FORMULA = f'max(32,2*sum(dp_effective_kv_tokens//{LENGTH}))'
 
 
 def write(path, value):
@@ -105,20 +106,35 @@ def capacity(directory, configured):
         pools.append({'data_parallel_rank':rank, 'effective_kv_tokens':effective,
                       'full_windows':effective//LENGTH})
     if any(p['full_windows'] < 1 for p in pools):
-        raise ValueError('Each DP pool must fit at least one full 256K window')
+        raise ValueError('Each DP pool must fit at least one full 1M window')
     windows = sum(p['full_windows'] for p in pools)
     effective = sum(p['effective_kv_tokens'] for p in pools)
     required = max(32,2*windows)
     if windows < 1:
-        raise ValueError('Cannot fit even one full 256K window')
+        raise ValueError('Cannot fit even one full 1M window')
     return {'status':'CALIBRATED' if required == configured else 'RESTART_REQUIRED',
             'max_model_len':LENGTH,'full_windows':windows,'effective_kv_tokens':effective,
             'configured_concurrency':configured,'required_concurrency':required,
             'minimum_pool_blocks':min(r['pool_blocks'] for r in rows),
-            'formula':'max(32,2*sum(dp_effective_kv_tokens//262144))','tp_capacity_multiplier':1,
+            'formula':CAPACITY_FORMULA,'tp_capacity_multiplier':1,
             'topology':'TP4-DP2-EP8','data_parallel_size':2,'tensor_parallel_size':4,
             'per_dp_max_num_seqs':configured//2,'pools':pools,
             'records':rows,'scope':'actual initialized KV groups; full-context correctness and stress are separate gates'}
+
+
+def initial_concurrency(path):
+    """Reuse only a matching calibration as a seed; every launch profiles again."""
+    try:
+        row = json.loads(path.read_text())
+        if (row.get('status') != 'CALIBRATED' or row.get('topology') != 'TP4-DP2-EP8'
+                or row.get('max_model_len') != LENGTH or row.get('formula') != CAPACITY_FORMULA):
+            return 32
+        value = row['required_concurrency']
+        if type(value) is int and value >= 32 and value % 2 == 0:
+            return value
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        pass
+    return 32
 
 
 def validate_topology(row):
@@ -177,6 +193,7 @@ def main():
         q = sub.add_parser(name); q.add_argument('--directory',type=Path,required=True); q.add_argument('--concurrency',type=int,required=True); q.add_argument('--output',type=Path,required=True)
         if name != 'capacity': q.add_argument('--resolved',type=Path,required=True)
     q = sub.add_parser('get'); q.add_argument('path',type=Path); q.add_argument('key')
+    q = sub.add_parser('initial-concurrency'); q.add_argument('path',type=Path)
     q = sub.add_parser('fingerprint'); q.add_argument('--model',type=Path,required=True); q.add_argument('--manifest',type=Path,required=True)
     a = p.parse_args()
     if a.command == 'resolve':
@@ -191,6 +208,8 @@ def main():
         write(a.output,graphs(a.directory,a.concurrency,json.loads(a.resolved.read_text())['config']['speculative_config']['num_speculative_tokens']))
     elif a.command == 'replays':
         write(a.output,replays(a.directory,a.concurrency,json.loads(a.resolved.read_text())['config']['speculative_config']['num_speculative_tokens']))
+    elif a.command == 'initial-concurrency':
+        print(initial_concurrency(a.path))
     elif a.command == 'get':
         value = json.loads(a.path.read_text())[a.key]
         print(value if isinstance(value,(str,int,float)) else json.dumps(value))

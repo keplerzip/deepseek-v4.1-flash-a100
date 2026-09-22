@@ -9,7 +9,7 @@ from pathlib import Path
 import statistics
 import time
 import uuid
-from acceptance import Client, MODEL, sse_chat
+from acceptance import Client, MODEL, LENGTH, sse_chat
 
 
 def percentile(values,fraction):
@@ -26,7 +26,7 @@ def main():
     a=p.parse_args()
     client=Client(a.base_url,a.key_file.read_text())
     rows=[]
-    report={'model':MODEL,'context':262144,'protocol':'Chat Completions HTTP/SSE','thinking':a.thinking,
+    report={'model':MODEL,'context':LENGTH,'protocol':'Chat Completions HTTP/SSE','thinking':a.thinking,
             'reasoning_effort':'high','temperature':0,'concurrency':a.concurrency,'warmups':2,'single_stream_samples':5,
             'requested_output_tokens':a.output_tokens,'ignore_eos':True,'status':'RUNNING',
             'started_at':datetime.datetime.now().astimezone().isoformat(),

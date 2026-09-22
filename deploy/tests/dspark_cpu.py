@@ -20,7 +20,7 @@ class ContractTests(unittest.TestCase):
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = k
             result, argv = ops.resolve(candidate, 56)
-            self.assertEqual(result['max_model_len'], 262144)
+            self.assertEqual(result['max_model_len'], 1048576)
             self.assertEqual(result['max_num_seqs'], 28)
             self.assertEqual(result['tensor_parallel_size'] * result['data_parallel_size'], 8)
             self.assertEqual(result['engram_config'], {'cpu_offload': True})
@@ -90,13 +90,13 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             bench.template_workload({**body, 'model': 'alias'}, 'high')
 
-    def test_capacity_formula_is_unchanged(self):
+    def test_capacity_takes_full_1m_windows_per_pool_before_summing(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 262144, 'configured_max_num_seqs': 28,
+            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 1048576, 'configured_max_num_seqs': 28,
                    'data_parallel_rank':0, 'data_parallel_size':2, 'tensor_parallel_size':4, 'expert_parallel_enabled':True,
                    'groups': [{'full_window_blocks': 10}], 'blocks_per_full_window': 10,
-                   'pool_blocks': 149, 'full_windows': 14, 'effective_kv_tokens': 149*262144//10}
+                   'pool_blocks': 149, 'full_windows': 14, 'effective_kv_tokens': 149*1048576//10}
             (directory / 'capacity-1.json').write_text(json.dumps(row))
             with self.assertRaisesRegex(ValueError, 'Missing capacity'):
                 ops.capacity(directory, 56)
@@ -107,6 +107,57 @@ class ContractTests(unittest.TestCase):
             self.assertEqual(ops.capacity(directory, 56)['full_windows'], 28)
             (directory / 'capacity-3.json').write_text(json.dumps(dict(row, pid=3)))
             self.assertEqual(ops.capacity(directory, 56)['required_concurrency'], 56)
+
+    def test_1m_capacity_floor_minimum_and_stale_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 1048576, 'configured_max_num_seqs': 16,
+                   'data_parallel_rank': 0, 'data_parallel_size': 2, 'tensor_parallel_size': 4,
+                   'expert_parallel_enabled': True, 'groups': [{'full_window_blocks': 10}],
+                   'blocks_per_full_window': 10}
+            def pool(rank, blocks, **changed):
+                value = dict(row, pid=rank+1, data_parallel_rank=rank, pool_blocks=blocks,
+                             full_windows=blocks//10, effective_kv_tokens=blocks*1048576//10)
+                value.update(changed)
+                (directory / f'capacity-{rank}.json').write_text(json.dumps(value))
+            for counts, windows, expected in [((19, 19), 2, 32), ((89, 89), 16, 32),
+                                              ((99, 89), 17, 34)]:
+                for rank, blocks in enumerate(counts): pool(rank, blocks)
+                result = ops.capacity(directory, 32)
+                self.assertEqual(result['full_windows'], windows)
+                self.assertEqual(result['required_concurrency'], expected)
+                self.assertEqual(result['formula'], 'max(32,2*sum(dp_effective_kv_tokens//1048576))')
+            pool(0, 9)
+            with self.assertRaisesRegex(ValueError, 'Each DP pool'):
+                ops.capacity(directory, 32)
+            pool(0, 19, max_model_len=262144)
+            with self.assertRaisesRegex(ValueError, 'Stale'):
+                ops.capacity(directory, 32)
+
+    def test_start_seed_does_not_reuse_256k_capacity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'capacity.json'
+            self.assertEqual(ops.initial_concurrency(path), 32)
+            valid = dict(status='CALIBRATED', topology='TP4-DP2-EP8', max_model_len=1048576,
+                         formula=ops.CAPACITY_FORMULA, required_concurrency=56)
+            path.write_text(json.dumps(valid))
+            self.assertEqual(ops.initial_concurrency(path), 56)
+            for changed in ({'max_model_len':262144}, {'topology':'TP8'},
+                            {'formula':'max(32,2*sum(dp_effective_kv_tokens//262144))'},
+                            {'required_concurrency':True}, {'required_concurrency':31},
+                            {'required_concurrency':33}, {'status':'RESTART_REQUIRED'}):
+                path.write_text(json.dumps(dict(valid, **changed)))
+                self.assertEqual(ops.initial_concurrency(path), 32)
+            for text in ('{broken', 'null', '[]'):
+                path.write_text(text)
+                self.assertEqual(ops.initial_concurrency(path), 32)
+
+    def test_long_acceptance_reserves_output_inside_native_window(self):
+        import acceptance
+        self.assertEqual(acceptance.LENGTH, ops.LENGTH)
+        self.assertEqual(acceptance.LONG_INPUT_BUDGETS[-1], 1044480)
+        self.assertIn(524288, acceptance.LONG_INPUT_BUDGETS)
+        self.assertEqual(acceptance.LONG_INPUT_BUDGETS[-1] + 4096, ops.LENGTH)
 
 
 if __name__ == '__main__':

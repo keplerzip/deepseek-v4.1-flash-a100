@@ -13,7 +13,8 @@ import urllib.request
 import uuid
 
 MODEL = 'DeepSeek-V4.1-Flash'
-LENGTH = 262144
+LENGTH = 1048576
+LONG_INPUT_BUDGETS = (32768, 65536, 131072, 258048, 524288, LENGTH - 4096)
 
 
 class Client:
@@ -353,7 +354,8 @@ def run(args):
         reply=client.chat(prompt,max_tokens=4096)
         expected=','.join(f'VALUE_{nonce}_{i}' for i in range(4))
         assert chat_text(reply).replace(' ','')==expected,(actual,reply)
-        assert reply['usage']['prompt_tokens'] <= LENGTH-4096
+        assert reply['usage']['prompt_tokens'] == actual, 'Serving input count differs from tokenizer; possible truncation'
+        assert budget-2048 <= reply['usage']['prompt_tokens'] <= min(budget, LENGTH-4096)
         return {'requested_input_budget':budget,'tokenizer_count':actual,'actual_prompt_tokens':reply['usage']['prompt_tokens'],
                 'output_budget':4096,'retrieval_positions':4,'seconds':reply['_elapsed']}
 
@@ -372,7 +374,7 @@ def run(args):
         for api in ['responses','messages']: test(f'vision-5-{api}',lambda a=api:vision(5,a))
         test('concurrent-requests',parallel)
     if args.suite == 'long':
-        for budget in [32768,65536,131072,258048]: test('long-'+str(budget),lambda b=budget:long_context(b))
+        for budget in LONG_INPUT_BUDGETS: test('long-'+str(budget),lambda b=budget:long_context(b))
     if args.suite == 'parallel': test('concurrent-requests',parallel)
     report['status']='PASS' if all(r['status']=='PASS' for r in report['tests']) else 'FAIL'
     report['finished_at']=datetime.datetime.now().astimezone().isoformat()
