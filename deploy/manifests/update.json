@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "id": "20260923-ep8-dtype",
-  "release": "1.6.0",
-  "delivery_version": "R1.6",
-  "git_tag": "v1.6.0",
+  "id": "20260923-ep8-full-contract",
+  "release": "1.7.0",
+  "delivery_version": "R1.7",
+  "git_tag": "v1.7.0",
   "cumulative": true,
   "compatible_initial_image": "deepseek-v4.1-flash-a100:20260913-r1",
   "requires_prior_update": false,
   "includes_weights": false,
   "includes_container_image": false,
-  "readme_source": "docs/deployment-update-20260922-gpu92.md",
+  "readme_source": "docs/deployment-update-20260923-ep8-r17.md",
   "target_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST"
 }

@@ -19,4 +19,4 @@ timeout --signal=TERM --kill-after=15s 300s sudo -n docker run --rm --pull never
   -m torch.distributed.run --nnodes=1 --nproc-per-node=8 \
   --rdzv-backend=static --master-addr=127.0.0.1 --master-port=29579 \
   /offline-tests/performance_ep8.py "/state/$run" 2>&1 | tee "$STATE_DIR/$run/probe.log"
-image_python -c 'import json,pathlib,sys; rows=[json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("rank-*.json")]; assert len(rows)==8 and {r["rank"] for r in rows}==set(range(8)) and all(r["status"]=="PASS" for r in rows); print("R1.2 EP8 eager/replay/fallback: all 8 ranks passed")' "/state/$run"
+image_python -c 'import json,pathlib,sys; rows=[json.loads(p.read_text()) for p in pathlib.Path(sys.argv[1]).glob("rank-*.json")]; assert len(rows)==8 and {r["rank"] for r in rows}==set(range(8)); assert all(r["status"]=="PASS" and r["graph_input_mutation"] and r["nonuniform_fp32_fallback"] and all(r["custom_calls"][k]>0 and r["custom_attempts"][k]>0 and r["fallback_custom_attempts"][k]==0 for k in ("ag","rs")) for r in rows); print("R1.7 EP8 eager/replay/fallback: all 8 ranks passed")' "/state/$run"

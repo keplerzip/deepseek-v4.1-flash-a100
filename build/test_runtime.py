@@ -19,6 +19,7 @@ def main():
     plan = subprocess.check_output(common+[a.image, '/deploy/scripts/performance.py', '--host-deploy', str(ROOT/'deploy')])
     mounts = [s.decode() for s in plan.split(b'\0') if s]
     checks = [(['/deploy/tests/performance_runtime_cpu.py'], 'runtime-cpu.log'),
+              (['/deploy/tests/performance_ep8_reference_cpu.py'], 'ep8-reference-cpu.log'),
               (['/deploy/tests/performance_r11_cpu.py'], 'r11-cpu.log'),
               (['/deploy/tests/performance_r12_cpu.py'], 'r12-cpu.log'),
               (['/deploy/tests/performance_r13_cpu.py'], 'r13-cpu.log'),

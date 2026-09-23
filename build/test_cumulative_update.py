@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
     rows = []
     version_expected = json.loads((ROOT / 'deploy/manifests/update.json').read_text())
-    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.3.0', False), ('v1.4.0', False), ('v1.5.0', False), ('v1.5.1', False), ('v1.0.0', True), ('v1.2.0', True), ('v1.3.0', True), ('v1.4.0', True), ('v1.5.0', True), ('v1.5.1', True)):
+    for ref, restart_failure in (('v1.0.0', False), ('d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2', False), ('v1.1.0', False), ('v1.2.0', False), ('v1.3.0', False), ('v1.4.0', False), ('v1.5.0', False), ('v1.5.1', False), ('v1.6.0', False), ('v1.0.0', True), ('v1.2.0', True), ('v1.3.0', True), ('v1.4.0', True), ('v1.5.0', True), ('v1.5.1', True), ('v1.6.0', True)):
         with tempfile.TemporaryDirectory(prefix='dsv41-upgrade-') as temp:
             tmp = Path(temp)
             old = subprocess.check_output(['git','archive',ref,'deploy'], cwd=ROOT)

@@ -1,5 +1,7 @@
 # R1.6 / v1.6.0：EP8 验收 dtype 修正
 
+**历史版本：R1.6 在目标机又暴露了 reduce-scatter 输入默认 int64 的第二处测试错误。请使用 [R1.7 累计更新](deployment-update-20260923-ep8-r17.md)。**
+
 R1.5.1 在隔离的八卡 A100 首次启动时，单卡 SM80 算子检查全部通过，随后 EP8 检查在 `performance_ep8.py:61` 失败并自动回滚。八个 rank 均报告 `torch.float32 != torch.int64`：变长、非 BF16 的 NCCL 回退分支输出是 float32，但测试使用 `torch.full` 的默认整数 dtype 构造期望值。这条日志证明验收断言错误，不证明通信结果的数值正确，也不证明 EP8 内核或整模失败。
 
 R1.6 只把该期望值显式设为输入 `x.dtype`。数值仍用 `atol=0, rtol=0` 严格比较；保留等长 BF16 custom AG/RS、CUDA Graph 修改输入重放、变长 float32 回退和八个 rank 的全部断言。若数值有误，仍会失败并自动回滚。模型权重、原始 R1 镜像、R1.4 性能覆盖、TP4×DP2＋EP8、DSpark k=5、1M 上下文、0.92 显存预算、自动 C≥32、999 图和本机/Docker 免密访问均不变。

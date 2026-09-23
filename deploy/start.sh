@@ -20,9 +20,10 @@ remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
 {
-  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE$PERF_DECODE_METADATA|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
+  # A changed EP8 acceptance test must run again even with identical kernels.
+  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$(sha256sum "$DEPLOY_DIR/tests/performance_ep8.py" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE$PERF_DECODE_METADATA|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
   if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking inherited R1.4 SM80 kernels, DSpark KV loading, ragged metadata and EP8 communication before the R1.6 / 1M / GPU=0.92 model launch.\n'
+    printf 'Checking inherited R1.4 SM80 kernels, DSpark KV loading, ragged metadata and EP8 communication before the R1.7 / 1M / GPU=0.92 model launch.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
     bash "$DEPLOY_DIR/tests/performance-ep8.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
