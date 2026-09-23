@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 import uuid
 
-MODEL = 'DeepSeek-V4.1-Flash'
+MODEL = 'DeepSeek-V4-Flash'
 LENGTH = 1048576
 LONG_INPUT_BUDGETS = (32768, 65536, 131072, 258048, 524288, LENGTH - 4096)
 

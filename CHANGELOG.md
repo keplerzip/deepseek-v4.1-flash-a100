@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0 / R1.8 — 2026-09-23
+
+- 隔离目标机的 R1.7 八卡 EP8、整模、双池缓存与 DSpark smoke 已由操作者报告通过；最后前端以 UID 65534 读取私有 `/frontend.py` 失败并自动回滚。前端改用部署用户 UID/GID，增加加载 GPU 前的挂载可读预检。
+- 唯一公开 API 模型名改为 `DeepSeek-V4-Flash`；底层 DeepSeek-V4.1-Flash 权重、ModelScope revision、镜像、项目目录均保持原样。离线 guard、三协议请求、模型列表与文档同步。
+- 全局调度并发硬上限固定 C32、每 DP pool 16；继续检查实际 KV 容量、1M 总上下文、0.92 显存比例、prefix caching、DSpark k=5。按操作者要求，本次跳过启动前 EP8 通信重测；完整模型通信与双池 smoke 仍执行。
+- 累计小包复用初始权重与镜像，可从 R1 至 R1.7 直接升级。构建机无 GPU；R1.8 整机性能待隔离目标机实测。
+
 ## 1.7.0 / R1.7 — 2026-09-23
 
 - 修正 R1.6 实机 EP8 验收中的第二处 dtype 错误：变长 reduce-scatter 输入原为默认 int64，期望值为 float32；现在两者明确为 float32，严格数值断言不放宽。

@@ -68,7 +68,7 @@ def main():
     a=p.parse_args();a.output.parent.mkdir(parents=True,exist_ok=True)
     client=Client(a.base_url,a.key_file.read_text(),timeout=10800)
     cap=json.loads(a.capacity.read_text());concurrency=cap['required_concurrency'];windows=cap['full_windows']
-    assert concurrency==max(32,2*windows) and cap['max_model_len']==LENGTH
+    assert concurrency==32 and cap['formula']=='fixed(32)' and cap['max_model_len']==LENGTH
     report={'model':MODEL,'context':LENGTH,'mode':a.mode,'status':'RUNNING','tests':[],
             'full_windows':windows,'concurrency':concurrency,'started_at':datetime.datetime.now().astimezone().isoformat()}
     start=time.monotonic()

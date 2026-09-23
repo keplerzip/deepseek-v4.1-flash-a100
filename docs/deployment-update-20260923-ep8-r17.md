@@ -1,5 +1,7 @@
 # R1.7 / v1.7.0：EP8 全链路验收修正
 
+**历史版本：** 目标机已通过八卡 EP8 与整模 smoke，但本机前端因 `/frontend.py` 权限失败并回滚。请使用 [R1.8 累计更新](deployment-update-20260923-r18.md)。
+
 R1.6 在隔离八卡 A100 上通过变长 all-gather 比较，随后在 `performance_ep8.py:67` 失败：reduce-scatter 的输入 `y` 由整数填充值创建，默认为 `torch.int64`；期望值由 float32 的 `x` 生成，因此八个 rank 报告 `torch.int64 != torch.float32`。这仍是验收脚本的 dtype 错误，日志没有证明数值正确，也没有证明整模能启动。安装器因此自动回滚；`ROLLED_BACK` 后仍须确认旧服务已恢复健康。
 
 R1.7 把测试输入、期望和输出的构造统一为两套明确的 dtype：等长自定义通信为 BF16，变长 NCCL 回退为 float32。`y` 显式沿用 `x.dtype`；所有数值比较继续使用 `atol=0, rtol=0`。同时验证 BF16 自定义 AG/RS 确实被调用、float32 回退没有进入自定义路径、CUDA Graph 修改输入重放正确，并将 EP8 测试源码哈希纳入启动验收签名，避免更新测试后被旧通过标记跳过。新增 CPU 参考验收，逐 rank 检查四种等长形状及变长形状的 dtype、shape、聚合数值和修改输入后的期望值。

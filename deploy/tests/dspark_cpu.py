@@ -16,12 +16,13 @@ import dspark_benchmark as bench
 class ContractTests(unittest.TestCase):
     def test_graph_sizes_and_constraints(self):
         base = json.loads((DEPLOY / 'configs/runtime.json').read_text())
-        for k, shapes in [(5, (140, 168))]:
+        for k, shapes in [(5, (80, 96))]:
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = k
-            result, argv = ops.resolve(candidate, 56)
+            result, argv = ops.resolve(candidate, 32)
             self.assertEqual(result['max_model_len'], 1048576)
-            self.assertEqual(result['max_num_seqs'], 28)
+            self.assertEqual(result['max_num_seqs'], 16)
+            self.assertEqual(result['served_model_name'], 'DeepSeek-V4-Flash')
             self.assertEqual(result['tensor_parallel_size'] * result['data_parallel_size'], 8)
             self.assertEqual(result['engram_config'], {'cpu_offload': True})
             self.assertEqual(result['gpu_memory_utilization'], 0.92)
@@ -32,11 +33,13 @@ class ContractTests(unittest.TestCase):
         for invalid in (True, 4, 6, 7, 8, 10):
             candidate = copy.deepcopy(base)
             candidate['speculative_config']['num_speculative_tokens'] = invalid
-            with self.assertRaises(ValueError): ops.resolve(candidate, 56)
+            with self.assertRaises(ValueError): ops.resolve(candidate, 32)
         for key, value in [('max_model_len', 32768), ('served_model_name', 'alias'), ('engram_config', {'cpu_offload': False}), ('limit_mm_per_prompt', {'image': 4}), ('gpu_memory_utilization', 0.90), ('gpu_memory_utilization', 0.94)]:
             candidate = copy.deepcopy(base)
             candidate[key] = value
-            with self.assertRaises(ValueError): ops.resolve(candidate, 56)
+            with self.assertRaises(ValueError): ops.resolve(candidate, 32)
+        for invalid_concurrency in (0, 31, 33, 56, True):
+            with self.assertRaises(ValueError): ops.resolve(base, invalid_concurrency)
 
     def test_eight_rank_graph_and_replay_checks_not_bypassed(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -50,25 +53,25 @@ class ContractTests(unittest.TestCase):
                     (directory / f'capture-{pid}-{query}.json').write_text(json.dumps({'kind': 'graph-capture',
                         **topology,
                         'pid': pid, 'manager_id': query, 'memory_estimation_probe': False, 'decode_query_len': query,
-                        'captured_full_graphs': [{'num_tokens': query*28, 'mode': 'FULL'}]}))
+                        'captured_full_graphs': [{'num_tokens': query*16, 'mode': 'FULL'}]}))
                     (directory / f'replay-{pid}-{query}.json').write_text(json.dumps({'kind': 'graph-replay',
                         **topology,
                         'pid': pid, 'manager_id': query, 'decode_query_len': query, 'descriptor': {'mode': 'FULL', 'num_tokens': query}}))
-            self.assertEqual(ops.graphs(directory, 56, 5)['status'], 'PASS')
-            self.assertEqual(ops.replays(directory, 56, 5)['status'], 'PASS')
-            with self.assertRaises(ValueError): ops.graphs(directory, 56, 7)
-            with self.assertRaises(ValueError): ops.replays(directory, 56, 7)
+            self.assertEqual(ops.graphs(directory, 32, 5)['status'], 'PASS')
+            self.assertEqual(ops.replays(directory, 32, 5)['status'], 'PASS')
+            with self.assertRaises(ValueError): ops.graphs(directory, 32, 7)
+            with self.assertRaises(ValueError): ops.replays(directory, 32, 7)
             (directory / 'replay-7-6.json').unlink()
-            with self.assertRaises(ValueError): ops.replays(directory, 56, 5)
+            with self.assertRaises(ValueError): ops.replays(directory, 32, 5)
             (directory / 'capture-7-6.json').unlink()
-            with self.assertRaises(ValueError): ops.graphs(directory, 56, 5)
+            with self.assertRaises(ValueError): ops.graphs(directory, 32, 5)
 
     def test_requests_and_per_position_metrics(self):
         first = bench.workload('fixed', 'high', 'single', 0)
         self.assertEqual(first, bench.workload('fixed', 'high', 'single', 0))
         self.assertNotEqual(first, bench.workload('fixed', 'high', 'load', 0))
         self.assertEqual(first['max_tokens'], 1024)
-        rows = bench.parse_metrics('vllm:spec_decode_num_drafts_total{model_name="DeepSeek-V4.1-Flash"} 100\n'
+        rows = bench.parse_metrics('vllm:spec_decode_num_drafts_total{model_name="DeepSeek-V4-Flash"} 100\n'
             'vllm:spec_decode_num_draft_tokens_total{engine="0"} 700\n'
             'vllm:spec_decode_num_accepted_tokens_total{engine="0"} 200\n'
             'vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",position="6"} 4\n')
@@ -78,7 +81,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(delta['accepted_per_draft'], 2)
 
     def test_private_history_benchmark_preserves_images_without_mutating_input(self):
-        body = {'model': 'DeepSeek-V4.1-Flash', 'messages': [
+        body = {'model': 'DeepSeek-V4-Flash', 'messages': [
             {'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': 'data:image/png;base64,AAAA'}}]},
             {'role': 'assistant', 'content': 'Previous analysis'},
             {'role': 'user', 'content': 'Continue the explanation'}], 'max_tokens': 256}
@@ -94,20 +97,20 @@ class ContractTests(unittest.TestCase):
     def test_capacity_takes_full_1m_windows_per_pool_before_summing(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 1048576, 'configured_max_num_seqs': 28,
+            row = {'pid': 1, 'time_ns': 1, 'max_model_len': 1048576, 'configured_max_num_seqs': 16,
                    'data_parallel_rank':0, 'data_parallel_size':2, 'tensor_parallel_size':4, 'expert_parallel_enabled':True,
                    'groups': [{'full_window_blocks': 10}], 'blocks_per_full_window': 10,
                    'pool_blocks': 149, 'full_windows': 14, 'effective_kv_tokens': 149*1048576//10}
             (directory / 'capacity-1.json').write_text(json.dumps(row))
             with self.assertRaisesRegex(ValueError, 'Missing capacity'):
-                ops.capacity(directory, 56)
+                ops.capacity(directory, 32)
             (directory / 'capacity-2.json').write_text(json.dumps(dict(row, pid=2, data_parallel_rank=1)))
-            self.assertEqual(ops.capacity(directory, 56)['required_concurrency'], 56)
-            self.assertEqual(ops.capacity(directory, 56)['tp_capacity_multiplier'], 1)
+            self.assertEqual(ops.capacity(directory, 32)['required_concurrency'], 32)
+            self.assertEqual(ops.capacity(directory, 32)['tp_capacity_multiplier'], 1)
             # 14.9 + 14.9 windows is 28 resident full windows, NOT 29.
-            self.assertEqual(ops.capacity(directory, 56)['full_windows'], 28)
+            self.assertEqual(ops.capacity(directory, 32)['full_windows'], 28)
             (directory / 'capacity-3.json').write_text(json.dumps(dict(row, pid=3)))
-            self.assertEqual(ops.capacity(directory, 56)['required_concurrency'], 56)
+            self.assertEqual(ops.capacity(directory, 32)['required_concurrency'], 32)
 
     def test_1m_capacity_floor_minimum_and_stale_records(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -121,13 +124,13 @@ class ContractTests(unittest.TestCase):
                              full_windows=blocks//10, effective_kv_tokens=blocks*1048576//10)
                 value.update(changed)
                 (directory / f'capacity-{rank}.json').write_text(json.dumps(value))
-            for counts, windows, expected in [((19, 19), 2, 32), ((89, 89), 16, 32),
-                                              ((99, 89), 17, 34)]:
+            for counts, windows in [((19, 19), 2), ((89, 89), 16),
+                                    ((99, 89), 17)]:
                 for rank, blocks in enumerate(counts): pool(rank, blocks)
                 result = ops.capacity(directory, 32)
                 self.assertEqual(result['full_windows'], windows)
-                self.assertEqual(result['required_concurrency'], expected)
-                self.assertEqual(result['formula'], 'max(32,2*sum(dp_effective_kv_tokens//1048576))')
+                self.assertEqual(result['required_concurrency'], 32)
+                self.assertEqual(result['formula'], 'fixed(32)')
             pool(0, 9)
             with self.assertRaisesRegex(ValueError, 'Each DP pool'):
                 ops.capacity(directory, 32)
@@ -142,7 +145,7 @@ class ContractTests(unittest.TestCase):
             valid = dict(status='CALIBRATED', topology='TP4-DP2-EP8', max_model_len=1048576,
                          formula=ops.CAPACITY_FORMULA, required_concurrency=56)
             path.write_text(json.dumps(valid))
-            self.assertEqual(ops.initial_concurrency(path), 56)
+            self.assertEqual(ops.initial_concurrency(path), 32)
             for changed in ({'max_model_len':262144}, {'topology':'TP8'},
                             {'formula':'max(32,2*sum(dp_effective_kv_tokens//262144))'},
                             {'required_concurrency':True}, {'required_concurrency':31},

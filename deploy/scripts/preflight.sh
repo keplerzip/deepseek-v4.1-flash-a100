@@ -7,6 +7,17 @@ for tool in sudo docker nvidia-smi nvidia-container-cli bash tar gzip sha256sum 
   command -v "$tool" >/dev/null || fail "Missing host prerequisite: $tool; see host-deps/README.zh-CN.md"
 done
 docker info >/dev/null
+# The update installer may install source with mode 0600. Check the exact
+# operator identity and bind mount used by the frontend before GPU loading.
+if docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+  resolve_image
+  docker run --rm --pull never --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+    --user "$(id -u):$(id -g)" -e PYTHONDONTWRITEBYTECODE=1 \
+    --mount "type=bind,src=$DEPLOY_DIR/scripts/local_access_frontend.py,dst=/frontend.py,readonly" \
+    --entrypoint /usr/bin/python3 "$RUNTIME_IMAGE" -c \
+      'from pathlib import Path; Path("/frontend.py").read_bytes()' \
+    || fail 'Frontend source is unreadable by the deployment operator'
+fi
 nvidia-container-cli --version > "$STATE_DIR/toolkit-version.txt"
 storage_preflight
 if ! own_container "$FRONTEND_NAME"; then

@@ -41,7 +41,7 @@ def workload(seed, mode, phase, index):
 def template_workload(template, mode):
     """Keep the same conversation/images while controlling benchmark sampling."""
     if template.get('model', MODEL) != MODEL or not isinstance(template.get('messages'), list):
-        raise ValueError('Request file must be a Chat Completions body for DeepSeek-V4.1-Flash')
+        raise ValueError('Request file must be a Chat Completions body for DeepSeek-V4-Flash')
     body = copy.deepcopy(template)
     for key in ('max_completion_tokens', 'stop', 'reasoning_effort', 'thinking'):
         body.pop(key, None)

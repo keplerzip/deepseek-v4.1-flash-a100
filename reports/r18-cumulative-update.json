@@ -1,0 +1,133 @@
+{
+  "status": "PASS",
+  "archive_sha256": "7f2d41d234fd647f0fc877beb1eda6ea886df219f6d66f8d8bbb0ef63969d5f0",
+  "gpu_executed": false,
+  "cases": [
+    {
+      "from_revision": "v1.0.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "d7c7d877a97bb0fc77acf90b3e6e35e0e78db1d2",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.1.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.2.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.3.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.4.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.5.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.5.1",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.6.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.7.0",
+      "restart_failure_test": false,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.0.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.2.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.3.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.4.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.5.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.5.1",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.6.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    },
+    {
+      "from_revision": "v1.7.0",
+      "restart_failure_test": true,
+      "status": "PASS",
+      "exact_source_and_mode_restored": true,
+      "real_service_touched": false
+    }
+  ]
+}

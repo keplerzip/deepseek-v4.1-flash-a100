@@ -1,12 +1,12 @@
 {
-  "release": "1.7.0",
-  "model": "DeepSeek-V4.1-Flash",
+  "release": "1.8.0",
+  "model": "DeepSeek-V4-Flash",
   "default_dspark_k": 5,
   "native_dspark_block_size": 5,
   "context": 1048576,
   "tensor_parallel_size": 4,
   "engram_cpu_offload": true,
-  "concurrency_formula": "max(32,2*sum(dp_effective_kv_tokens//1048576))",
+  "concurrency_formula": "fixed(32)",
   "base_image": "lazymio/vllm-backport@sha256:349690323ab9aba712111529ed1ca60730199205d8202f67895ffde85b451be3",
   "upstream_source": "https://github.com/wtdcode/vllm-backport",
   "upstream_revision": "a350766628514d597670d2a5217777fdee2ba7f4",
@@ -25,7 +25,7 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260923-ep8-full-contract",
+  "source_update": "20260923-r18-local-access-c32-alias",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
@@ -43,8 +43,8 @@
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
   "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
-  "delivery_version": "R1.7",
-  "git_tag": "v1.7.0",
+  "delivery_version": "R1.8",
+  "git_tag": "v1.8.0",
   "data_parallel_size": 2,
   "expert_parallel_size": 8,
   "performance_overlay_release": "1.4.0",
@@ -54,5 +54,7 @@
   "image_limit_per_prompt": 999,
   "client_api_key_required": false,
   "access_policy": "loopback-and-docker-only",
-  "api_port": 8005
+  "api_port": 8005,
+  "weight_model": "DeepSeek-V4.1-Flash",
+  "served_model_name": "DeepSeek-V4-Flash"
 }

@@ -1,7 +1,10 @@
 """Run CPU controls and offline SM80 compilation in the exact reused image."""
 import argparse
+import os
 from pathlib import Path
+import shutil
 import subprocess
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -13,6 +16,27 @@ def main():
     p.add_argument('--checks', nargs='*', help='Optional logfile stems to resume a failed check')
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=True)
+    if a.checks is None or 'frontend-mount' in a.checks:
+        # Reproduce the private (0600) files installed on the target. A
+        # fixed nobody UID could not read them and caused R1.7 to roll back.
+        with tempfile.TemporaryDirectory(prefix='dsv41-frontend-mount-') as tmp:
+            source = Path(tmp) / 'frontend.py'
+            config = Path(tmp) / 'access.json'
+            shutil.copyfile(ROOT / 'deploy/scripts/local_access_frontend.py', source)
+            config.write_text('{}\n')
+            source.chmod(0o600)
+            config.chmod(0o600)
+            command = ['sudo', '-n', 'docker', 'run', '--rm', '--pull', 'never',
+                       '--network', 'none', '--read-only', '--cap-drop', 'ALL',
+                       '--security-opt', 'no-new-privileges', '--user', f'{os.getuid()}:{os.getgid()}',
+                       '-e', 'PYTHONDONTWRITEBYTECODE=1',
+                       '--mount', f'type=bind,src={source},dst=/frontend.py,readonly',
+                       '--mount', f'type=bind,src={config},dst=/access.json,readonly',
+                       '--entrypoint', '/usr/bin/python3', a.image, '-c',
+                       'from pathlib import Path; compile(Path("/frontend.py").read_bytes(), "/frontend.py", "exec"); Path("/access.json").read_bytes()']
+            with (a.output/'frontend-mount.log').open('w') as out:
+                subprocess.run(command, check=True, stdout=out, stderr=subprocess.STDOUT)
+            print('Private frontend bind mounts: PASS', flush=True)
     common = ['sudo', '-n', 'docker', 'run', '--rm', '--pull', 'never', '--network', 'none',
               '--entrypoint', '/usr/bin/python3', '-e', 'PYTHONDONTWRITEBYTECODE=1', '-e', 'OMP_NUM_THREADS=2',
               '-v', f'{ROOT / "deploy"}:/deploy:ro', '-v', f'{ROOT / "build"}:/build:ro']

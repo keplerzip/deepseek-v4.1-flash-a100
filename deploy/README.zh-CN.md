@@ -1,12 +1,12 @@
-# DeepSeek-V4.1-Flash 离线服务 R1.7 / v1.7.0
+# DeepSeek-V4.1-Flash 离线服务 R1.8 / v1.8.0
 
-R1.7 修正 R1.5.1 和 R1.6 在 EP8 变长回退验收中暴露的两处 dtype 错误，并检查整套 BF16 自定义通信、float32 NCCL 回退、图回放和八 rank 数学参考。EP8 测试脚本变化会使启动门禁重新运行。目标 GPU 的修正后结果及整模速度仍待验收；配置、性能覆盖、权重和原镜像保持不变。[累计升级与验证](../docs/deployment-update-20260923-ep8-r17.md)。
+R1.8 修复 R1.7 目标机整模 smoke 通过后本机前端无法读取 `/frontend.py` 的权限错误。前端以部署用户 UID/GID 运行，并在 GPU 加载前检查私有文件挂载。公开 API 唯一模型名是 `DeepSeek-V4-Flash`；权重仍是 V4.1。全局调度并发固定 C32，两个 DP pool 各 16。按操作者要求跳过本次启动前 EP8 通信重测，保留整模通信与双池 smoke。[累计升级与验证](../docs/deployment-update-20260923-r18.md)。
 
 固定显存预算 gpu_memory_utilization=0.92，DSpark k=5，1048576（1M）总上下文，TP4×DP2＋EP8，Engram 主存卸载。只管理模型服务，不安装 NewAPI。
 
-20260922-context1m-gpu92 补齐并锁定 0.92，容量与验收沿用 R1.5。20260922-context1m 将容量与验收改为 1M，忽略旧 256K 容量种子。沿用 20260922-perf5 的 SWA 有效性直接输出、prefill 专用长度计算及小批 ragged indptr/pack 融合（最多 1024 行，较大批次保留原扫描）。累计保留 R1.3 的 DSpark context KV 合并投影与索引复用，以及 dense BF16、EP8 custom AG/RS、8-warp decode、共享专家条件重叠、主干 EPLB 和此前修正。两池分别计算满 1M 容量，C=max(32,2×两池满窗口数之和)，每池 max_num_seqs=C/2。复用最初 R1 镜像；首次检查新增及累计 GPU 算子、图回放和 EP8，两个池均做 smoke。新版 GPU 速度和完整模型验收待目标机回传。
+沿用 20260922-perf5 的 SWA 有效性直接输出、prefill 专用长度计算及小批 ragged indptr/pack 融合（最多 1024 行，较大批次保留原扫描）。累计保留 R1.3 的 DSpark context KV 合并投影与索引复用，以及 dense BF16、EP8 custom AG/RS、8-warp decode、共享专家条件重叠、主干 EPLB 和此前修正。两池分别计算满 1M KV 容量以作可行性检查，但不再据此抬高调度并发；固定 C32，每池 max_num_seqs=16。复用最初 R1 镜像。新版 GPU 速度和完整模型验收待目标机回传。
 
-已有实例可用小更新包中的 install.sh 升级并重启，自动保留源码备份；源码更新后也可运行 bash ./restart.sh。使用 bash ./rollback-update.sh 恢复最近备份。独立检查为 tests/performance-kernels.sh 和 tests/performance-ep8.sh，C1/C32 与多图历史对照为 tests/performance-benchmark.sh。包顶层 README.zh-CN.md 包含安装说明，版本记录见 manifests/update.json；仓库详细说明见 docs/deployment-update-20260923-ep8-r17.md。
+已有实例可用小更新包中的 install.sh 升级并重启，自动保留源码备份；源码更新后也可运行 bash ./restart.sh。使用 bash ./rollback-update.sh 恢复最近备份。独立检查为 tests/performance-kernels.sh 和 tests/performance-ep8.sh，C1/C32 与多图历史对照为 tests/performance-benchmark.sh。包顶层 README.zh-CN.md 包含安装说明，版本记录见 manifests/update.json；仓库详细说明见 docs/deployment-update-20260923-r18.md。
 
 源码树需要在构建侧补齐 images/runtime-image.tar 并生成 manifests/deploy.sha256；模型位于相邻 DeepSeek-V4.1-Flash 目录。完整准备流程见 ../docs/building.md，目标部署见 ../docs/deployment.md。
 
@@ -16,4 +16,4 @@ R1.7 修正 R1.5.1 和 R1.6 在 EP8 变长回退验收中暴露的两处 dtype �
 
 本版固化 `PERF_DECODE_METADATA=1`，同时保留 `PERF_DSPARK_KV=1`、`PERF_TOPK_REUSE=1`，k=5 固定。单独将 `PERF_DECODE_METADATA` 设为 0 并重启，只恢复 R1.3 元数据实现。累计小包可从初始版本直接升级，失败时恢复安装前源码并尝试重启旧服务。开关不改变图片限制、TTL 或 Engram 位置。
 
-主模型和 DSpark 的 decode CUDA Graph 保持启用（FULL_DECODE_ONLY）；视觉编码器图未移植。两池各需至少容纳一个满 1M 窗口；C32 为调度下限，不代表 32 个满 1M 同时驻留。tests/run-all.sh 在两池分别增加 512K 与近 1M 检索，输出预算计入总窗口。
+主模型和 DSpark 的 decode CUDA Graph 保持启用（FULL_DECODE_ONLY）；视觉编码器图未移植。两池各需至少容纳一个满 1M 窗口；C32 为调度硬上限，不代表 32 个满 1M 同时驻留。tests/run-all.sh 在两池分别增加 512K 与近 1M 检索，输出预算计入总窗口。

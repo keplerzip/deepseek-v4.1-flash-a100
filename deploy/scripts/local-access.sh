@@ -12,16 +12,25 @@ docker network inspect "${dsv41_bridges[@]}" > "$STATE_DIR/local-access-networks
 image_python /deploy/scripts/local_access_frontend.py configure \
   --networks /state/local-access-networks.json --upstream "$upstream" --port "$API_PORT" \
   --output /state/local-access.json
+# Check both actual bind mounts before replacing the running frontend.
+docker run --rm --pull never --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+  --user "$(id -u):$(id -g)" -e PYTHONDONTWRITEBYTECODE=1 \
+  --mount "type=bind,src=$DEPLOY_DIR/scripts/local_access_frontend.py,dst=/frontend.py,readonly" \
+  --mount "type=bind,src=$STATE_DIR/local-access.json,dst=/access.json,readonly" \
+  --entrypoint /usr/bin/python3 "$RUNTIME_IMAGE" -c \
+    'from pathlib import Path; Path("/frontend.py").read_bytes(); Path("/access.json").read_bytes()' \
+  || fail 'Frontend bind mounts are not readable by the deployment operator'
 remove_own "$FRONTEND_NAME"
 docker run -d --pull never --name "$FRONTEND_NAME" --label dsv41.owner=offline-delivery \
-  --network host --read-only --cap-drop ALL --security-opt no-new-privileges --user 65534:65534 \
+  --network host --read-only --cap-drop ALL --security-opt no-new-privileges \
+  --user "$(id -u):$(id -g)" -e PYTHONDONTWRITEBYTECODE=1 \
   --mount "type=bind,src=$DEPLOY_DIR/scripts/local_access_frontend.py,dst=/frontend.py,readonly" \
   --mount "type=bind,src=$STATE_DIR/local-access.json,dst=/access.json,readonly" \
   --entrypoint /usr/bin/python3 "$RUNTIME_IMAGE" /frontend.py serve --config /access.json >/dev/null
 for dsv41_try in {1..30}; do
   if frontend_health; then
     docker exec "$FRONTEND_NAME" /usr/bin/python3 -c \
-      'import json,sys,urllib.request;op=urllib.request.build_opener(urllib.request.ProxyHandler({}));data=json.load(op.open("http://127.0.0.1:"+sys.argv[1]+"/v1/models",timeout=10));ids=[m["id"] for m in data["data"]];assert ids==["DeepSeek-V4.1-Flash"],ids;print(json.dumps({"status":"PASS","client_api_key_required":False,"models":ids}))' "$API_PORT"
+      'import json,sys,urllib.request;op=urllib.request.build_opener(urllib.request.ProxyHandler({}));data=json.load(op.open("http://127.0.0.1:"+sys.argv[1]+"/v1/models",timeout=10));ids=[m["id"] for m in data["data"]];assert ids==["DeepSeek-V4-Flash"],ids;print(json.dumps({"status":"PASS","client_api_key_required":False,"models":ids}))' "$API_PORT"
     exit 0
   fi
   [[ $(docker inspect --format '{{.State.Running}}' "$FRONTEND_NAME") == true ]] || break

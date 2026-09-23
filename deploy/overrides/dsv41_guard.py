@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 
-MODEL = 'DeepSeek-V4.1-Flash'
+MODEL = 'DeepSeek-V4-Flash'
 ALLOWED_PATHS = {'/health', '/version', '/metrics', '/v1/models', '/v1/chat/completions',
                  '/v1/responses', '/v1/messages', '/v1/messages/count_tokens', '/tokenize',
                  '/detokenize', '/reset_prefix_cache', '/server_info'}

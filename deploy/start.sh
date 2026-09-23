@@ -20,12 +20,19 @@ remove_own "$ENGINE_NAME"
 active=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)
 [[ -z "$active" ]] || fail 'Another process still occupies the GPUs'
 {
-  # A changed EP8 acceptance test must run again even with identical kernels.
-  performance_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$(sha256sum "$DEPLOY_DIR/tests/performance_ep8.py" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE$PERF_DECODE_METADATA|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
-  if [[ ! -f "$STATE_DIR/performance-kernels-approved.txt" || "$(cat "$STATE_DIR/performance-kernels-approved.txt")" != "$performance_signature" ]]; then
-    printf 'Checking inherited R1.4 SM80 kernels, DSpark KV loading, ragged metadata and EP8 communication before the R1.7 / 1M / GPU=0.92 model launch.\n'
+  # The operator reported R1.7 EP8 pass on all eight ranks. R1.8 changes
+  # only the access frontend, scheduler cap and public name; this launch
+  # deliberately skips repeating that communication test.
+  prior_signature="$(sha256sum "$DEPLOY_DIR/overrides/performance/manifest.json" | cut -d ' ' -f1)|$(sha256sum "$DEPLOY_DIR/tests/performance_ep8.py" | cut -d ' ' -f1)|$RUNTIME_IMAGE|$PERF_MHC$PERF_INDEXER$PERF_MOE_ALIGN$PERF_DSPARK_KV$PERF_TOPK_REUSE$PERF_DECODE_METADATA|$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | sort -u | tr '\n' ',')"
+  performance_signature="$prior_signature|r18-ep8-retest-skipped"
+  previous=$(cat "$STATE_DIR/performance-kernels-approved.txt" 2>/dev/null || true)
+  if [[ "$previous" == "$prior_signature" ]]; then
+    printf 'Reusing R1.7 kernel/EP8 pass receipt; R1.8 communication retest skipped.\n'
+    printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
+    mv -- "$STATE_DIR/performance-kernels-approved.txt.tmp" "$STATE_DIR/performance-kernels-approved.txt"
+  elif [[ "$previous" != "$performance_signature" ]]; then
+    printf 'Checking inherited SM80 kernels; R1.8 EP8 communication retest skipped by operator request.\n'
     bash "$DEPLOY_DIR/tests/performance-kernels.sh"
-    bash "$DEPLOY_DIR/tests/performance-ep8.sh"
     printf '%s\n' "$performance_signature" > "$STATE_DIR/performance-kernels-approved.txt.tmp"
     mv -- "$STATE_DIR/performance-kernels-approved.txt.tmp" "$STATE_DIR/performance-kernels-approved.txt"
   fi
@@ -36,7 +43,7 @@ if docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
 else
   docker network create --internal --label dsv41.owner=offline-delivery "$NETWORK_NAME" >/dev/null
 fi
-# R1.4's TP4/DP2 capacity still describes 256K and cannot seed a 1M launch.
+# Always start at C32; older C56 capacity records cannot raise this hard cap.
 concurrency=$(op initial-concurrency /state/capacity.json)
 config=/deploy/configs/runtime.json
 [[ ! -f "$STATE_DIR/selected-config.json" ]] || config=/state/selected-config.json
@@ -64,7 +71,7 @@ for attempt in 1 2 3 4 5 6; do
       fixed_blocks=(--fixed-blocks "$minimum_blocks")
       printf 'Capacity iteration repeated C=%s; fixing KV to the smallest actually profiled pool (%s blocks) and revalidating.\n' "$required" "$minimum_blocks"
     fi
-    printf 'KV calibration requests C=%s (current C=%s); restarting with the exact formula.\n' "$required" "$concurrency"
+    printf 'KV calibration requests C=%s (current C=%s); restarting with the fixed C32 cap.\n' "$required" "$concurrency"
     concurrency=$required
     seen_concurrency+="$concurrency "
     remove_own "$ENGINE_NAME"
@@ -97,5 +104,5 @@ for attempt in 1 2 3 4 5 6; do
 done
 [[ "$completed" == true ]] || fail 'Capacity did not converge within six launches; reports retained, no context or concurrency downgrade applied'
 bash "$DEPLOY_DIR/scripts/local-access.sh"
-printf 'Model: DeepSeek-V4.1-Flash\nContext: 1048576 (1M, input plus output)\nConcurrency: %s\nAPI port: %s\nClient API key: not required (loopback and Docker bridges only)\n' "$concurrency" "$API_PORT"
+printf 'Model: DeepSeek-V4-Flash\nContext: 1048576 (1M, input plus output)\nConcurrency: %s (hard maximum)\nAPI port: %s\nClient API key: not required (loopback and Docker bridges only)\n' "$concurrency" "$API_PORT"
 printf 'GPU smoke/capacity passed. Full acceptance, speed selection and stability require tests/run-all.sh.\n'

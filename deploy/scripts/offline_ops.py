@@ -5,9 +5,10 @@ import json
 from pathlib import Path
 import sys
 
-MODEL = 'DeepSeek-V4.1-Flash'
+MODEL_PATH = '/models/DeepSeek-V4.1-Flash'
+SERVED_MODEL = 'DeepSeek-V4-Flash'
 LENGTH = 1048576
-CAPACITY_FORMULA = f'max(32,2*sum(dp_effective_kv_tokens//{LENGTH}))'
+CAPACITY_FORMULA = 'fixed(32)'
 
 
 def write(path, value):
@@ -18,7 +19,7 @@ def write(path, value):
 
 
 def resolve(config, concurrency, fixed_blocks=None):
-    expected = {'model':'/models/'+MODEL,'served_model_name':MODEL,'tensor_parallel_size':4,
+    expected = {'model':MODEL_PATH,'served_model_name':SERVED_MODEL,'tensor_parallel_size':4,
                 'data_parallel_size':2,'data_parallel_size_local':2,'enable_expert_parallel':True,
                 'all2all_backend':'allgather_reducescatter','enable_eplb':True,
                 'eplb_config':{'window_size':1000,'step_interval':3000,'num_redundant_experts':0,
@@ -40,8 +41,8 @@ def resolve(config, concurrency, fixed_blocks=None):
     if spec != {'method':'dspark','num_speculative_tokens':k,'draft_sample_method':'greedy',
                 'rejection_sample_method':'standard','use_local_argmax_reduction':True,'enable_adaptive_verification':False}:
         raise ValueError('DSpark contract changed')
-    if not (32 <= concurrency and concurrency % 2 == 0):
-        raise ValueError('Invalid concurrency; no silent clamping is performed')
+    if type(concurrency) is not int or concurrency != 32:
+        raise ValueError('This deployment has a hard global concurrency limit of 32')
     if config['gpu_memory_utilization'] != 0.92:
         raise ValueError('This deployment is fixed to gpu_memory_utilization=0.92')
     if config['max_num_batched_tokens'] not in [4096,8192,16384]:
@@ -109,9 +110,14 @@ def capacity(directory, configured):
         raise ValueError('Each DP pool must fit at least one full 1M window')
     windows = sum(p['full_windows'] for p in pools)
     effective = sum(p['effective_kv_tokens'] for p in pools)
-    required = max(32,2*windows)
+    required = 32
     if windows < 1:
         raise ValueError('Cannot fit even one full 1M window')
+    # Preserve the raw window-derived value as diagnostic evidence, but never
+    # let an older telemetry field override the operator's hard C32 limit.
+    for row in rows:
+        if 'required_concurrency' in row:
+            row['uncapped_window_derived_concurrency'] = row.pop('required_concurrency')
     return {'status':'CALIBRATED' if required == configured else 'RESTART_REQUIRED',
             'max_model_len':LENGTH,'full_windows':windows,'effective_kv_tokens':effective,
             'configured_concurrency':configured,'required_concurrency':required,
@@ -123,17 +129,7 @@ def capacity(directory, configured):
 
 
 def initial_concurrency(path):
-    """Reuse only a matching calibration as a seed; every launch profiles again."""
-    try:
-        row = json.loads(path.read_text())
-        if (row.get('status') != 'CALIBRATED' or row.get('topology') != 'TP4-DP2-EP8'
-                or row.get('max_model_len') != LENGTH or row.get('formula') != CAPACITY_FORMULA):
-            return 32
-        value = row['required_concurrency']
-        if type(value) is int and value >= 32 and value % 2 == 0:
-            return value
-    except (OSError, ValueError, KeyError, TypeError, AttributeError):
-        pass
+    """Always use the fixed C32 cap, including after older C56 calibrations."""
     return 32
 
 
