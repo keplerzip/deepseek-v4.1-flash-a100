@@ -16,7 +16,7 @@ bash ./start.sh
 
 ## 版本更新
 
-R1.5.1 / 20260922-context1m-gpu92 固定 1M / 显存预算 0.92，可复用原 R1 镜像，通过累计小包直接备份升级。首次启用新增算子先执行 SM80 数值和图重放检查；依据覆盖层、镜像、驱动和开关缓存通过结果。使用方法、诊断开关及恢复最近备份见 [R1.5.1 更新](deployment-update-20260922-gpu92.md)。版本身份见 deploy/manifests/update.json，实际安装收据见 deploy/runtime/latest-update.json。
+R1.6 / 20260923-ep8-dtype 保持 1M / 显存预算 0.92，修正 EP8 测试期望 dtype，可复用原 R1 镜像，通过累计小包直接备份升级。首次启用新增算子先执行 SM80 数值和图重放检查；依据覆盖层、镜像、驱动和开关缓存通过结果。使用方法、诊断开关及恢复最近备份见 [R1.6 更新](deployment-update-20260923-ep8.md)。版本身份见 deploy/manifests/update.json，实际安装收据见 deploy/runtime/latest-update.json。
 
 在构建侧组装完整离线 deploy 目录，核对组件和镜像清单，复制到目标机的独立目录。在维护窗口停止旧实例，再按部署说明启动新版本。保留旧目录和相邻权重以便恢复，避免直接覆盖正在运行的脚本与运行状态。运行目录包含实例身份、缓存和验收结果，不应作为新源码包的一部分复制。
 

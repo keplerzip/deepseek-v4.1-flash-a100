@@ -1,4 +1,6 @@
-# DeepSeek-V4.1-Flash 离线服务 R1.5.1 / v1.5.1
+# DeepSeek-V4.1-Flash 离线服务 R1.6 / v1.6.0
+
+R1.6 修正实机回传的 EP8 验收 dtype 错误：变长 float32 回退输出应与 float32 期望值严格比较。单卡 SM80 检查曾在 R1.5.1 尝试中通过，EP8 因测试 dtype 错误失败并自动回滚；修正后八卡结果及整模速度仍待目标机验收。配置、性能覆盖、权重和原镜像均沿用 R1.5.1。[累计升级与验证](../docs/deployment-update-20260923-ep8.md)。
 
 固定显存预算 gpu_memory_utilization=0.92，DSpark k=5，1048576（1M）总上下文，TP4×DP2＋EP8，Engram 主存卸载。只管理模型服务，不安装 NewAPI。
 

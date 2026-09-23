@@ -57,7 +57,10 @@ def main():
     sizes = list(range(1, 9))
     x = torch.full((sizes[rank], 32), rank + 1, dtype=torch.float32, device='cuda')
     ag = comm.all_gatherv(x, sizes=sizes)
-    expected = torch.cat([torch.full((n, 32), i + 1, device='cuda') for i, n in enumerate(sizes)])
+    expected = torch.cat([
+        torch.full((n, 32), i + 1, device='cuda', dtype=x.dtype)
+        for i, n in enumerate(sizes)
+    ])
     torch.testing.assert_close(ag, expected, atol=0, rtol=0)
     y = torch.full((sum(sizes), 32), rank + 1, device='cuda')
     rs = comm.reduce_scatterv(y, dim=0, sizes=sizes)

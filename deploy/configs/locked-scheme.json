@@ -1,5 +1,5 @@
 {
-  "release": "1.5.1",
+  "release": "1.6.0",
   "model": "DeepSeek-V4.1-Flash",
   "default_dspark_k": 5,
   "native_dspark_block_size": 5,
@@ -25,7 +25,7 @@
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260922-context1m-gpu92",
+  "source_update": "20260923-ep8-dtype",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
@@ -43,8 +43,8 @@
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
   "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
-  "delivery_version": "R1.5.1",
-  "git_tag": "v1.5.1",
+  "delivery_version": "R1.6",
+  "git_tag": "v1.6.0",
   "data_parallel_size": 2,
   "expert_parallel_size": 8,
   "performance_overlay_release": "1.4.0",
