@@ -31,7 +31,7 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 [完整性能报告与方法](docs/performance.md) · [机器可读实测记录](reports/) · [测试代码](deploy/tests/dspark_benchmark.py)
 
-**R1.9 / v1.9.0：固定 500K＝1024,000 token、C64、调度预算 1024，唯一公开名称 `DeepSeek-Flash`。** 原 V4.1 权重不变，复用初始 SM80 镜像，累计保留 TP4×DP2＋EP8、k5、0.92、Engram 主存卸载、前缀缓存、图片上限 999 与三协议。新增 prefill 去同步、inverse RoPE 融合、DSpark context KV 图捕获、indexer 工作区上界优化。**尚无本版 A100 实测 TPS；上表是历史 TP8 / 256K 成绩，不能当作新版成绩。** [完整进版方案与传输说明](docs/deployment-update-20261015-r19.md) · [全网方案筛选](docs/performance-review-20261015.md)。
+**R1.9 / v1.9.0：固定 500K＝512,000 token、C64、调度预算 1024，唯一公开名称 `DeepSeek-Flash`。** 原 V4.1 权重不变，复用初始 SM80 镜像，累计保留 TP4×DP2＋EP8、k5、0.92、Engram 主存卸载、前缀缓存、图片上限 999 与三协议。新增 prefill 去同步、inverse RoPE 融合、DSpark context KV 图捕获、indexer 工作区上界优化。**尚无本版 A100 实测 TPS；上表是历史 TP8 / 256K 成绩，不能当作新版成绩。** [完整进版方案与传输说明](docs/deployment-update-20261015-r19.md) · [全网方案筛选](docs/performance-review-20261015.md)。
 
 R1.8 用户回传还观察过：文本预热 176.25 / 192.10 tok/s；8 图 off 单流 39.49–177.29 tok/s，中位数 128.02。因后台请求造成全局计数不一致，两轮正式结果均 FAIL，无有效聚合成绩。这些观察值不能据此声称升级幅度。新版测速会保留污染数据并标记 CONTAMINATED，也支持只暂停本项目入口后隔离测速。
 
