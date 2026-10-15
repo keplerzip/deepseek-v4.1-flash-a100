@@ -1,0 +1,509 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-07",
+  "timezone": "Asia/Shanghai",
+  "scope": "Research records only; no serving source, defaults, image, weights, host settings, NewAPI or release version changed",
+  "source_baseline": {
+    "release": "R1.8",
+    "version": "1.8.0",
+    "git_commit": "89bd2effe25e739f517af3a2e20eb152ee8d96e5",
+    "weights_model": "DeepSeek-V4.1-Flash",
+    "served_model_name": "DeepSeek-V4-Flash",
+    "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+    "base_image": "deepseek-v4.1-flash-a100:20260913-r1",
+    "base_backport_commit": "a350766628514d597670d2a5217777fdee2ba7f4"
+  },
+  "constraints": {
+    "gpus": "8x A100-SXM4-80GB, NVSwitch",
+    "context_tokens": 1048576,
+    "total_scheduler_concurrency": 32,
+    "tp": 4,
+    "dp": 2,
+    "ep": 8,
+    "dspark_k": 5,
+    "gpu_memory_utilization": 0.92,
+    "engram_cpu_offload": true,
+    "prefix_caching": true,
+    "multimodal": true,
+    "weights_unchanged": true,
+    "target_offline": true,
+    "operator_access": "manual transfer and sudo -n docker",
+    "build_machine_has_gpu": false
+  },
+  "finding": "No inspected public evidence establishes a replacement runtime faster than R1.8 on the same eight-A100, original V4.1, multimodal, 1M, C32 workload. Prioritize source-compatible ports and measure them on target.",
+  "upstream": {
+    "vllm_release": "v0.31.0",
+    "release_url": "https://github.com/vllm-project/vllm/releases/tag/v0.31.0",
+    "published_at_utc": "2026-10-05T06:44:55Z",
+    "v41_flashmla_capability_majors": [
+      9,
+      10
+    ],
+    "v41_flashinfer_capability_majors": [
+      10,
+      12
+    ],
+    "stock_sm80_v41_drop_in": false,
+    "sm80_issue": "https://github.com/vllm-project/vllm/issues/57144",
+    "sglang_verified_hardware": [
+      "H200",
+      "B200",
+      "B300",
+      "GB300",
+      "MI355X"
+    ],
+    "sglang_nvidia_preview_image": "lmsysorg/sglang:dev-dsv41",
+    "sglang_docs": "https://lmsysorg.mintlify.app/cookbook/autoregressive/DeepSeek/DeepSeek-V4_1"
+  },
+  "repository_observations": [
+    {
+      "name": "wtdcode/vllm-backport",
+      "default_branch": "master",
+      "head_sha": "29e66dad461b11caae6039f510eaa7913f9dfb19",
+      "commits_since_prior_head": 4,
+      "new_commits_scope": [
+        "Qwen4",
+        "MiMo",
+        "PP KV allocation"
+      ],
+      "master_v013_commits_since_20260922": 0,
+      "new_v41_decode_gain_shown": false,
+      "url": "https://github.com/wtdcode/vllm-backport/commits/master/"
+    },
+    {
+      "name": "Tokha233/deepseek-v4.1-flash-a100-turbo",
+      "head_sha": "fae324ae62ac5cef31b7d38f5d369618e1cae1fa",
+      "changed_since_prior_review": false,
+      "reported_gpu": "8x A800 80GB",
+      "reported_c32_high_aggregate_tok_s": 1459.17,
+      "reported_c128_aggregate_tok_s": 3039.88,
+      "already_ported_core_optimizations": true,
+      "url": "https://github.com/Tokha233/deepseek-v4.1-flash-a100-turbo"
+    },
+    {
+      "name": "shi3z/deepseekv4.1-A100-custom",
+      "head_sha": "580568edd6f84537ff042ded4ee842b892bf3ff4",
+      "changed_since_prior_review": false,
+      "url": "https://github.com/shi3z/deepseekv4.1-A100-custom"
+    },
+    {
+      "name": "concentrate1/deepseekv4.1-A100-custom",
+      "pushed_at_utc": "2026-09-27T19:34:35Z",
+      "new_support": [
+        "persistent model worker",
+        "batch scheduling",
+        "vision/cache fixes",
+        "cancellation"
+      ],
+      "matching_8xa100_c32_1m_benchmark_found": false,
+      "url": "https://github.com/concentrate1/deepseekv4.1-A100-custom"
+    },
+    {
+      "name": "guqiong96/Lvllm",
+      "sm80_v41_support_claimed": true,
+      "public_v41_single_request_spec_tok_s_range": [
+        24,
+        40
+      ],
+      "benchmark_hardware": "2x 3090, 2x 5060Ti, mixed TP4; EPYC 7642 CPU hybrid MoE",
+      "decision": "Additional hardware support; no demonstrated benefit over eight-GPU resident-compute baseline",
+      "url": "https://github.com/guqiong96/Lvllm"
+    },
+    {
+      "name": "guqiong96/Lsglang",
+      "sm80_v41_support_claimed": true,
+      "public_v41_4080s2_example_tok_s": 60,
+      "decision": "CPU/GPU hybrid route, not matched A100 evidence",
+      "url": "https://github.com/guqiong96/Lsglang"
+    },
+    {
+      "name": "devin-lai/DeepSeek-V4.1-Flash-Accel",
+      "pushed_at_utc": "2026-09-16T07:57:49Z",
+      "reported_gpu": "8x RTX 5090 / SM120",
+      "decision": "Old offload/eager baseline ratio cannot predict R1.8 gains",
+      "url": "https://github.com/devin-lai/DeepSeek-V4.1-Flash-Accel"
+    },
+    {
+      "name": "Zanooda/deepseek-v4.1-flash-cmp170hx",
+      "commits_since_20260922": 0,
+      "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx"
+    }
+  ],
+  "priority_order": [
+    [
+      57632
+    ],
+    [
+      57435
+    ],
+    [
+      56720
+    ],
+    [
+      56625,
+      58499
+    ]
+  ],
+  "follow_after_first_priority": [
+    59511
+  ],
+  "engram_attribution": "No causal proof that host Engram alone explains lower A100 decode; profile host lookup, NUMA/PCIe, attention, compute, draft and communication before attribution.",
+  "current_benchmark_limit": {
+    "source": "operator-pasted R1.8 eight-image off benchmark",
+    "single_decode_median_tok_s": 128.02,
+    "single_decode_max_tok_s": 177.29,
+    "global_generation_accounting_mismatch": true,
+    "background_requests_possible": true,
+    "clean_ab_baseline": false
+  },
+  "vllm_pr_snapshots": [
+    {
+      "number": 57632,
+      "url": "https://github.com/vllm-project/vllm/pull/57632",
+      "title": "[DFlash] Capture the context K/V precompute in the draft CUDA graph",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-24T21:38:04Z",
+      "head_sha": "f2b00d1f989e62edb44a869a8786f4594b55e495",
+      "merge_sha": "04730e82700d0c9b957cda188dd1bbc8073e1fcd",
+      "decision": "priority_1",
+      "purpose": "DSpark context KV precompute captured in FULL draft graphs",
+      "reported_hardware": "GB200",
+      "a100_applicability": "R1.8 precompute remains eager; requires padded slots, variable context rows and DP2-compatible graph adaptation",
+      "selected_evidence": {
+        "c1_tpot_before_ms": 1.27,
+        "c1_tpot_after_ms": 1.08,
+        "synthetic_acceptance": true
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 57435,
+      "url": "https://github.com/vllm-project/vllm/pull/57435",
+      "title": "[ROCm][DSv4.1][Perf] Fuse the inverse RoPE into the sparse decode reduce",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-22T18:05:12Z",
+      "head_sha": "b1465b142c4c7cfc6c4d94ae34e45fa309cb9f31",
+      "merge_sha": "ca831d1c55714aa10acd826389674ce8f6a4f872",
+      "decision": "priority_1",
+      "purpose": "Inverse RoPE fused into sparse decode reduce",
+      "reported_hardware": "MI355X",
+      "a100_applicability": "SM80 inherits shared Triton path; preserve software FP8 and dynamically changing row counts",
+      "selected_evidence": {
+        "standalone_inverse_rope_us_per_step": 196.55,
+        "standalone_launches_per_step": 43
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 56720,
+      "url": "https://github.com/vllm-project/vllm/pull/56720",
+      "title": "[ROCm][DSv4.1][Perf] One-pass dequantize and a gather-sized grid for the compressed K cache",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-10-06T00:57:47Z",
+      "head_sha": "5a22914e0de08e706bb794720cc639cf697b434f",
+      "merge_sha": "97bd8c74ebf12c3d847fb59f24966a83bf6f6920",
+      "decision": "long_prefill_candidate",
+      "purpose": "Gather grid selected from length and one-pass KV decode",
+      "reported_hardware": "MI355X",
+      "a100_applicability": "Grid mechanism portable; new one-pass default is ROCm only and needs SM80 software-FP8 adaptation",
+      "selected_evidence": {
+        "input_tokens": 131072,
+        "concurrency": 4,
+        "output_tokens": 8,
+        "dspark": false,
+        "warm_ttft_change_pct": -43.2,
+        "cold_ttft_change_pct": -10.6
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 58499,
+      "url": "https://github.com/vllm-project/vllm/pull/58499",
+      "title": "[Bugfix][DSV4.1] Avoid host sync in ViT CUDA graph replay metadata",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-26T15:37:37Z",
+      "head_sha": "3733bd73feb71d64b8876fe254268b7f58f0646e",
+      "merge_sha": "7d8c5fe9a95dd7a9734f05fdbad57c1ad61f77fe",
+      "decision": "vision_candidate_with_56625",
+      "purpose": "Eliminate host synchronization in vision graph metadata",
+      "reported_hardware": "H200",
+      "a100_applicability": "R1.8 has no vision encoder graphs; port complete 56625 path plus this fix and budget both DP pools",
+      "selected_evidence": {
+        "generation_test_passed": true,
+        "full_model_performance_measured": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59511,
+      "url": "https://github.com/vllm-project/vllm/pull/59511",
+      "title": "[Perf][DFlash] Capture context combine and anchor in the draft CUDA graph",
+      "state": "open",
+      "draft": false,
+      "merged_at_utc": null,
+      "head_sha": "680590ff66517817d3f8d8e0e87d7af181d76ccc",
+      "merge_sha": null,
+      "decision": "follow_after_57632",
+      "purpose": "Capture context combine and anchor in draft graph",
+      "reported_hardware": "GB200",
+      "a100_applicability": "Open PR; strongest claim limited to host-bound C1 with baseline drift, synthetic acceptance",
+      "selected_evidence": {
+        "c1_itl_change_pct_range": [
+          -6,
+          -2
+        ],
+        "c8_c64_measurable_gain": false,
+        "synthetic_acceptance": true
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 60320,
+      "url": "https://github.com/vllm-project/vllm/pull/60320",
+      "title": "[Perf][DSpark] Compute windowed draft context for trailing rows only",
+      "state": "open",
+      "draft": false,
+      "merged_at_utc": null,
+      "head_sha": "69a504902ad6296f46567d8d9d4a2abf0a085470",
+      "merge_sha": null,
+      "decision": "low_priority_prefill",
+      "purpose": "Project only trailing SWA context rows for DSpark",
+      "reported_hardware": "GB200",
+      "a100_applicability": "Open PR; requires all-SWA cache, prefix-cache eligibility checks and no connector/anchor",
+      "selected_evidence": {
+        "whole_request_ttft_change_pct_range": [
+          -1.3,
+          -0.3
+        ],
+        "confidence_interval_includes_zero": true
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59327,
+      "url": "https://github.com/vllm-project/vllm/pull/59327",
+      "title": "[Perf][DSv4.1] Faster Engram host lookups: sorted rows, inline big lookups",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-10-01T03:54:45Z",
+      "head_sha": "24a50efaaee9ba5d9aacff6df79b7afb52935983",
+      "merge_sha": "4c2d277643e217344056e1d2c42115d5f005912f",
+      "decision": "engram_profile_first",
+      "purpose": "Sort host lookup and inline larger lookups",
+      "reported_hardware": "GB200/GB300",
+      "a100_applicability": "Sort threshold enabled on Blackwell; R1.8 already prepares Engram on main stream",
+      "selected_evidence": {
+        "a100_e2e_gain_proven": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 56926,
+      "url": "https://github.com/vllm-project/vllm/pull/56926",
+      "title": "[Perf][Engram] Serialize offloaded lookups and pack host tables into huge pages",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-25T02:52:03Z",
+      "head_sha": "ba19c129cbc49295f47f8880c9e2bdf77005cca1",
+      "merge_sha": "6936e77ba451725e6482eee229839e10ab2bf48c",
+      "decision": "engram_profile_first",
+      "purpose": "Optional THP host tables and serialized lookup",
+      "reported_hardware": "GB200",
+      "a100_applicability": "Target kernel 5.15 lacks MADV_COLLAPSE; no host setting changes justified and old backport already uses main stream",
+      "selected_evidence": {
+        "a100_e2e_gain_proven": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59849,
+      "url": "https://github.com/vllm-project/vllm/pull/59849",
+      "title": "[Perf][DSv4.1] Register CPU-offloaded Engram tables at their exact size",
+      "state": "open",
+      "draft": true,
+      "merged_at_utc": null,
+      "head_sha": "8e91c6ea3164487585bfe75241e4dd9f241ffcf9",
+      "merge_sha": null,
+      "decision": "watch_draft",
+      "purpose": "Register CPU tables at exact size without requiring THP",
+      "reported_hardware": "GB10",
+      "a100_applicability": "Draft; only lookup microbenchmarks and RAM savings, GB200 and E2E still requested",
+      "selected_evidence": {
+        "a100_e2e_gain_proven": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 58678,
+      "url": "https://github.com/vllm-project/vllm/pull/58678",
+      "title": "[Perf][DSv4.1] Shard the Engram wkv projection across TP ranks",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-26T01:15:58Z",
+      "head_sha": "1f21107a23381758f8e1373b799302b7e98c81ef",
+      "merge_sha": "4bb804cc5bf0de81ce8344238b5b4522630874fd",
+      "decision": "not_reached_in_current_topology",
+      "purpose": "TP-sharded Engram wkv projection",
+      "reported_hardware": "H20",
+      "a100_applicability": "R1.8 TP4 DP2 EP8 enables sequence parallel; PR keeps replicated projection under sequence parallel",
+      "selected_evidence": {
+        "current_default_gain_expected_from_dispatch": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59923,
+      "url": "https://github.com/vllm-project/vllm/pull/59923",
+      "title": "[Perf][DSv4.1] Exchange packed FP8 Engram rows across DP and feed wkv MXFP8",
+      "state": "open",
+      "draft": false,
+      "merged_at_utc": null,
+      "head_sha": "d593d7f5df95ce73a762c428a9fe87fb5f188c52",
+      "merge_sha": null,
+      "decision": "fast_path_not_applicable",
+      "purpose": "Packed FP8 DP exchange and direct MXFP8 wkv",
+      "reported_hardware": "GB300",
+      "a100_applicability": "Headline path requires TP1 and native/direct MXFP8 kernel, unlike current TP4 SM80 Marlin",
+      "selected_evidence": {
+        "a100_e2e_gain_proven": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 57893,
+      "url": "https://github.com/vllm-project/vllm/pull/57893",
+      "title": "[Perf][DSv4.1] Speed up small Engram lookups",
+      "state": "open",
+      "draft": true,
+      "merged_at_utc": null,
+      "head_sha": "d4e47cb518bb6904aad0026429f781bbc3bf35b4",
+      "merge_sha": null,
+      "decision": "watch_draft_no_e2e_gain",
+      "purpose": "Two-row small Engram lookup tile",
+      "reported_hardware": "GB300",
+      "a100_applicability": "Component gain did not establish serving gain",
+      "selected_evidence": {
+        "paired_serving_mean_change_pct": 0.11,
+        "paired_serving_95pct_interval": [
+          -1.55,
+          1.8
+        ]
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 58132,
+      "url": "https://github.com/vllm-project/vllm/pull/58132",
+      "title": "[Model] Decoder-side SWA bounded replay for DeepSeek-V4.1",
+      "state": "closed",
+      "draft": false,
+      "merged_at_utc": "2026-09-29T08:25:47Z",
+      "head_sha": "e0f1dc431dd09a70d5179a65e2e678f4be3b8d55",
+      "merge_sha": "4b2e1cfa7b8094f1a9547aee41c39e05d2ce5c97",
+      "decision": "topology_gate_blocks_default",
+      "purpose": "Decoder SWA bounded replay",
+      "reported_hardware": "GB200",
+      "a100_applicability": "Disabled under sequence-parallel MoE; nontrivial SM80/SP adaptation required",
+      "selected_evidence": {
+        "current_default_gain_expected_from_dispatch": false
+      },
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59039,
+      "url": "https://github.com/vllm-project/vllm/pull/59039",
+      "title": "[ROCm][Perf][DSv4.1] Enable decoder SWA bounded replay",
+      "state": "open",
+      "draft": true,
+      "merged_at_utc": null,
+      "head_sha": "02bd80d1cbb7535fefc98c3f410289de01bff2c6",
+      "merge_sha": null,
+      "decision": "nontrivial_port",
+      "purpose": "ROCm decoder bounded replay",
+      "reported_hardware": "MI325X",
+      "a100_applicability": "Draft and needs separate index bounds changes; no A100 evidence",
+      "selected_evidence": {},
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 46963,
+      "url": "https://github.com/vllm-project/vllm/pull/46963",
+      "title": "[Attention] Support NVFP4 KV cache on SM8x and SM12x with FlashInfer",
+      "state": "open",
+      "draft": false,
+      "merged_at_utc": null,
+      "head_sha": "3b484624b907f5a9ddae0025d6fc490b306fe2c7",
+      "merge_sha": null,
+      "decision": "wrong_cache_format",
+      "purpose": "Standard MHA NVFP4 KV on SM80",
+      "reported_hardware": "SM80",
+      "a100_applicability": "FlashInfer FA2 ordinary MHA KV, not V4.1 compressed MLA",
+      "selected_evidence": {},
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59342,
+      "url": "https://github.com/vllm-project/vllm/pull/59342",
+      "title": "[Attention][MLA] Support nvfp4_ds_mla on FLASHINFER_MLA_SPARSE, with native NVFP4 decode",
+      "state": "open",
+      "draft": true,
+      "merged_at_utc": null,
+      "head_sha": "40287a490e43e31aa30f8b231ac50fa73cab9a18",
+      "merge_sha": null,
+      "decision": "unsupported_architecture",
+      "purpose": "NVFP4 compressed DS MLA sparse attention",
+      "reported_hardware": "SM100/SM103",
+      "a100_applicability": "No SM80 dispatch",
+      "selected_evidence": {},
+      "tested_on_this_a100_target": false
+    },
+    {
+      "number": 59668,
+      "url": "https://github.com/vllm-project/vllm/pull/59668",
+      "title": "[ROCm][DSV4.1][Perf] Single-launch DSA decode candidate mask",
+      "state": "open",
+      "draft": false,
+      "merged_at_utc": null,
+      "head_sha": "9c80621dda0bf7bf0a3a14edc41fd49636434ab3",
+      "merge_sha": null,
+      "decision": "profile_call_reachability",
+      "purpose": "Fuse candidate mask generation",
+      "reported_hardware": "MI355X",
+      "a100_applicability": "R1.8 candidate-only indexer bypasses part of the full-width mask path",
+      "selected_evidence": {},
+      "tested_on_this_a100_target": false
+    }
+  ],
+  "backport_pr_snapshots": [
+    {
+      "number": 110,
+      "url": "https://github.com/wtdcode/vllm-backport/pull/110",
+      "title": "attention: route small-q spec-decode verify batches onto the 3D split-KV kernel (7-20x per-call at long context)",
+      "state": "open",
+      "draft": false,
+      "head_sha": "795c622432cebc88847ba8539c3d2d274e4a6beb",
+      "reported_hardware": "CMP 170HX / SM80",
+      "reported_model": "MiMo-V2.6 with MTP",
+      "directly_used_by_r18_sparse_mla": false,
+      "decision": "Borrow verify-parallelism mechanism only after profiling; ordinary FA2/DiffKV backend is not current V4.1 sparse MLA"
+    },
+    {
+      "number": 82,
+      "url": "https://github.com/wtdcode/vllm-backport/pull/82",
+      "title": "Speculative-decoding verify attention: split-KV kernel for sm8x (+12% decode on the FA2 path)",
+      "state": "open",
+      "draft": false,
+      "head_sha": "13159bbafcff4a714a2ce29539ee3f4d4c228945",
+      "reported_hardware": "CMP 170HX / SM80",
+      "reported_model": "Qwen3.8-27B with DFlash2",
+      "directly_used_by_r18_sparse_mla": false,
+      "decision": "Borrow verify-parallelism mechanism only after profiling; ordinary FA2/DiffKV backend is not current V4.1 sparse MLA"
+    }
+  ],
+  "implementation_and_target_validation_completed": false,
+  "verification_plan": "Fixed original weights and screenshots; isolate ambient traffic; alternate baseline/candidate/baseline; off/high and C1/C32; record decode, E2E, TTFT, DSpark acceptance, caching, preemption and both KV pools; validate dynamic graph inputs, slots and multimodal/task quality."
+}

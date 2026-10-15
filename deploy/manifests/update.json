@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "id": "20260923-r18-local-access-c32-alias",
-  "release": "1.8.0",
-  "delivery_version": "R1.8",
-  "git_tag": "v1.8.0",
+  "id": "20261015-r19-500k-b1024-c64",
+  "release": "1.9.0",
+  "delivery_version": "R1.9",
+  "git_tag": "v1.9.0",
   "cumulative": true,
   "compatible_initial_image": "deepseek-v4.1-flash-a100:20260913-r1",
   "requires_prior_update": false,
   "includes_weights": false,
   "includes_container_image": false,
-  "readme_source": "docs/deployment-update-20260923-r18.md",
+  "readme_source": "docs/deployment-update-20261015-r19.md",
   "target_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST"
 }

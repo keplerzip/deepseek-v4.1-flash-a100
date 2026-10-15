@@ -29,7 +29,7 @@ def main():
     from vllm.config.compilation import CUDAGraphMode
     ns = dict(np=np, torch=torch, CUDAGraphMode=CUDAGraphMode, build_attn_metadata=lambda **kw: kw)
     fn = method('vllm/v1/worker/gpu/spec_decode/speculator.py', 'DraftModelSpeculator', '_build_attn_metadata', ns)
-    spec = NS(max_model_len=1048576, draft_max_seq_len=1048576, attn_groups=[], kv_cache_config=None,
+    spec = NS(max_model_len=512000, draft_max_seq_len=512000, attn_groups=[], kv_cache_config=None,
               block_tables=NS(input_block_tables=[torch.zeros(6, 8)], slot_mappings=torch.arange(96).view(1, -1), cp_size=1),
               input_buffers=NS(query_start_loc=torch.zeros(7, dtype=torch.int32), seq_lens=torch.ones(6, dtype=torch.int32), positions=torch.arange(96)))
     for mode, tokens in ((CUDAGraphMode.FULL, 30), (CUDAGraphMode.PIECEWISE, 10), (CUDAGraphMode.NONE, 10)):
@@ -96,7 +96,7 @@ def main():
         async def generate(*args, **kw):
             calls.append(kw)
             yield 'first-result'
-        owner = NS(model_config=NS(max_model_len=1048576), engine_client=NS(generate=generate), _log_inputs=lambda *a,**k:None)
+        owner = NS(model_config=NS(max_model_len=512000), engine_client=NS(generate=generate), _log_inputs=lambda *a,**k:None)
         context = NS(append_output=lambda _:None, need_builtin_tool_call=lambda:False)
         for rank in (0, 1):
             rows = [x async for x in response_generate(owner, 'test', {}, None, context, data_parallel_rank=rank)]
@@ -112,12 +112,12 @@ def main():
     from vllm.utils.argparse_utils import FlexibleArgumentParser
     sys.path.insert(0, '/deploy/scripts')
     from offline_ops import resolve
-    config, argv = resolve(json.loads(Path('/deploy/configs/runtime.json').read_text()), 56)
+    config, argv = resolve(json.loads(Path('/deploy/configs/runtime.json').read_text()), 64)
     parsed = make_arg_parser(FlexibleArgumentParser()).parse_args(argv)
     assert parsed.data_parallel_size == parsed.data_parallel_size_local == 2
-    assert parsed.tensor_parallel_size == 4 and parsed.max_num_seqs == 28
+    assert parsed.tensor_parallel_size == 4 and parsed.max_num_seqs == 32
     assert parsed.enable_expert_parallel and parsed.enable_eplb
-    assert not parsed.language_model_only and parsed.max_model_len == 1048576
+    assert not parsed.language_model_only and parsed.max_model_len == 512000
     assert parsed.gpu_memory_utilization == 0.92
     print(json.dumps(dict(status='PASS', gpu_executed=False,
         checks=['DP graph/eager padding control', 'dense dispatch including permuted bias',

@@ -38,3 +38,5 @@
 ## R1.4 / 20260922-perf5
 
 感谢 Woosuk Kwon / WoosukKwon 的 [vLLM #57885](https://github.com/vllm-project/vllm/pull/57885)（`73ce1d9220507a4d06412983e6cb599ed163eb43`）及 nehaprakriya 的 [#57860](https://github.com/vllm-project/vllm/pull/57860)（`2031422bfd952cc65fc1a46a9b570f6f04dc318d`）。本版移植稀疏注意力冗余元数据清理和 ragged indptr/pack 融合，针对 A100 实际继承路径增加 1024 行上限、空输入处理及独立回退，继续保留 R1.3 索引复用。代码保留 Apache-2.0 SPDX；其他 GPU 的微基准不作为本机提速承诺。
+
+R1.9还感谢vLLM #60091、#57435、#57632、#60874的作者和审阅者，分别提供同步消除、逆RoPE融合、draft context图捕获、工作区预算机制。本仓库适配到旧SM80 ABI、添加边界和离线验证；不将上游优化归为原创。固定提交及具体文件见deploy/overrides/performance/manifest.json。调研涉及LvLLM、Lsglang、XTU、shi3z、DGX社区方案；未采用其全部运行时，也不把其硬件成绩当成本机成绩。

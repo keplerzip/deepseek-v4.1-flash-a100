@@ -1,0 +1,31 @@
+INFO 10-15 10:26:24 [importing.py:74] Triton is installed but 0 active driver(s) found (expected 1). Disabling Triton to prevent runtime errors.
+INFO 10-15 10:26:24 [importing.py:98] Triton not installed or not compatible; certain GPU-related functions will not be available.
+W1015 10:26:29.999000 1 torch/utils/cpp_extension.py:178] No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+WARNING 10-15 10:26:31 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-15 10:26:32 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-15 10:26:32 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+test_atomic_guard_covers_exact_start_text_prefix_cached_and_duplicate_images (__main__.SchedulerMultimodalTests.test_atomic_guard_covers_exact_start_text_prefix_cached_and_duplicate_images) ... INFO 10-15 10:26:32 [scheduler.py:288] Chunked prefill is enabled with max_num_batched_tokens=1024.
+ok
+test_encoder_budget_is_independent_and_does_not_inflate_decoder_budget (__main__.SchedulerMultimodalTests.test_encoder_budget_is_independent_and_does_not_inflate_decoder_budget) ... ok
+test_image_span_is_atomic_and_never_exceeds_1024_decoder_tokens (__main__.SchedulerMultimodalTests.test_image_span_is_atomic_and_never_exceeds_1024_decoder_tokens) ... ok
+test_multiple_images_reclaim_encoder_cache_without_raising_decoder_budget (__main__.SchedulerMultimodalTests.test_multiple_images_reclaim_encoder_cache_without_raising_decoder_budget) ... ok
+test_real_cli_and_full_vllm_config_with_simulated_a100_capability (__main__.SchedulerMultimodalTests.test_real_cli_and_full_vllm_config_with_simulated_a100_capability) ... INFO 10-15 10:26:32 [config.py:840] Detected quantization_config.scale_fmt=ue8m0; enabling UE8M0 for DeepGEMM.
+INFO 10-15 10:26:38 [model.py:693] Resolved architecture: DeepseekV41ForCausalLM
+INFO 10-15 10:26:38 [model.py:2031] Using max model len 512000
+INFO 10-15 10:26:39 [cache.py:355] Using fp8_ds_mla data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+INFO 10-15 10:26:39 [model.py:693] Resolved architecture: DeepseekV41ForCausalLM
+INFO 10-15 10:26:39 [model.py:2031] Using max model len 1048576
+INFO 10-15 10:26:40 [speculative.py:1644] Overriding draft model max model len from 1048576 to 512000
+INFO 10-15 10:26:40 [vllm.py:1149] Resolved Engram configuration: EngramConfig(cpu_offload=True, embedding_across_dp=False)
+INFO 10-15 10:26:40 [vllm.py:1396] Disabling NCCL for DP synchronization when using async scheduling.
+INFO 10-15 10:26:40 [kernel.py:370] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+WARNING 10-15 10:26:40 [vllm.py:2002] max_num_scheduled_tokens is set to 1024 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens.
+INFO 10-15 10:26:40 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+{"check": "vision1024", "actual_processor_cases": 8, "normal_pad_exact_parity": 7, "degenerate_original_failure_fixed": 1, "resize_math_cases": 1000, "image_span_token_cap": 1020, "requested_image_token_ceiling": 1024, "real_scheduler_prefill_tokens": {"1020": 1020, "1024": 0}, "dspark_reserved_slots": 4, "delimiter_tokens_included": true, "atomic_bidirectional_images": true}
+ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 8.964s
+
+OK
+{"status": "PASS", "gpu_executed": false, "tests": 5, "skipped": 0, "simulated_hardware_config": true, "scope": "real scheduler, encoder cache and embedding-slice CPU checks; no GPU inference"}

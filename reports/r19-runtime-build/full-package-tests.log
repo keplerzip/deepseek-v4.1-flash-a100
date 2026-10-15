@@ -1,0 +1,12 @@
+test_corrupt_payload_foreign_image_and_nonempty_target_refused (__main__.FullPackageTests.test_corrupt_payload_foreign_image_and_nonempty_target_refused) ... ok
+test_existing_install_uses_real_transaction_and_preserves_model_cache (__main__.FullPackageTests.test_existing_install_uses_real_transaction_and_preserves_model_cache) ... ok
+test_existing_restart_forwards_to_transactional_entry (__main__.FullPackageTests.test_existing_restart_forwards_to_transactional_entry) ... ok
+test_fresh_install_imports_only_pinned_image_and_starts_on_request (__main__.FullPackageTests.test_fresh_install_imports_only_pinned_image_and_starts_on_request) ... ok
+test_full_verifier_rejects_links_weights_and_corrupt_payload (__main__.FullPackageTests.test_full_verifier_rejects_links_weights_and_corrupt_payload) ... ok
+test_source_contract_derives_c64_and_protects_vision_prefill (__main__.FullPackageTests.test_source_contract_derives_c64_and_protects_vision_prefill) ... ok
+test_streaming_archive_excludes_private_state_weights_and_base64 (__main__.FullPackageTests.test_streaming_archive_excludes_private_state_weights_and_base64) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.994s
+
+OK

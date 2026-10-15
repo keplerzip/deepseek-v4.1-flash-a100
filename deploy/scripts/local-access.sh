@@ -30,7 +30,7 @@ docker run -d --pull never --name "$FRONTEND_NAME" --label dsv41.owner=offline-d
 for dsv41_try in {1..30}; do
   if frontend_health; then
     docker exec "$FRONTEND_NAME" /usr/bin/python3 -c \
-      'import json,sys,urllib.request;op=urllib.request.build_opener(urllib.request.ProxyHandler({}));data=json.load(op.open("http://127.0.0.1:"+sys.argv[1]+"/v1/models",timeout=10));ids=[m["id"] for m in data["data"]];assert ids==["DeepSeek-V4-Flash"],ids;print(json.dumps({"status":"PASS","client_api_key_required":False,"models":ids}))' "$API_PORT"
+      'import json,sys,urllib.request;op=urllib.request.build_opener(urllib.request.ProxyHandler({}));data=json.load(op.open("http://127.0.0.1:"+sys.argv[1]+"/v1/models",timeout=10));ids=[m["id"] for m in data["data"]];assert ids==["DeepSeek-Flash"],ids;print(json.dumps({"status":"PASS","client_api_key_required":False,"models":ids}))' "$API_PORT"
     exit 0
   fi
   [[ $(docker inspect --format '{{.State.Running}}' "$FRONTEND_NAME") == true ]] || break

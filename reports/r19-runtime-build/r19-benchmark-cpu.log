@@ -1,0 +1,15 @@
+test_ambient_metrics_keep_all_phases_and_c32_samples (__main__.BenchmarkContracts.test_ambient_metrics_keep_all_phases_and_c32_samples) ... ok
+test_counter_reset_and_missing_dspark_are_not_signoff (__main__.BenchmarkContracts.test_counter_reset_and_missing_dspark_are_not_signoff) ... ok
+test_default_c64_clean (__main__.BenchmarkContracts.test_default_c64_clean) ... ok
+test_private_request_history_and_images_preserved (__main__.BenchmarkContracts.test_private_request_history_and_images_preserved) ... ok
+test_unsettled_metrics_do_not_abort_measurement (__main__.BenchmarkContracts.test_unsettled_metrics_do_not_abort_measurement) ... ok
+test_contaminated_or_failed_off_still_runs_high_and_restores (__main__.FrontendLifecycleContracts.test_contaminated_or_failed_off_still_runs_high_and_restores) ... ok
+test_foreign_owner_or_mount_is_never_stopped (__main__.FrontendLifecycleContracts.test_foreign_owner_or_mount_is_never_stopped) ... ok
+test_isolation_stops_only_frontend_and_restores_after_both_modes (__main__.FrontendLifecycleContracts.test_isolation_stops_only_frontend_and_restores_after_both_modes) ... ok
+test_operation_lock_prevents_overlap (__main__.FrontendLifecycleContracts.test_operation_lock_prevents_overlap) ... ok
+test_term_restores_frontend (__main__.FrontendLifecycleContracts.test_term_restores_frontend) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.214s
+
+OK

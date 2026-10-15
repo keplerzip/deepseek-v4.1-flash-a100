@@ -49,3 +49,5 @@ removal, and PR #57860 by nehaprakriya
 (commit 2031422bfd952cc65fc1a46a9b570f6f04dc318d), fused ragged indptr/pack.
 The local SM80 port adds a bounded small-batch dispatch, empty-input handling,
 and an independent fallback retaining R1.3 reuse. Apache-2.0 notices remain.
+
+R1.9 includes adaptations of vLLM PRs #60091, #57435, #57632 and #60874. Original authors retain copyright; upstream Apache-2.0 notices and per-file headers are preserved. See docs/acknowledgements.md and the pinned performance manifest.

@@ -1,0 +1,1 @@
+{"status": "PASS", "gpu_executed": false, "world_size": 8, "uniform_rows": [1, 6, 24, 32], "nonuniform_sizes": [1, 2, 3, 4, 5, 6, 7, 8], "dtype_contracts": ["BF16 custom", "FP32 NCCL fallback"]}

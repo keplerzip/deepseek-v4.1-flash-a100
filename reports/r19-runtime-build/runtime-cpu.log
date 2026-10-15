@@ -1,0 +1,4 @@
+WARNING 10-15 10:03:47 [interface.py:368] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+INFO 10-15 10:03:47 [importing.py:74] Triton is installed but 0 active driver(s) found (expected 1). Disabling Triton to prevent runtime errors.
+INFO 10-15 10:03:47 [importing.py:98] Triton not installed or not compatible; certain GPU-related functions will not be available.
+{"status": "PASS", "checks": ["SM80 complete tiles and split-4 aux warmup", "registered fake tensor ABI for empty/C1/C32/C56 k5 shapes", "production decoder control flow vs old source using CPU reference ops, including pre-Engram aux", "image padding removed; default placeholder splicing and exact sentinel mask"], "gpu_math_tested": false, "full_model_import_tested": false}

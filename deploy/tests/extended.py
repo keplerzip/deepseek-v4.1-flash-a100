@@ -68,7 +68,7 @@ def main():
     a=p.parse_args();a.output.parent.mkdir(parents=True,exist_ok=True)
     client=Client(a.base_url,a.key_file.read_text(),timeout=10800)
     cap=json.loads(a.capacity.read_text());concurrency=cap['required_concurrency'];windows=cap['full_windows']
-    assert concurrency==32 and cap['formula']=='fixed(32)' and cap['max_model_len']==LENGTH
+    assert concurrency==64 and cap['formula']=='fixed(64)' and cap['max_model_len']==LENGTH
     report={'model':MODEL,'context':LENGTH,'mode':a.mode,'status':'RUNNING','tests':[],
             'full_windows':windows,'concurrency':concurrency,'started_at':datetime.datetime.now().astimezone().isoformat()}
     start=time.monotonic()
@@ -85,7 +85,7 @@ def main():
         after=metrics(client)
         return {'submitted':count,'completed':len(rows),'seconds':time.monotonic()-started,'requests':rows,
                 'preemption_delta':after.get('vllm:num_preemptions_total',0)-before.get('vllm:num_preemptions_total',0),
-                'scope':'independent near-full 1M requests; admission/completion proof, C is not simultaneous KV residency'}
+                'scope':'independent near-full 512000-token requests; admission/completion proof, C is not simultaneous KV residency'}
     def suite(name,round_no):
         target=a.output.parent/f'round-{round_no}-{name}.json'
         proc=subprocess.run([sys.executable,'-B',str(Path(__file__).with_name('acceptance.py')),

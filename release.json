@@ -1,13 +1,13 @@
 {
-  "release": "1.8.0",
-  "model": "DeepSeek-V4-Flash",
+  "release": "1.9.0",
+  "model": "DeepSeek-Flash",
   "default_dspark_k": 5,
   "image_limit_per_prompt": 999,
   "native_dspark_block_size": 5,
-  "context": 1048576,
+  "context": 512000,
   "tensor_parallel_size": 4,
   "engram_cpu_offload": true,
-  "concurrency_formula": "fixed(32)",
+  "concurrency_formula": "fixed(64)",
   "base_image": "lazymio/vllm-backport@sha256:349690323ab9aba712111529ed1ca60730199205d8202f67895ffde85b451be3",
   "upstream_source": "https://github.com/wtdcode/vllm-backport",
   "upstream_revision": "a350766628514d597670d2a5217777fdee2ba7f4",
@@ -20,13 +20,13 @@
   "nccl": "2.29.7",
   "newapi_compatibility_reference": "v1.0.0-rc.37 (externally managed; not bundled)",
   "report_provenance": "operator-pasted isolated-target results; no raw JSONL transferred",
-  "source_only": true,
+  "source_only": false,
   "model_and_image_files_in_git": false,
   "deployment_policy": "fixed native DSpark k=5",
   "allowed_dspark_k": [
     5
   ],
-  "source_update": "20260923-r18-local-access-c32-alias",
+  "source_update": "20261015-r19-500k-b1024-c64",
   "performance_defaults": {
     "nccl": "auto",
     "mhc_fusion": true,
@@ -40,21 +40,46 @@
     "stacked_dspark_context_kv": true,
     "reuse_topk_ragged": true,
     "decode_metadata_fusion": true,
-    "fused_indptr_max_rows": 1024
+    "fused_indptr_max_rows": 1024,
+    "prefill_repeat_output_size": true,
+    "fused_inverse_rope": true,
+    "draft_context_kv_graph": true,
+    "bounded_indexer_workspace": true
   },
   "performance_update_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
-  "performance_overlay_sha256": "6c0ea42fb5bee1559f763d21e5e6e5715e789d609036def3718a4fc0d10166cc",
-  "delivery_version": "R1.8",
-  "git_tag": "v1.8.0",
+  "performance_overlay_sha256": "8374f99e32aeb09e3dcc11c691e730bbddb58007f53c3bba4f1932b0a9a685ec",
+  "delivery_version": "R1.9",
+  "git_tag": "v1.9.0",
   "data_parallel_size": 2,
   "expert_parallel_size": 8,
-  "performance_overlay_release": "1.4.0",
-  "performance_overlay_id": "20260922-perf5",
+  "performance_overlay_release": "1.9.0",
+  "performance_overlay_id": "20261015-perf6",
   "context_gpu_acceptance": "NOT_RUN_ON_BUILD_HOST",
   "gpu_memory_utilization": 0.92,
   "client_api_key_required": false,
   "access_policy": "loopback-and-docker-only",
   "api_port": 8005,
   "weight_model": "DeepSeek-V4.1-Flash",
-  "served_model_name": "DeepSeek-V4-Flash"
+  "served_model_name": "DeepSeek-Flash",
+  "max_num_batched_tokens": 1024,
+  "global_concurrency": 64,
+  "per_dp_concurrency": 32,
+  "includes_weights": false,
+  "enable_chunked_prefill": true,
+  "disable_chunked_mm_input": true,
+  "vision_max_n_token": 1020,
+  "image_budget_tradeoff": "operator requested1024 scheduling budget; processor1020 plus4 DSpark slots stays within1024; original image upper bound1024, no512 cap retained",
+  "repository_source_only": true,
+  "delivery_artifacts": {
+    "full": {
+      "includes_weights": false,
+      "includes_container_image": true
+    },
+    "cumulative_update": {
+      "includes_weights": false,
+      "includes_container_image": false
+    }
+  },
+  "requested_image_token_ceiling": 1024,
+  "dspark_reserved_token_slots": 4
 }

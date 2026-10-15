@@ -1276,6 +1276,7 @@ def _fused_inverse_rope_gptj(
     positions: torch.Tensor,
     cos_sin_cache: torch.Tensor,
     rope_head_dim: int,
+    out: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """bf16 inverse GPT-J RoPE via a single fused Triton kernel."""
     assert o.dim() == 3 and o.stride(-1) == 1, (
@@ -1289,9 +1290,13 @@ def _fused_inverse_rope_gptj(
         f"[P, {rope_head_dim}] = cos | sin, got {tuple(cos_sin_cache.shape)}"
     )
     num_tokens, num_heads, head_dim = o.shape
-    out = torch.empty(
-        (num_tokens, num_heads, head_dim), dtype=torch.bfloat16, device=o.device
-    )
+    if out is None:
+        out = torch.empty(
+            (num_tokens, num_heads, head_dim), dtype=torch.bfloat16, device=o.device
+        )
+    else:
+        assert out.dtype == torch.bfloat16 and out.shape == o.shape
+        assert out.device == o.device and out.stride(-1) == 1
     if num_tokens == 0:
         return out
     _inverse_rope_gptj_kernel[(num_tokens, num_heads)](
@@ -1310,6 +1315,22 @@ def _fused_inverse_rope_gptj(
         BLOCK_HALF=triton.next_power_of_2(rope_head_dim // 2),
     )
     return out
+
+
+def rocm_inverse_rope_rows_(
+    o: torch.Tensor,
+    positions: torch.Tensor,
+    cos_sin_cache: torch.Tensor,
+    rope_head_dim: int,
+) -> None:
+    """Rotate the rows not covered by a decode epilogue, from eager attention.
+
+    The standalone kernel reads both adjacent lanes before storing either,
+    so input and output may alias. Empty suffixes do not launch a kernel.
+    """
+    if o.shape[0] == 0:
+        return
+    _fused_inverse_rope_gptj(o, positions, cos_sin_cache, rope_head_dim, out=o)
 
 
 def _get_cached_wo_a_bf16(
@@ -1373,16 +1394,21 @@ def rocm_inv_rope_einsum(
     n_local_groups: int,
     o_lora_rank: int,
     wo_a: torch.nn.Module,
+    inverse_rope: bool = True,
 ) -> torch.Tensor:
     """Inverse-RoPE + WO_A bmm path used on ROCm.
 
     Fuses the inverse GPT-J RoPE into one Triton kernel and caches the bf16
     wo_a weight so the per-step dequant disappears.
     """
-    o_ref = _fused_inverse_rope_gptj(
-        o, positions, rotary_emb.cos_sin_cache, rope_head_dim
-    )
-    o_ref = o_ref.view(o.shape[0], n_local_groups, -1)
+    if inverse_rope:
+        o_ref = _fused_inverse_rope_gptj(
+            o, positions, rotary_emb.cos_sin_cache, rope_head_dim
+        )
+    else:
+        assert o.dtype == torch.bfloat16, "pre-rotated attention output must be bf16"
+        o_ref = o
+    o_ref = o_ref.reshape(o.shape[0], n_local_groups, -1)
 
     wo_a_weight = _get_cached_wo_a_bf16(
         wo_a, n_local_groups, o_lora_rank, o_ref.shape[-1]
@@ -2904,6 +2930,8 @@ def _sparse_attn_decode_reduce_kernel(
     part_acc_ptr,
     attn_sink_ptr,
     out_ptr,
+    pos_ptr,
+    cos_sin_ptr,
     out_stride0,
     out_stride1,
     pm_stride0,
@@ -2911,6 +2939,7 @@ def _sparse_attn_decode_reduce_kernel(
     pa_stride0,
     pa_stride_s,
     pa_stride_h,
+    cs_stride,
     num_heads,
     HAS_ATTN_SINK: tl.constexpr,
     ADAPTIVE_SPLITS: tl.constexpr,
@@ -2918,6 +2947,9 @@ def _sparse_attn_decode_reduce_kernel(
     BLOCK_H: tl.constexpr,
     NUM_SPLITS: tl.constexpr,
     SPLITS_PAD: tl.constexpr,
+    FUSE_INV_ROPE: tl.constexpr,
+    NOPE: tl.constexpr,
+    HALF: tl.constexpr,
 ):
     query_idx = tl.program_id(0)
     pid_h = tl.program_id(1)
@@ -3006,6 +3038,23 @@ def _sparse_attn_decode_reduce_kernel(
         acc += w_s[:, None] * acc_s
 
     out = tl.where(l_final[:, None] > 0.0, acc / denom[:, None], 0.0)
+
+    if FUSE_INV_ROPE:
+        # GPT-J inverse rotation: preserve NoPE and rotate adjacent RoPE lanes.
+        pos = tl.load(pos_ptr + query_idx).to(tl.int64)
+        pair_idx = tl.arange(0, COMB_DIM // 2) - (NOPE // 2)
+        is_rope = pair_idx >= 0
+        k = tl.where(is_rope, pair_idx, 0)
+        cos = tl.where(is_rope, tl.load(cos_sin_ptr + pos * cs_stride + k), 1.0)
+        sin = tl.where(is_rope, tl.load(cos_sin_ptr + pos * cs_stride + HALF + k), 0.0)
+        even, odd = tl.split(tl.reshape(out, (BLOCK_H, COMB_DIM // 2, 2)))
+        out = tl.reshape(
+            tl.join(
+                even * cos[None, :] + odd * sin[None, :],
+                odd * cos[None, :] - even * sin[None, :],
+            ),
+            (BLOCK_H, COMB_DIM),
+        )
 
     out_row_ptr = (
         out_ptr + query_idx * out_stride0 + head_offsets[:, None] * out_stride1
@@ -3734,6 +3783,8 @@ def _rocm_sparse_attn_decode_ragged_triton(
     out: torch.Tensor | None = None,
     extra_cache_nan_free: bool = False,
     adaptive_splits: bool = False,
+    inv_rope_positions: torch.Tensor | None = None,
+    inv_rope_cos_sin_cache: torch.Tensor | None = None,
 ) -> torch.Tensor:
     assert q.ndim == 3, f"expected q=[b,h,d], got {q.shape}"
     assert main_cache.ndim == 3, (
@@ -3981,12 +4032,20 @@ def _rocm_sparse_attn_decode_ragged_triton(
             num_warps=8 if current_platform.is_cuda() else 4,
         )
 
+    fuse_inv_rope = inv_rope_positions is not None
+    if fuse_inv_rope:
+        assert inv_rope_cos_sin_cache is not None
+        assert inv_rope_cos_sin_cache.shape[-1] == rope_head_dim
+        assert nope_head_dim % 2 == 0 and rope_head_dim % 2 == 0
+
     _sparse_attn_decode_reduce_kernel[(num_queries, num_heads)](
         part_m,
         part_l,
         part_acc,
         attn_sink,
         out,
+        inv_rope_positions,
+        inv_rope_cos_sin_cache,
         out.stride(0),
         out.stride(1),
         part_m.stride(0),
@@ -3994,6 +4053,7 @@ def _rocm_sparse_attn_decode_ragged_triton(
         part_acc.stride(0),
         part_acc.stride(1),
         part_acc.stride(2),
+        inv_rope_cos_sin_cache.stride(0) if inv_rope_cos_sin_cache is not None else 0,
         num_heads,
         HAS_ATTN_SINK=has_attn_sink,
         ADAPTIVE_SPLITS=adaptive_splits,
@@ -4001,6 +4061,9 @@ def _rocm_sparse_attn_decode_ragged_triton(
         BLOCK_H=1,
         NUM_SPLITS=num_splits,
         SPLITS_PAD=triton.next_power_of_2(num_splits),
+        FUSE_INV_ROPE=fuse_inv_rope,
+        NOPE=nope_head_dim,
+        HALF=rope_head_dim // 2,
         num_warps=4,
     )
     return out
@@ -4025,6 +4088,8 @@ def _rocm_sparse_attn_decode_triton(
     out: torch.Tensor | None = None,
     extra_cache_nan_free: bool = False,
     adaptive_splits: bool = False,
+    inv_rope_positions: torch.Tensor | None = None,
+    inv_rope_cos_sin_cache: torch.Tensor | None = None,
 ) -> torch.Tensor:
     if main_ragged_indices is None or main_ragged_indptr is None:
         main_ragged_indices, main_ragged_indptr = build_ragged_indices_from_dense(
@@ -4063,6 +4128,8 @@ def _rocm_sparse_attn_decode_triton(
         out=out,
         extra_cache_nan_free=extra_cache_nan_free,
         adaptive_splits=adaptive_splits,
+        inv_rope_positions=inv_rope_positions,
+        inv_rope_cos_sin_cache=inv_rope_cos_sin_cache,
     )
 
 
@@ -4230,7 +4297,9 @@ def rocm_sparse_attn_decode(
     output: torch.Tensor,
     extra_cache_nan_free: bool = False,
     adaptive_splits: bool = False,
-) -> None:
+    inv_rope_positions: torch.Tensor | None = None,
+    inv_rope_cos_sin_cache: torch.Tensor | None = None,
+) -> int:
     assert swa_k_cache.dtype == torch.uint8, (
         "ROCm Triton sparse decode expects uint8 fp8_ds_mla SWA cache, "
         f"got {swa_k_cache.dtype}"
@@ -4259,6 +4328,9 @@ def rocm_sparse_attn_decode(
         if topk_indices is not None:
             extra_indices = topk_indices.reshape(topk_indices.shape[0], -1)
 
+    # A non-split fallback cannot apply the reduce epilogue. Report zero
+    # rotated rows so eager attention still rotates that complete suffix.
+    fuse_inv_rope = inv_rope_positions is not None and _use_split_k_decode()
     direct_out = output if _ON_GFX950 and output.dtype == torch.bfloat16 else None
     attn_out = _rocm_sparse_attn_decode_triton(
         q=q,
@@ -4279,6 +4351,9 @@ def rocm_sparse_attn_decode(
         out=direct_out,
         extra_cache_nan_free=extra_cache_nan_free,
         adaptive_splits=adaptive_splits,
+        inv_rope_positions=inv_rope_positions if fuse_inv_rope else None,
+        inv_rope_cos_sin_cache=inv_rope_cos_sin_cache,
     )
     if direct_out is None:
         output.copy_(attn_out.to(output.dtype))
+    return output.shape[0] if fuse_inv_rope else 0

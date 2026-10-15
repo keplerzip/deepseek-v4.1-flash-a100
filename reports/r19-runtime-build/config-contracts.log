@@ -1,0 +1,13 @@
+test_500k_capacity_floor_minimum_and_stale_records (__main__.ContractTests.test_500k_capacity_floor_minimum_and_stale_records) ... ok
+test_capacity_takes_full_500k_windows_per_pool_before_summing (__main__.ContractTests.test_capacity_takes_full_500k_windows_per_pool_before_summing) ... ok
+test_eight_rank_graph_and_replay_checks_not_bypassed (__main__.ContractTests.test_eight_rank_graph_and_replay_checks_not_bypassed) ... ok
+test_graph_sizes_and_constraints (__main__.ContractTests.test_graph_sizes_and_constraints) ... ok
+test_long_acceptance_reserves_output_inside_fixed_window (__main__.ContractTests.test_long_acceptance_reserves_output_inside_fixed_window) ... ok
+test_private_history_benchmark_preserves_images_without_mutating_input (__main__.ContractTests.test_private_history_benchmark_preserves_images_without_mutating_input) ... ok
+test_requests_and_per_position_metrics (__main__.ContractTests.test_requests_and_per_position_metrics) ... ok
+test_start_seed_does_not_reuse_256k_capacity (__main__.ContractTests.test_start_seed_does_not_reuse_256k_capacity) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.019s
+
+OK

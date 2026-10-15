@@ -1,0 +1,913 @@
+{
+  "status": "PASS",
+  "gpu_executed": false,
+  "target": "sm_80",
+  "triton": "3.7.1",
+  "source": "/usr/local/lib/python3.12/dist-packages/vllm/v1/attention/ops/rocm_aiter_mla_sparse.py",
+  "source_sha256": "875eaa80630f59d18c8378a78eec105ea096c4ef662b57828ddba6bef10420d4",
+  "cases": [
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 10856,
+      "ptx_bytes": 10513,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 11496,
+      "ptx_bytes": 11345,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 11368,
+      "ptx_bytes": 11018,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 11880,
+      "ptx_bytes": 11850,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 14176,
+      "ptx_bytes": 14425,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 14944,
+      "ptx_bytes": 15259,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 14560,
+      "ptx_bytes": 14930,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 1,
+        "SPLITS_PAD": 1,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 15200,
+      "ptx_bytes": 15765,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 14440,
+      "ptx_bytes": 22728,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 15208,
+      "ptx_bytes": 23657,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 15720,
+      "ptx_bytes": 24258,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 16360,
+      "ptx_bytes": 25187,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 18016,
+      "ptx_bytes": 26700,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 18656,
+      "ptx_bytes": 27648,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 19040,
+      "ptx_bytes": 28254,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 3,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 19808,
+      "ptx_bytes": 29202,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 15720,
+      "ptx_bytes": 23959,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 16488,
+      "ptx_bytes": 24893,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 17256,
+      "ptx_bytes": 26011,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 18152,
+      "ptx_bytes": 26956,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 19168,
+      "ptx_bytes": 27958,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 19808,
+      "ptx_bytes": 28906,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 20576,
+      "ptx_bytes": 30027,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 4,
+        "SPLITS_PAD": 4,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 21344,
+      "ptx_bytes": 30975,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 31080,
+      "ptx_bytes": 42802,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 31848,
+      "ptx_bytes": 43766,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 37608,
+      "ptx_bytes": 51125,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": false,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 38376,
+      "ptx_bytes": 52091,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 34400,
+      "ptx_bytes": 46863,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": false,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 35168,
+      "ptx_bytes": 47816,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": false,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 40800,
+      "ptx_bytes": 55189,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_sparse_attn_decode_reduce_kernel",
+      "constants": {
+        "HAS_ATTN_SINK": true,
+        "ADAPTIVE_SPLITS": true,
+        "COMB_DIM": 512,
+        "BLOCK_H": 1,
+        "NUM_SPLITS": 16,
+        "SPLITS_PAD": 16,
+        "FUSE_INV_ROPE": true,
+        "NOPE": 448,
+        "HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "part_m_ptr": "*fp32",
+        "part_l_ptr": "*fp32",
+        "part_acc_ptr": "*fp32",
+        "attn_sink_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 41568,
+      "ptx_bytes": 56143,
+      "shared_bytes": 2048
+    },
+    {
+      "kernel": "_inverse_rope_gptj_kernel",
+      "constants": {
+        "NOPE": 448,
+        "HALF": 32,
+        "BLOCK_NOPE": 512,
+        "BLOCK_HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "o_ptr": "*bf16",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 9192,
+      "ptx_bytes": 10143,
+      "shared_bytes": 0
+    },
+    {
+      "kernel": "_inverse_rope_gptj_kernel",
+      "constants": {
+        "NOPE": 448,
+        "HALF": 32,
+        "BLOCK_NOPE": 512,
+        "BLOCK_HALF": 32
+      },
+      "status": "COMPILED_SM80",
+      "pointer_types": {
+        "o_ptr": "*fp32",
+        "out_ptr": "*bf16",
+        "pos_ptr": "*i64",
+        "cos_sin_ptr": "*fp32"
+      },
+      "cubin_bytes": 9192,
+      "ptx_bytes": 10098,
+      "shared_bytes": 0
+    }
+  ],
+  "scope": "offline SM80 compilation only; GPU accuracy, graph replay and speed require target tests"
+}

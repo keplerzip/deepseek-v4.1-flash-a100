@@ -36,6 +36,7 @@ from vllm.v1.attention.backends.mla.sparse_swa import (
 from vllm.v1.attention.ops.rocm_aiter_mla_sparse import (
     build_ragged_indices_from_dense,
     rocm_inv_rope_einsum,
+    rocm_inverse_rope_rows_,
     rocm_sparse_attn_decode,
     rocm_sparse_attn_prefill,
 )
@@ -204,12 +205,15 @@ def combine_topk_swa_indices(
 
     # query_start_loc may have a non-zero base for a narrowed mixed batch.
     query_lens = query_start_loc[1:] - query_start_loc[:-1]
+    # The caller slices both inputs to the same prefill chunk. Its row count
+    # is already known on the host; do not synchronize to sum query_lens.
     req_ids = torch.repeat_interleave(
-        torch.arange(seq_lens.shape[0], device=seq_lens.device), query_lens
+        torch.arange(seq_lens.shape[0], device=seq_lens.device), query_lens,
+        output_size=num_tokens,
     )
     query_starts = query_start_loc[:-1] - query_start_loc[0]
     token_offsets = torch.arange(num_tokens, device=seq_lens.device) - (
-        torch.repeat_interleave(query_starts, query_lens)
+        torch.repeat_interleave(query_starts, query_lens, output_size=num_tokens)
     )
     positions = seq_lens[req_ids] - query_lens[req_ids] + token_offsets
 
@@ -728,6 +732,7 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
             self.n_local_groups,
             self.o_lora_rank,
             self.wo_a,
+            inverse_rope=False,
         )
         zf = z.flatten(1)
         if self._wo_b_scale is not None and zf.dim() == 2:
@@ -802,15 +807,25 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
                 attn_metadata=rocm_metadata,
                 swa_metadata=swa_metadata,
             )
+        rotated = 0
         if num_decodes > 0:
-            self._forward_decode(
+            rotated = self._forward_decode(
                 q=q[:num_decode_tokens],
+                positions=positions[:num_decode_tokens],
                 kv_cache=self_kv_cache,
                 swa_metadata=swa_metadata,
                 attn_metadata=rocm_metadata,
                 swa_only=swa_only,
                 output=output[:num_decode_tokens],
             )
+        # This split is batch-dependent, so settle it in eager attention.
+        # Reading it from compiled _o_proj would freeze a trace-time split.
+        rocm_inverse_rope_rows_(
+            output[rotated:, : self.n_local_heads, :],
+            positions[rotated:],
+            self.rotary_emb.cos_sin_cache,
+            self.rope_head_dim,
+        )
 
     def _decode_topk_ragged(
         self,
@@ -860,12 +875,14 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
     def _forward_decode(
         self,
         q: torch.Tensor,
+        positions: torch.Tensor,
         kv_cache: torch.Tensor | None,
         swa_metadata: DeepseekV4ROCMAiterSparseSWAMetadata,
         attn_metadata: DeepseekV4FlashMLAMetadata | None,
         swa_only: bool,
         output: torch.Tensor,
-    ) -> None:
+    ) -> int:
+        """Return the number of leading rows inverse-RoPE'd by decode."""
         num_decodes = swa_metadata.num_decodes
         num_decode_tokens = swa_metadata.num_decode_tokens
 
@@ -878,7 +895,7 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
                 swa_metadata, attn_metadata
             )
 
-        rocm_sparse_attn_decode(
+        return rocm_sparse_attn_decode(
             q=q,
             kv_cache=kv_cache,
             swa_k_cache=self.swa_cache_layer.kv_cache,
@@ -897,6 +914,10 @@ class DeepseekV41ROCMAiterMLAAttention(DeepseekV4Attention):
             nope_head_dim=self.nope_head_dim,
             rope_head_dim=self.rope_head_dim,
             output=output,
+            inv_rope_positions=(
+                positions if os.environ.get("VLLM_DSV41_FUSED_INV_ROPE", "1") == "1" else None
+            ),
+            inv_rope_cos_sin_cache=self.rotary_emb.cos_sin_cache,
             extra_cache_nan_free=_trust_dsv4_extra_cache_nan_free(
                 self.kv_cache_dtype,
                 self._has_kv_transfer,

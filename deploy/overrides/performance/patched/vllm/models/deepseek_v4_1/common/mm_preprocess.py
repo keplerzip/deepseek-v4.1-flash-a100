@@ -150,6 +150,17 @@ def load_image(
     if max_wh_ratio is not None and image.width >= max_wh_ratio * image.height:
         image = image.resize((best_width, best_height))
     else:
+        # PIL's contain()/pad() rounds the smaller dimension to zero for
+        # extreme aspect ratios (e.g. a 1 x 32768 scan line). Preserve the
+        # existing pad path for ordinary images; only clamp the degenerate
+        # contained dimension to one pixel before padding.
+        contain_scale = min(best_width / image.width, best_height / image.height)
+        contained_width = round(image.width * contain_scale)
+        contained_height = round(image.height * contain_scale)
+        if contained_width < 1 or contained_height < 1:
+            image = image.resize(
+                (max(1, contained_width), max(1, contained_height))
+            )
         image = ImageOps.pad(image, (best_width, best_height), color=(127, 127, 127))
     x = torch.from_numpy(np.asarray(image, dtype=np.float32)).permute(2, 0, 1) / 255
     x = ((x - 0.5) / 0.5).to(torch.bfloat16)

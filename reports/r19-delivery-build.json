@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "release": "1.9.0",
+  "delivery_version": "R1.9",
+  "created_at": "2026-10-15T10:27:18.793101+00:00",
+  "source_update": "20261015-r19-500k-b1024-c64",
+  "target_gpu_tested": false,
+  "scope": "CPU controls, exact-image configuration and offline SM80 compilation; target inference and speed remain untested",
+  "contract": {
+    "model": "DeepSeek-Flash",
+    "weight_model": "DeepSeek-V4.1-Flash",
+    "context": 512000,
+    "max_num_batched_tokens": 1024,
+    "concurrency": 64,
+    "per_dp_concurrency": 32,
+    "tp": 4,
+    "dp": 2,
+    "ep": 8,
+    "k": 5,
+    "gpu_memory_utilization": 0.92,
+    "vision_processor_tokens": 1020,
+    "vision_upper_bound": 1024,
+    "dspark_new_slots": 4,
+    "images": 999,
+    "client_api_key_required": false
+  },
+  "checks": {
+    "source_syntax_and_links": "PASS",
+    "exact_runtime_image_archive": "PASS",
+    "source_overlay_contracts": 6,
+    "config_contracts": 8,
+    "dp_routing_contracts": 3,
+    "update_unit_contracts": 5,
+    "full_package_fixture_methods": 7,
+    "benchmark_fixture_methods": 10,
+    "real_scheduler_processor_config_cases": 5,
+    "real_scheduler_skipped_cases": 0,
+    "draft_context_graph_cpu_cases": 7,
+    "prefill_reference_cases": 12,
+    "workspace_workloads": 1440,
+    "workspace_chunks": 2108452,
+    "sm80_new_kernel_compile_variants": 34,
+    "historical_cumulative_installer_cases": 20
+  },
+  "artifacts": {
+    "full_includes_weights": false,
+    "full_includes_runtime_image": true,
+    "cumulative_includes_weights": false,
+    "cumulative_includes_runtime_image": false
+  },
+  "limitations": [
+    "No build-host GPU; no new target TPS/capacity claim.",
+    "500K is512000 tokens input+output combined.",
+    "C64 is scheduler concurrency, not64 full-context resident guarantees.",
+    "Whole image cap1020 plus4draft slots respects1024; boundary aspect ratios may resize slightly vs native1024.",
+    "Decoder/vision prefill remains eager; only target/draft decode graph captured.",
+    "Idle cache TTL observation remains unresolved; no promised timed retention."
+  ],
+  "cumulative_deploy_manifest_sha256": "caa06a75e19090e14ab381f88e121e43bc1a1a3c95bd4423ac55b8c590878234",
+  "cumulative_candidate_archive_sha256": "6a5d7b65d77f98b063a27af0fb5a2b517529b5c86fe75e9ffafa53a929d2663d"
+}

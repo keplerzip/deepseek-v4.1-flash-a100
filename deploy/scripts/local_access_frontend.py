@@ -114,7 +114,7 @@ def check(base_url):
         assert response.status == 200
     with opener.open(base + '/v1/models', timeout=10) as response:
         ids = [row['id'] for row in json.load(response)['data']]
-    assert ids == ['DeepSeek-V4-Flash'], ids
+    assert ids == ['DeepSeek-Flash'], ids
     payload = {'model': ids[0], 'input': 'Reply exactly LOCAL_ACCESS_READY.',
                'stream': True, 'store': False, 'max_output_tokens': 64,
                'chat_template_kwargs': {'thinking': False}}

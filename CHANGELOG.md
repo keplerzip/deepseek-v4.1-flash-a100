@@ -1,3 +1,11 @@
+# R1.9 / v1.9.0 — 2026-10-15
+
+- 固定DeepSeek-Flash、512000上下文、每池1024调度token、全局C64/每池32，k5和GPU0.92。
+- 移植prefill去同步、inverse RoPE融合、DSpark context KV图捕获、indexer工作区上界；复用原权重和SM80镜像。
+- 保留图片双向注意力/整图段，单图视觉token上限1024（用户确认大图细节取舍）；原镜像CLI/config、CPU数学/图控制与SM80编译检查；不宣称目标机实测速率。
+- 测速支持隔离本项目入口，污染流量保留结果并标记不可签收；完整无权重包与累计小包、事务回退。
+- 完整选型及局限见docs/deployment-update-20261015-r19.md与docs/performance-review-20261015.md。
+
 # Changelog
 
 ## 1.8.0 / R1.8 — 2026-09-23

@@ -1,0 +1,15 @@
+test_apply_and_exact_rollback_preserve_settings_and_runtime (__main__.UpdateChecks.test_apply_and_exact_rollback_preserve_settings_and_runtime) ... ok
+test_bad_payload_and_symlink_refuse_before_source_changes (__main__.UpdateChecks.test_bad_payload_and_symlink_refuse_before_source_changes) ... ok
+test_cumulative_update_without_any_previous_performance_patch (__main__.UpdateChecks.test_cumulative_update_without_any_previous_performance_patch) ... ok
+test_r18_fixed_contract_migration_and_exact_rollback (__main__.UpdateChecks.test_r18_fixed_contract_migration_and_exact_rollback) ... ok
+test_rollback_preserves_post_update_user_edits (__main__.UpdateChecks.test_rollback_preserves_post_update_user_edits) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.149s
+
+OK
+{"status": "APPLIED", "release": "1.1.0", "update": "20260916-perf2", "backup": "runtime/update-backups/20261015T102553-1d2926bd", "files": 7}
+{"status": "APPLIED", "release": "1.1.0", "update": "20260916-perf2", "backup": "runtime/update-backups/20261015T102553-35c18ca8", "files": 7}
+{"status": "APPLIED", "release": "1.1.0", "update": "20260916-perf2", "backup": "runtime/update-backups/20261015T102553-e93633dc", "files": 6}
+{"status": "APPLIED", "release": "1.1.0", "update": "20260916-perf2", "backup": "runtime/update-backups/20261015T102553-d06a4532", "files": 8}
+{"status": "APPLIED", "release": "1.1.0", "update": "20260916-perf2", "backup": "runtime/update-backups/20261015T102553-f0558a44", "files": 7}

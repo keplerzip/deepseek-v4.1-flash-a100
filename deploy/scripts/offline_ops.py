@@ -6,9 +6,11 @@ from pathlib import Path
 import sys
 
 MODEL_PATH = '/models/DeepSeek-V4.1-Flash'
-SERVED_MODEL = 'DeepSeek-V4-Flash'
-LENGTH = 1048576
-CAPACITY_FORMULA = 'fixed(32)'
+SERVED_MODEL = 'DeepSeek-Flash'
+LENGTH = 512000
+CONCURRENCY = 64
+BATCH_TOKENS = 1024
+CAPACITY_FORMULA = 'fixed(64)'
 
 
 def write(path, value):
@@ -28,11 +30,12 @@ def resolve(config, concurrency, fixed_blocks=None):
                 'kv_cache_dtype':'fp8_ds_mla','engram_config':{'cpu_offload':True},
                 'tool_call_parser':'deepseek_v41','reasoning_parser':'deepseek_v41',
                 'enable_prefix_caching':True,'enable_prompt_tokens_details':True,'enable_auto_tool_choice':True,
+                'enable_chunked_prefill':True,'disable_chunked_mm_input':True,'hf_overrides':{'vision_max_n_token':1020},
                 'limit_mm_per_prompt':{'image':999},'generation_config':'vllm','disable_custom_all_reduce':True}
     allowed=set(expected)|{'speculative_config','max_num_batched_tokens','gpu_memory_utilization'}
     if set(config)!=allowed: raise ValueError('Unexpected or missing runtime keys')
     for key, value in expected.items():
-        if config.get(key) != value:
+        if type(config.get(key)) is not type(value) or config.get(key) != value:
             raise ValueError('Protected runtime constraint changed: '+key)
     spec = config['speculative_config']
     k = spec.get('num_speculative_tokens') if isinstance(spec, dict) else None
@@ -41,19 +44,20 @@ def resolve(config, concurrency, fixed_blocks=None):
     if spec != {'method':'dspark','num_speculative_tokens':k,'draft_sample_method':'greedy',
                 'rejection_sample_method':'standard','use_local_argmax_reduction':True,'enable_adaptive_verification':False}:
         raise ValueError('DSpark contract changed')
-    if type(concurrency) is not int or concurrency != 32:
-        raise ValueError('This deployment has a hard global concurrency limit of 32')
+    if type(concurrency) is not int or concurrency != CONCURRENCY:
+        raise ValueError('This deployment has a hard global concurrency limit of 64')
     if config['gpu_memory_utilization'] != 0.92:
         raise ValueError('This deployment is fixed to gpu_memory_utilization=0.92')
-    if config['max_num_batched_tokens'] not in [4096,8192,16384]:
-        raise ValueError('Batch-token budget is outside the bounded tuning matrix')
+    if type(config['max_num_batched_tokens']) is not int or config['max_num_batched_tokens'] != BATCH_TOKENS:
+        raise ValueError('This deployment is fixed to max_num_batched_tokens=1024')
     # The user-facing C is global; vLLM's scheduler limit is per DP engine.
     local_concurrency = concurrency // expected['data_parallel_size']
     result = dict(config, max_num_seqs=local_concurrency)
     if fixed_blocks is not None:
         if fixed_blocks<=0:raise ValueError('Fixed KV pool must be positive')
         result['num_gpu_blocks_override']=fixed_blocks
-    result['max_num_batched_tokens'] = max(result['max_num_batched_tokens'], (((k+1)*local_concurrency+127)//128)*128)
+    if (k + 1) * local_concurrency > BATCH_TOKENS:
+        raise ValueError('Fixed scheduling budget cannot hold a full DSpark verification batch')
     batches = {1,2,4,8,16,32,local_concurrency}
     rung = 64
     while rung < local_concurrency:
@@ -107,14 +111,14 @@ def capacity(directory, configured):
         pools.append({'data_parallel_rank':rank, 'effective_kv_tokens':effective,
                       'full_windows':effective//LENGTH})
     if any(p['full_windows'] < 1 for p in pools):
-        raise ValueError('Each DP pool must fit at least one full 1M window')
+        raise ValueError('Each DP pool must fit at least one full 512000-token window')
     windows = sum(p['full_windows'] for p in pools)
     effective = sum(p['effective_kv_tokens'] for p in pools)
-    required = 32
+    required = CONCURRENCY
     if windows < 1:
-        raise ValueError('Cannot fit even one full 1M window')
+        raise ValueError('Cannot fit even one full 512000-token window')
     # Preserve the raw window-derived value as diagnostic evidence, but never
-    # let an older telemetry field override the operator's hard C32 limit.
+    # let an older telemetry field override the operator's hard C64 limit.
     for row in rows:
         if 'required_concurrency' in row:
             row['uncapped_window_derived_concurrency'] = row.pop('required_concurrency')
@@ -129,8 +133,8 @@ def capacity(directory, configured):
 
 
 def initial_concurrency(path):
-    """Always use the fixed C32 cap, including after older C56 calibrations."""
-    return 32
+    """Use the fixed C64 cap, irrespective of older capacity calibrations."""
+    return CONCURRENCY
 
 
 def validate_topology(row):
@@ -156,6 +160,8 @@ def graphs(directory, concurrency, k=5):
     captures = [r for r in rows if r.get('kind') == 'graph-capture' and not r['memory_estimation_probe']]
     for query in [k,k+1]:
         eligible = [r for r in captures if r['decode_query_len'] == query]
+        if query == k:
+            eligible = [r for r in eligible if r.get('draft_context_kv_captured') is True]
         matching = [r for r in eligible if any(d['num_tokens'] == query*(concurrency//2) and d['mode'] == 'FULL' for d in r['captured_full_graphs'])]
         if not eight_workers(matching):
             raise ValueError(f'Missing full CUDA graph at query={query}, C={concurrency} on eight workers')
@@ -172,11 +178,13 @@ def replays(directory, concurrency, k=5):
     for query in [k,k+1]:
         valid = [r for r in rows if r.get('kind')=='graph-replay'
                  and (r['pid'],r['manager_id']) in real and r['decode_query_len']==query
+                 and (query != k or r.get('draft_context_kv_captured') is True)
                  and r['descriptor']['mode']=='FULL']
         if not eight_workers(valid): raise ValueError(f'Missing actual FULL graph replay on both DP groups: query={query}')
         counts[str(query)] = sorted({r['descriptor']['num_tokens'] for r in valid})
     return {'status':'PASS','scope':'FULL target and draft graph replay on eight workers; pair with successful requests',
-            'concurrency':concurrency,'num_speculative_tokens':k,'replayed_token_shapes':counts}
+            'concurrency':concurrency,'num_speculative_tokens':k,'replayed_token_shapes':counts,
+            'draft_context_kv_captured':True}
 
 
 def main():

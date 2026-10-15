@@ -4,7 +4,7 @@
 
 实测机：8×A100-SXM4-80GB、NVSwitch NV12、双路 EPYC 7742、约 2 TiB RAM；Ubuntu 22.04.4，内核 5.15.0-94，NVIDIA 580.159.04，Docker 29.5.1，Container Toolkit 1.19.0。这是参考环境，不代表任意版本组合都经过验证。
 
-预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 512 GiB 当前可用主存作为基础检查；R1.8 两份 Engram 表预算约 378 GiB，按本机约 2 TiB RAM 设计，加载峰值仍须实测。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
+预检要求八卡、MIG 关闭、NV12 拓扑，以及至少 512 GiB 当前可用主存作为基础检查；R1.9 两份 Engram 表预算约 378 GiB，按本机约 2 TiB RAM 设计，加载峰值仍须实测。八卡需由操作者从旧推理服务释放。已有 Docker、驱动、Toolkit 与 Fabric Manager 由管理员维护；部署只需普通用户和 `sudo -n docker`，不安装宿主服务。
 
 ## 资源与目录
 
@@ -26,9 +26,9 @@ set -o pipefail
 bash ./deploy.sh 2>&1 | tee runtime/first-deploy.log
 ```
 
-流程：组件 SHA256 → 空间/硬件预检 → 本地镜像导入 → 模型全量校验 → 八卡小算子检查 → network=none 首启 smoke → 实际 KV 标定 → internal 网络正式服务。C 改变或隔离首启转入服务网络可能再次加载模型，日志会解释阶段。
+流程：组件 SHA256 → 空间/硬件预检 → 本地镜像导入 → 模型全量校验 → 八卡小算子检查 → network=none 首启 smoke → 实际 KV 标定 → internal 网络正式服务。隔离首启转入服务网络可能再次加载模型，日志会解释阶段。
 
-固定 k5；运行参数校验拒绝其他草稿长度。配置优先级：`configs/runtime.json` < `runtime/selected-config.json` < 显式调优的 `runtime/tuning-active.json`。改配置须停止再启动；重复调用 start.sh 不会自动改动健康实例。
+固定k5/512000/1024/C64，单图视觉token上限1024（大图细节取舍已经用户确认）；运行参数校验拒绝其他草稿长度。配置优先级：`configs/runtime.json` < `runtime/selected-config.json` < 显式调优的 `runtime/tuning-active.json`。改配置须停止再启动；重复调用 start.sh 不会自动改动健康实例。
 
 ```bash
 bash ./status.sh
@@ -39,4 +39,4 @@ bash ./tests/run-all.sh 2>&1 | tee runtime/acceptance.log
 
 run-all 包含功能、长输入与负载测试，避免同时运行其他压测。成功 smoke 不是 24h 稳定性或满窗口并发验收。
 
-R1.8 的更新安装、目标机检查与回退见 [累计更新说明](deployment-update-20260923-r18.md)。本次跳过启动前 EP8 通信重测；仍要通过整模启动、双池 smoke 和完整验收。
+R1.9 的更新安装、目标机检查与回退见 [累计更新说明](deployment-update-20261015-r19.md)。本次跳过启动前 EP8 通信重测；仍要通过整模启动、双池 smoke 和完整验收。

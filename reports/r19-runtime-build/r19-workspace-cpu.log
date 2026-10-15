@@ -1,0 +1,1 @@
+{"status": "PASS", "gpu_executed": false, "production_chunk_builder": true, "workloads": 1440, "chunks": 2108452, "context": 512000, "logits_mb": 512, "reserved_rows": {"1": 8289721, "2": 5861718}, "scope": "integer allocation bounds; not GPU accuracy or measured KV capacity"}

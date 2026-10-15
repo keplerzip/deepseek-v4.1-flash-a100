@@ -16,3 +16,6 @@ jobs:
       - run: python deploy/tests/r12_contracts.py
       - run: python build/test_archive.py
       - run: python build/test_update.py
+      - run: python deploy/tests/performance_r19_workspace_cpu.py
+      - run: python deploy/tests/performance_r19_benchmark_cpu.py
+      - run: python build/test_full_package.py

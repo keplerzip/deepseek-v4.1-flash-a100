@@ -151,7 +151,7 @@ launch_engine() {
     entrypoint_args=(--entrypoint /usr/bin/env)
     entry_command=(-u NCCL_ALGO -u NCCL_PROTO vllm serve)
   fi
-  printf 'R1.8 / 1M / C32 / GPU=0.92 TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s decode-metadata=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE" "$PERF_DECODE_METADATA"
+  printf 'R1.9 / 500K=512000 / C64 / batch=1024 / GPU=0.92 TP4 DP2 EP8: mHC=%s indexer=%s stable-MoE=%s NCCL=%s KV-stack=%s topk-reuse=%s decode-metadata=%s (DSpark k=5)\n' "$PERF_MHC" "$PERF_INDEXER" "$PERF_MOE_ALIGN" "$PERF_NCCL" "$PERF_DSPARK_KV" "$PERF_TOPK_REUSE" "$PERF_DECODE_METADATA"
   docker run -d --pull never --name "$ENGINE_NAME" --label dsv41.owner=offline-delivery \
     "${CONTAINER_USER_ARGS[@]}" \
     --gpus all --ipc host --ulimit memlock=-1:-1 --ulimit stack=67108864:67108864 \
@@ -163,7 +163,7 @@ launch_engine() {
     -e VLLM_USE_BREAKABLE_CUDAGRAPH=1 -e VLLM_USE_V2_MODEL_RUNNER=1 -e VLLM_DSPARK_FUSED_MARKOV=1 \
     -e VLLM_DSV41_CAND_LOGITS="$PERF_INDEXER" -e VLLM_FUSED_STABLE_MOE_ALIGN="$PERF_MOE_ALIGN" \
     -e VLLM_DSV41_STACKED_DRAFT_KV="$PERF_DSPARK_KV" -e VLLM_DSV41_REUSE_TOPK_RAGGED="$PERF_TOPK_REUSE" \
-    -e VLLM_DETERMINISTIC_MOE_ALIGN=1 \
+    -e VLLM_DSV41_FUSED_INV_ROPE=1 -e VLLM_DETERMINISTIC_MOE_ALIGN=1 \
     -e VLLM_AMPERE_DENSE_BF16_MIN_TOKENS=32 -e VLLM_SM80_EP8_CUSTOM_AG_RS=1 \
     -e VLLM_DISABLE_SHARED_EXPERTS_STREAM=0 -e DSV41_DP_SIZE=2 \
     "${nccl_args[@]}" -e NCCL_IB_DISABLE=1 \

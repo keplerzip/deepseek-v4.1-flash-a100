@@ -1,0 +1,13 @@
+test_capture_fills_all_groups_and_passes_fixed_context_callback (__main__.DraftContextTests.test_capture_fills_all_groups_and_passes_fixed_context_callback) ... ok
+test_eager_and_dummy_never_write_placeholder_or_padding_slots (__main__.DraftContextTests.test_eager_and_dummy_never_write_placeholder_or_padding_slots) ... ok
+test_full_replay_matches_eager_with_tail_padding_groups_and_mutation (__main__.DraftContextTests.test_full_replay_matches_eager_with_tail_padding_groups_and_mutation) ... ok
+test_graph_factory_precompute_precedes_query_on_both_dp_ranks (__main__.DraftContextTests.test_graph_factory_precompute_precedes_query_on_both_dp_ranks) ... ok
+test_idle_dp_dummy_uses_agreed_request_count_and_no_context_writes (__main__.DraftContextTests.test_idle_dp_dummy_uses_agreed_request_count_and_no_context_writes) ... ok
+test_propose_dispatches_context_before_query_with_prefill_tail (__main__.DraftContextTests.test_propose_dispatches_context_before_query_with_prefill_tail) ... ok
+test_verify_rows_include_bonus_despite_dspark_k_query_rows (__main__.DraftContextTests.test_verify_rows_include_bonus_despite_dspark_k_query_rows) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.218s
+
+OK
+{"status": "PASS", "gpu_executed": false, "tests": 7, "scope": "production draft-context graph plumbing; independent CPU cache reference"}

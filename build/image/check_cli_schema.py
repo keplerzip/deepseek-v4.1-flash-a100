@@ -24,8 +24,11 @@ else:
     parsed = parser.parse_args(arguments)
     selected_model = parsed.model_tag or parsed.model
     assert selected_model == '/models/DeepSeek-V4.1-Flash', selected_model
-    assert parsed.served_model_name == ['DeepSeek-V4-Flash'], parsed.served_model_name
-    assert parsed.max_model_len == 1048576 and parsed.max_num_seqs * parsed.data_parallel_size >= 32
+    assert parsed.served_model_name == ['DeepSeek-Flash'], parsed.served_model_name
+    assert parsed.max_model_len == 512000 and parsed.max_num_seqs * parsed.data_parallel_size == 64
+    assert parsed.max_num_batched_tokens == 1024 and parsed.enable_chunked_prefill is True
+    assert parsed.disable_chunked_mm_input is True
+    assert parsed.hf_overrides=={'vision_max_n_token':1020}
     print(json.dumps({'status': 'PASS', 'scope': 'CLI parse only with CPU platform defaults; no engine or GPU validation',
                       'argument_count': len(arguments), 'model': selected_model,
                       'max_model_len': parsed.max_model_len, 'max_num_seqs': parsed.max_num_seqs}))

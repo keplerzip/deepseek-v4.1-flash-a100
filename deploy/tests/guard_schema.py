@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 import urllib.request
 
-MODEL = 'DeepSeek-V4-Flash'
+MODEL = 'DeepSeek-Flash'
 SCHEMA = {'type': 'object', 'properties': {
     'type': {'type': 'string', 'description': 'The record category.'},
     'optional': {'type': ['string', 'null']}}, 'required': ['type'], 'additionalProperties': False}

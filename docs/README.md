@@ -4,6 +4,10 @@
 
 性能与边界见 [性能报告](performance.md)、[缓存](cache.md)、[故障定位](troubleshooting.md)。网关和客户端见 [协议接入](clients.md)，实现与来源见 [架构](architecture.md)、[致谢](acknowledgements.md)。
 
+- [R1.9完整进版与离线包](deployment-update-20261015-r19.md)
+- [2026-10-15全网方案筛选](performance-review-20261015.md)
+- [2026-10-14：A100 性能进展继续追踪](performance-review-20261014.md)
+- [2026-10-07：R1.8 之后的 A100 支持与提速进展](performance-review-20261007.md)
 - [R1.7：EP8 全链路验收修正与累计升级](deployment-update-20260923-ep8-r17.md)
 - [R1.6：历史验收修正](deployment-update-20260923-ep8.md)
 - [R1.5.1：0.92、固定配置清单与累计升级](deployment-update-20260922-gpu92.md)

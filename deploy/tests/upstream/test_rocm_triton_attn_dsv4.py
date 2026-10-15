@@ -270,6 +270,8 @@ def _launch_sparse_decode_reduce(
         part_acc,
         attn_sink,
         out,
+        None,  # inverse RoPE disabled in this reduction-only reference
+        None,
         out.stride(0),
         out.stride(1),
         part_m.stride(0),
@@ -277,6 +279,7 @@ def _launch_sparse_decode_reduce(
         part_acc.stride(0),
         part_acc.stride(1),
         part_acc.stride(2),
+        0,  # no cos/sin cache
         num_heads,
         HAS_ATTN_SINK=False,
         ADAPTIVE_SPLITS=adaptive_splits,
@@ -284,6 +287,9 @@ def _launch_sparse_decode_reduce(
         BLOCK_H=1,
         NUM_SPLITS=num_splits,
         SPLITS_PAD=1 << (num_splits - 1).bit_length(),
+        FUSE_INV_ROPE=False,
+        NOPE=NOPE_HEAD_DIM,
+        HALF=ROPE_HEAD_DIM // 2,
         num_warps=4,
     )
     return out

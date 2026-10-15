@@ -1,6 +1,6 @@
-# DeepSeek-V4.1-Flash on 8×A100 — R1.8 / v1.8.0
+# DeepSeek-V4.1-Flash on 8×A100 — R1.9 / v1.9.0
 
-## 实测性能：历史 256K 基线，R1.8 / 1M 待目标机验证
+## 实测性能：保留历史成绩，R1.9 / 500K / C64 待目标机验证
 
 **8×A100-SXM4-80GB + NVSwitch，256K 上下文，TP8，Engram 主存卸载。** 同机 k5/k7 对照结果如下，最终默认选择 **k=5**。
 
@@ -31,7 +31,9 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 [完整性能报告与方法](docs/performance.md) · [机器可读实测记录](reports/) · [测试代码](deploy/tests/dspark_benchmark.py)
 
-**R1.8 / v1.8.0：修复 R1.7 最后一步前端权限失败，并固定 C32。** 操作者在隔离目标机报告：R1.7 八 rank EP8、整模启动、双 DP pool 文本/缓存/DSpark smoke 均通过，随后前端以固定 UID 65534 读取私有 `/frontend.py` 失败，安装器自动回滚。R1.8 让前端使用部署用户 UID/GID，并在 GPU 加载前检查实际只读挂载。公开 API 唯一模型名改为 `DeepSeek-V4-Flash`；权重、ModelScope revision、镜像均仍是 V4.1。保留 0.92、固定 1M（1,048,576 token）总上下文、TP4×DP2＋EP8、DSpark k5、R1.4 性能优化、视觉与三协议；全局调度并发硬上限 **32**，每 DP pool 为 16，prefix caching 及命中 token 明细开启。主模型和草稿 decode CUDA Graph 保留，视觉编码器图尚未移植。**复用最初镜像和权重，可从 R1 至 R1.7 直接安装累计小包**。R1.8 整机启动及性能仍待目标机验收；上述 TP8 / 256K 数据不代表新版成绩。[R1.8 下载、升级与回退](docs/deployment-update-20260923-r18.md)
+**R1.9 / v1.9.0：固定 500K＝1024,000 token、C64、调度预算 1024，唯一公开名称 `DeepSeek-Flash`。** 原 V4.1 权重不变，复用初始 SM80 镜像，累计保留 TP4×DP2＋EP8、k5、0.92、Engram 主存卸载、前缀缓存、图片上限 999 与三协议。新增 prefill 去同步、inverse RoPE 融合、DSpark context KV 图捕获、indexer 工作区上界优化。**尚无本版 A100 实测 TPS；上表是历史 TP8 / 256K 成绩，不能当作新版成绩。** [完整进版方案与传输说明](docs/deployment-update-20261015-r19.md) · [全网方案筛选](docs/performance-review-20261015.md)。
+
+R1.8 用户回传还观察过：文本预热 176.25 / 192.10 tok/s；8 图 off 单流 39.49–177.29 tok/s，中位数 128.02。因后台请求造成全局计数不一致，两轮正式结果均 FAIL，无有效聚合成绩。这些观察值不能据此声称升级幅度。新版测速会保留污染数据并标记 CONTAMINATED，也支持只暂停本项目入口后隔离测速。
 
 [权重容量核算](reports/r12-weight-budget.json)来自本地 V4.1 全部 48 个分片头：专家含草稿约 275.7 GiB，由 EP8 分摊；Engram 单份表约 188.8 GiB，DP2 的两份主存表预算约 377.7 GiB；其余权重约 10.7 GiB。DP2 并非复制两份完整模型，但非专家副本与额外 BF16 dense 缓冲会消耗显存，实际 KV 容量必须重测。
 
@@ -41,58 +43,52 @@ high 模式下，k=7 的单流速度与 C32 总吞吐分别下降约 **12.97% / 
 
 本项目提供 `DeepSeek-V4.1-Flash` 在八卡 A100 上的离线部署、验收和运维工具，是从实际隔离环境交付整理的 **源码发行版**。联网构建侧准备全部资源后，目标机仅用普通用户和 `sudo -n docker` 启动，无需公网下载或在宿主安装 Python 依赖。
 
-| 项目 | R1.8 当前设置 |
+| 项目 | R1.9 当前设置 |
 |---|---|
-| 唯一模型 / API 名称 | `DeepSeek-V4-Flash`（底层仍是 V4.1 权重） |
-| 上下文 | **1048576 token（1M）**，输入与输出合计 |
+| 唯一模型 / API 名称 | `DeepSeek-Flash`（底层仍是 V4.1 权重） |
+| 上下文 | **512000 token（500 × 1024，约定 500K）**，输入与输出合计 |
 | 并行 | TP=4 × DP=2，EP=8，PP=1；专家跨八卡分布 |
 | 权重 | 官方混合 FP8/FP4，固定 ModelScope revision |
 | DSpark | **固定 k=5**，主模型与草稿 decode CUDA Graph |
 | 性能更新 | decode 元数据清理、小批 indptr/pack 融合；累计 DSpark context KV 合并、top-k 复用、dense BF16 ≥32 行、EP8 custom AG/RS、8-warp decode、条件共享专家重叠、主干 EPLB、R1.1 优化 |
+| token 调度预算 | **每 DP pool 1024**，chunked prefill 开启；k5 每池最多 192 验证 token |
 | 显存预算 | **固定 0.92**，启动后测量实际 KV 容量 |
 | Engram | 主存卸载 |
 | KV | `fp8_ds_mla`，prefix caching 与命中 token 明细 |
-| 并发上限 | **固定 C32**；每 DP pool `max_num_seqs=16` |
-| 多模态 | 图片数量配置为 999（与固定版本 vLLM 默认值一致）；拒绝公网媒体抓取 |
+| 并发上限 | **固定全局 C64**；每 DP pool `max_num_seqs=32` |
+| 多模态 | 图片数量上限999；**单图完整视觉token上限1024**，按固定调度预算缩放，大图细节可能减少；拒绝公网媒体抓取 |
 | API | Chat Completions、Responses、Anthropic Messages |
 | 访问 | `127.0.0.1:8005` 和本机 Docker bridge，客户端免密 |
 | NewAPI | 接已有实例；不安装、不修改网关 |
 
-原 TP8 参考机曾标定 N=28、C=56；R1.8 不沿用这一调度量。每个 DP 池仍需实测能容纳至少一个满 1M 窗口，但测得更多窗口也不会把 C32 上限自动调高。C32 不是 32 个满 1M 请求同时驻留的保证。权重、Docker 镜像、商业 CLI 二进制和目标运行数据均不进入 Git，需在构建侧准备。[构建与离线包](docs/building.md)
+C64 是两池总调度并发，不承诺 64 个满 512,000 窗口同时驻留。启动读取两池实测 KV，要求各池至少容纳一个完整窗口，并报告按池取整后的满窗口容量；不会自动改变用户指定 C64。1024 token 是每池每步调度额度，不是输出上限，长输入会分成更多块，可能增加冷 prefill 延迟。[构建与离线包](docs/building.md)
 
 ## 快速开始
 
-完整离线资源目录：
-
-```text
-deepseek-v4.1-flash-a100/
-├── DeepSeek-V4.1-Flash/       # 固定 revision 完整模型快照
-└── deploy/
-    ├── deployment.env
-    ├── images/runtime-image.tar
-    ├── configs/runtime.json   # 默认 k=5
-    ├── manifests/deploy.sha256
-    ├── deploy.sh
-    └── runtime/               # 运行生成，不入 Git
-```
-
-在普通用户拥有的 `deploy` 目录执行：
+本版提供**不含权重、含原运行镜像的完整包**，以及复用已装镜像的累计小包。已有目标机无需重新传权重。完整包解压后执行：
 
 ```bash
-umask 077
-mkdir -p runtime
-set -o pipefail
-bash ./deploy.sh 2>&1 | tee runtime/first-deploy.log
+bash ./install.sh /ai/services/deepseek-v4.1-flash-a100/deploy --restart
 ```
 
-首次导入、模型全量校验、GPU 小算子检查和模型加载均需要时间；KV 标定可能要求重启。启动后访问 `http://127.0.0.1:8005/v1/models`。容器内访问 `http://host.docker.internal:8005/v1`，Linux 容器需有 `host.docker.internal:host-gateway` 映射。[详细部署](docs/deployment.md)
+已有部署的模型目录、端口和 runtime 保留，旧调优配置在事务中迁移；失败自动恢复旧源码并尝试重启旧服务。全新部署需先放好原 V4.1 权重；可先不带 `--restart` 安装，再检查目标 `deployment.env`。只需普通用户与 `sudo -n docker`，不安装系统服务。详细包名、校验、回退和首次启动见 [R1.9 说明](docs/deployment-update-20261015-r19.md)。
 
+服务就绪后：
+
+```bash
+curl --fail http://127.0.0.1:8005/v1/models
+cd /ai/services/deepseek-v4.1-flash-a100/deploy
+bash ./tests/performance-benchmark.sh --isolate-clients
+bash ./tests/performance-benchmark.sh --isolate-clients --images 8
+```
+
+隔离测速会暂停本项目本机/Docker入口，完成后恢复，期间已有客户端无法访问；不停止模型、不操作 NewAPI。宿主地址 `http://127.0.0.1:8005/v1`，容器地址 `http://host.docker.internal:8005/v1`；Linux 容器自行配置 `host.docker.internal:host-gateway` 映射。
 
 ## 文档
 
 - [准备离线包](docs/building.md) · [部署](docs/deployment.md) · [运维与恢复](docs/operations.md)
 - [性能报告](docs/performance.md) · [KV 缓存](docs/cache.md) · [故障定位](docs/troubleshooting.md)
-- [R1.8：前端权限修复、C32 与 API 名称](docs/deployment-update-20260923-r18.md) · [R1.7 历史验收修正](docs/deployment-update-20260923-ep8-r17.md) · [R1.6 历史修正](docs/deployment-update-20260923-ep8.md) · [R1.5.1：0.92 固定方案](docs/deployment-update-20260922-gpu92.md) · [R1.5：1M 容量说明](docs/context-update-20260922.md) · [R1.4 历史优化](docs/performance-update-20260922.md) · [R1.3 历史方案](docs/performance-update-20260920.md) · [R1.2 历史方案](docs/performance-update-20260918.md) · [R1.1 历史更新](docs/performance-update-20260916.md) · [perf1 历史说明](docs/performance-update-20260915.md)
+- [R1.9：500K / C64 / 1024 与四项优化](docs/deployment-update-20261015-r19.md) · [R1.8：前端权限修复、C32 与 API 名称](docs/deployment-update-20260923-r18.md) · [R1.7 历史验收修正](docs/deployment-update-20260923-ep8-r17.md) · [R1.6 历史修正](docs/deployment-update-20260923-ep8.md) · [R1.5.1：0.92 固定方案](docs/deployment-update-20260922-gpu92.md) · [R1.5：1M 容量说明](docs/context-update-20260922.md) · [R1.4 历史优化](docs/performance-update-20260922.md) · [R1.3 历史方案](docs/performance-update-20260920.md) · [R1.2 历史方案](docs/performance-update-20260918.md) · [R1.1 历史更新](docs/performance-update-20260916.md) · [perf1 历史说明](docs/performance-update-20260915.md)
 - [协议、NewAPI 与 CLI](docs/clients.md) · [固定实现](docs/architecture.md)
 - [上游致谢](docs/acknowledgements.md) · [变更记录](CHANGELOG.md)
 
@@ -101,3 +97,5 @@ bash ./deploy.sh 2>&1 | tee runtime/first-deploy.log
 感谢 [DeepSeek](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) 提供模型，[wtdcode/vllm-backport](https://github.com/wtdcode/vllm-backport) / lazymio 提供 SM80 适配与镜像，以及 [vLLM](https://github.com/vllm-project/vllm)、[PyTorch](https://github.com/pytorch/pytorch)、[Triton](https://github.com/triton-lang/triton) 和 [NVIDIA NCCL](https://github.com/NVIDIA/nccl) 的基础设施。本仓库负责固定版本、离线交付、接口修正、验收和结果记录，不将上游模型或 SM80 实现归为原创。
 
 原创部署代码采用 Apache-2.0；第三方代码保留其版权与许可证，模型权重遵循模型自身许可。见 [LICENSE](LICENSE)、[NOTICE](NOTICE)、[完整致谢](docs/acknowledgements.md)。
+
+R1.9单图上限1024的实际处理器预算为1020，另留DSpark k5的4个新增槽，总计1024；保留整张图片的双向注意力，不允许为缓存命中或混合负载而拆图片段。

@@ -53,7 +53,13 @@ class UpdateChecks(unittest.TestCase):
             self.assertIn('PERF_DECODE_METADATA=1\n', env)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['speculative_config']['num_speculative_tokens'], 5)
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['data_parallel_size'], 2)
-            self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['max_model_len'], 1048576)
+            selected = json.loads((target / 'runtime/selected-config.json').read_text())
+            self.assertEqual(selected['max_model_len'], 512000)
+            self.assertEqual(selected['served_model_name'], 'DeepSeek-Flash')
+            self.assertEqual(selected['max_num_batched_tokens'], 1024)
+            self.assertIs(selected['enable_chunked_prefill'], True)
+            self.assertIs(selected['disable_chunked_mm_input'], True)
+            self.assertEqual(selected['hf_overrides'], {'vision_max_n_token': 1020})
             self.assertEqual(json.loads((target / 'runtime/selected-config.json').read_text())['gpu_memory_utilization'], 0.92)
             receipt = json.loads((target / 'runtime/latest-update.json').read_text())
             self.assertEqual(receipt['release'], '1.1.0')
@@ -61,6 +67,33 @@ class UpdateChecks(unittest.TestCase):
             for name, data in original.items():
                 self.assertEqual((target / name).read_bytes(), data)
             self.assertFalse((target / 'new.py').exists())
+
+    def test_r18_fixed_contract_migration_and_exact_rollback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            payload, target = self.setup_tree(Path(tmp))
+            old_config = dict(model='/models/DeepSeek-V4.1-Flash', served_model_name='DeepSeek-V4-Flash',
+                              max_model_len=1048576, max_num_batched_tokens=8192,
+                              max_num_seqs=16, tensor_parallel_size=4, data_parallel_size=2,
+                              enable_chunked_prefill=True,
+                              speculative_config={'method': 'dspark', 'num_speculative_tokens': 5})
+            for name in ('selected-config.json', 'tuning-active.json'):
+                path = target / 'runtime' / name
+                path.write_text(json.dumps(old_config))
+                path.chmod(0o600)
+            (target / 'manifests').mkdir()
+            (target / 'manifests/update.json').write_text(json.dumps({'id': '20260923-r18-local-access-c32-alias', 'release': '1.8.0'}))
+            original = {p.relative_to(target).as_posix(): (p.read_bytes(), p.stat().st_mode & 0o777)
+                        for p in target.rglob('*') if p.is_file()}
+            manager.apply(payload, target)
+            new_config = json.loads((payload / 'configs/runtime.json').read_text())
+            for name in ('selected-config.json', 'tuning-active.json'):
+                self.assertEqual(json.loads((target / 'runtime' / name).read_text()), new_config)
+            receipt = json.loads((target / 'runtime/latest-update.json').read_text())
+            self.assertEqual(receipt['previous_update'], '20260923-r18-local-access-c32-alias')
+            manager.restore(target, target / receipt['backup'], receipt)
+            for name, (data, mode) in original.items():
+                self.assertEqual((target / name).read_bytes(), data)
+                self.assertEqual((target / name).stat().st_mode & 0o777, mode)
 
     def test_cumulative_update_without_any_previous_performance_patch(self):
         with tempfile.TemporaryDirectory() as tmp:

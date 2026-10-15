@@ -41,7 +41,7 @@ def workload(seed, mode, phase, index):
 def template_workload(template, mode):
     """Keep the same conversation/images while controlling benchmark sampling."""
     if template.get('model', MODEL) != MODEL or not isinstance(template.get('messages'), list):
-        raise ValueError('Request file must be a Chat Completions body for DeepSeek-V4-Flash')
+        raise ValueError('Request file must be a Chat Completions body for DeepSeek-Flash')
     body = copy.deepcopy(template)
     for key in ('max_completion_tokens', 'stop', 'reasoning_effort', 'thinking'):
         body.pop(key, None)
@@ -79,10 +79,14 @@ def idle_metrics(client):
         busy = sum(totals.get(n, 0) for n in ['vllm:num_requests_running', 'vllm:num_requests_waiting'])
         counters = {k: v for k, v in totals.items() if k.endswith('_total')}
         if busy == 0 and previous == counters:
+            current['settled'] = True
             return current
         previous = counters
         time.sleep(1)
-    raise RuntimeError('Engine counters did not settle; pause other clients before the benchmark')
+    # Request timings and usage remain useful under contention. Preserve them,
+    # then label the report non-signoff instead of silently skipping load.
+    current['settled'] = False
+    return current
 
 
 def metric_delta(before, after):
@@ -99,6 +103,44 @@ def metric_delta(before, after):
             'accepted_fraction_of_rounds_by_position': {k: v/drafts for k, v in positions.items()} if drafts else {}}
 
 
+def accounting_issues(before, after, delta, expected_tokens, k):
+    """Global metrics can be attributed only after exact request accounting."""
+    issues = []
+    if not before.get('settled', True) or not after.get('settled', True):
+        issues.append('Engine counters did not settle; other clients may be active')
+    observed = delta['counters'].get('vllm:generation_tokens_total')
+    if observed is None or observed != expected_tokens:
+        issues.append(f'Generation accounting mismatch: metrics={observed}, benchmark={expected_tokens}; possible other traffic or counter reset')
+    if any(v < 0 for v in delta['counters'].values()):
+        issues.append('Global metric counters decreased during the phase')
+    if not (delta['drafts'] > 0 and 0 < delta['accepted_tokens'] <= delta['draft_tokens']):
+        issues.append('DSpark draft/accept counters are missing or inconsistent')
+    if delta['mean_draft_length'] is None or not 0 < delta['mean_draft_length'] <= k + 1e-6:
+        issues.append('DSpark mean draft length is outside the configured bound')
+    return issues
+
+
+def sample_summary(rows, phases):
+    """Compute client measurements independently of shared service counters."""
+    single = [r for r in rows if r['phase'] == 'single' and r['status'] == 'PASS']
+    load = [r for r in rows if r['phase'] == 'load' and r['status'] == 'PASS']
+    load_seconds = phases.get('load', {}).get('seconds', 0)
+    return dict(
+        completed_requests=sum(r['status'] == 'PASS' for r in rows),
+        load_completed_requests=len(load),
+        load_output_tokens=sum(r['output_tokens'] for r in load),
+        load_requests_by_dp=dict(Counter(str(r.get('data_parallel_rank')) for r in load)),
+        single_decode_median=statistics.median([r['decode_tps'] for r in single]) if single else None,
+        single_decode_min=min([r['decode_tps'] for r in single], default=None),
+        single_decode_max=max([r['decode_tps'] for r in single], default=None),
+        single_end_to_end_tps_median=statistics.median([r['end_to_end_tps'] for r in single]) if single else None,
+        single_ttft_median=statistics.median([r['ttft_seconds'] for r in single]) if single else None,
+        load_output_tokens_per_second=sum(r['output_tokens'] for r in load)/load_seconds if load and load_seconds > 0 else None,
+        load_latency_p50=percentile([r['seconds'] for r in load], .5),
+        load_latency_p95=percentile([r['seconds'] for r in load], .95),
+        load_ttft_p95=percentile([r['ttft_seconds'] for r in load], .95))
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--base-url', default='http://127.0.0.1:8000')
@@ -106,6 +148,10 @@ def main():
     p.add_argument('--seed', required=True)
     p.add_argument('--mode', choices=['off', 'high'], required=True)
     p.add_argument('--k', type=int, choices=[5], default=5)
+    p.add_argument('--concurrency', type=int, choices=(32, 64), default=64,
+                   help='Load concurrency; use 32 for the historical comparison')
+    p.add_argument('--clients-isolated', action='store_true',
+                   help='Shell wrapper paused this deployment frontend; direct internal clients can still contend')
     source = p.add_mutually_exclusive_group()
     source.add_argument('--request-file', type=Path, help='Private Chat body; preserved images/history, controlled 1024-token sampling')
     source.add_argument('--images', type=int, choices=(1, 5, 8), help='Small bundled OCR fixtures, not a real screenshot-history benchmark')
@@ -121,16 +167,19 @@ def main():
         return template_workload(template, a.mode) if template is not None else workload(a.seed, a.mode, phase, index)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     client = Client(a.base_url, '', timeout=600)
-    rows, errors, phases = [], [], {}
+    rows, errors, contamination, phases = [], [], [], {}
     trace = a.output.with_suffix('.jsonl')
     trace.write_text('')
     report = {'status': 'RUNNING', 'model': MODEL, 'k': a.k, 'thinking': a.mode == 'high',
         'reasoning_effort': 'high' if a.mode == 'high' else None, 'context': LENGTH,
-        'concurrency': 32, 'output_tokens_per_request': 1024, 'warmups': 2, 'single_samples': 5,
+        'concurrency': a.concurrency, 'output_tokens_per_request': 1024, 'warmups': 2, 'single_samples': 5,
         'load_requests': 200, 'seed': a.seed, 'sampling_seed': 42, 'temperature': 0,
         'started_at': datetime.datetime.now().astimezone().isoformat(),
         'timing_note': 'completion tokens include reasoning; SSE chunks are not tokens. Decode estimate=(usage completion_tokens-1)/(last-first token-bearing event). Also report completion_tokens/total HTTP duration.',
-        'engram_cpu_offload': True, 'trace_file': trace.name}
+        'engram_cpu_offload': True, 'trace_file': trace.name,
+        'frontend_paused': a.clients_isolated,
+        'aggregate_timing_note': 'load usage completion tokens / entire client load-phase wall time, excluding metric settlement; includes queueing and prefill',
+        'signoff_note': 'CONTAMINATED retains real client timings but is not an isolated performance signoff; global DSpark counters cannot be attributed to these requests'}
     if template is None:
         bodies = [make_workload(phase, i) for phase, n in [('warmup', 2), ('single', 5), ('load', 200)] for i in range(n)]
         report['request_set_sha256'] = digest(bodies)
@@ -184,10 +233,14 @@ def main():
     save()
     try:
         assert [m['id'] for m in client.request('/v1/models')['data']] == [MODEL]
-        for phase, count, concurrency in [('warmup', 2, 1), ('single', 5, 1), ('load', 200, 32)]:
+        for phase, count, concurrency in [('warmup', 2, 1), ('single', 5, 1), ('load', 200, a.concurrency)]:
             phase_state[0] = phase
             before = idle_metrics(client)
             start = time.monotonic()
+            # Keep a partial phase if a real request fails, so successful
+            # client samples do not disappear from the final report.
+            phases[phase] = {'seconds': None, 'requests': count, 'concurrency': concurrency,
+                             'completed': False}
             if concurrency == 1:
                 for i in range(count):
                     row = one(phase, i)
@@ -198,38 +251,29 @@ def main():
                     for future in as_completed([pool.submit(one, phase, i) for i in range(count)]):
                         record(future.result())
             elapsed = time.monotonic()-start  # Excludes metrics-settlement polling.
+            phases[phase].update(seconds=elapsed, completed=True)
             after = idle_metrics(client)
             delta = metric_delta(before, after)
-            assert delta['drafts'] > 0 and delta['accepted_tokens'] > 0, delta
-            assert 0 < delta['accepted_tokens'] <= delta['draft_tokens'], delta
             # Near output limits a round may be shorter than k. Do not invent
             # exact-k proof from this mean; startup observations prove actual k.
-            assert delta['mean_draft_length'] <= a.k + 1e-6, delta
-            observed = delta['counters'].get('vllm:generation_tokens_total')
-            if observed is None or observed != count*1024:
-                raise RuntimeError(f'Generation accounting mismatch: metrics={observed}, benchmark={count*1024}; possible other traffic')
-            phases[phase] = {'seconds': elapsed, 'requests': count, 'metrics': delta}
+            issues = accounting_issues(before, after, delta, count*1024, a.k)
+            contamination.extend(f'{phase}: {issue}' for issue in issues)
+            phases[phase].update(metrics=delta, accounting_status='CONTAMINATED' if issues else 'PASS',
+                                  accounting_issues=issues, global_counters_attributable=not issues)
+            if issues:
+                print(f'[k={a.k} thinking={a.mode}] {phase}: CONTAMINATED; preserving client samples and continuing load', flush=True)
             report['phases'] = phases
             save()
     except Exception as exc:
         errors.append(str(exc)[:4000])
     finally:
         stop_heartbeat.set()
-        single = [r for r in rows if r['phase'] == 'single' and r['status'] == 'PASS']
-        load = [r for r in rows if r['phase'] == 'load' and r['status'] == 'PASS']
-        report.update(status='FAIL' if errors or len(rows) != 207 else 'PASS', errors=errors,
-            completed_requests=len([r for r in rows if r['status']=='PASS']),
-            load_requests_by_dp=dict(Counter(str(r['data_parallel_rank']) for r in load)),
-            single_decode_median=statistics.median([r['decode_tps'] for r in single]) if single else None,
-            single_decode_min=min([r['decode_tps'] for r in single], default=None),
-            single_decode_max=max([r['decode_tps'] for r in single], default=None),
-            single_end_to_end_tps_median=statistics.median([r['end_to_end_tps'] for r in single]) if single else None,
-            single_ttft_median=statistics.median([r['ttft_seconds'] for r in single]) if single else None,
-            load_output_tokens_per_second=sum(r['output_tokens'] for r in load)/phases['load']['seconds'] if 'load' in phases else None,
-            load_latency_p50=percentile([r['seconds'] for r in load], .5),
-            load_latency_p95=percentile([r['seconds'] for r in load], .95),
-            load_ttft_p95=percentile([r['ttft_seconds'] for r in load], .95),
-            phases=phases, finished_at=datetime.datetime.now().astimezone().isoformat())
+        if phase_state[0] in phases and phases[phase_state[0]]['seconds'] is None:
+            phases[phase_state[0]]['seconds'] = time.monotonic()-start
+        status = 'FAIL' if errors or len(rows) != 207 else 'CONTAMINATED' if contamination else 'PASS'
+        report.update(status=status, signoff_eligible=status == 'PASS', errors=errors,
+                      contamination=contamination, **sample_summary(rows, phases),
+                      phases=phases, finished_at=datetime.datetime.now().astimezone().isoformat())
         save()
     print(json.dumps(report), flush=True)
     return report['status'] != 'PASS'

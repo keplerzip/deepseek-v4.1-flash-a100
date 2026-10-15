@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-15",
+  "timezone": "Asia/Shanghai",
+  "recorded_at_utc": "2026-10-15T10:14:07.763097+00:00",
+  "previous_review": "reports/performance-review-20261014.json",
+  "release": "R1.9",
+  "version": "1.9.0",
+  "conclusion": "Retain pinned SM80 runtime with four reached and independently testable ports. No inspected public matched 8A100 original-weight multimodal 512000-context C64 benchmark establishes a superior replacement. No target GPU speed claim.",
+  "baseline": {
+    "release": "R1.8",
+    "git_commit": "89bd2effe25e739f517af3a2e20eb152ee8d96e5",
+    "context_tokens": 1048576,
+    "global_scheduler_concurrency": 32,
+    "weights_model": "DeepSeek-V4.1-Flash",
+    "modelscope_revision": "f877e3ed82d979be83e828b52762cdb86152bb9c",
+    "base_image": "deepseek-v4.1-flash-a100:20260913-r1",
+    "base_backport_commit": "a350766628514d597670d2a5217777fdee2ba7f4"
+  },
+  "new_contract": {
+    "served_model_name": "DeepSeek-Flash",
+    "context_tokens": 512000,
+    "context_definition": "500*1024; input+output combined",
+    "global_scheduler_concurrency": 64,
+    "per_dp_pool_max_num_seqs": 32,
+    "max_num_batched_tokens": 1024,
+    "tp": 4,
+    "dp": 2,
+    "ep": 8,
+    "pp": 1,
+    "dspark_k": 5,
+    "gpu_memory_utilization": 0.92,
+    "prefix_caching": true,
+    "multimodal": true,
+    "image_count_config_cap": 999,
+    "engram_cpu_offload": true,
+    "client_api_key_required": false,
+    "access_scope": "127.0.0.1 and Docker bridges",
+    "weights_changed": false,
+    "weights_in_delivery": false,
+    "full_window_residency_not_equal_scheduler_concurrency": true,
+    "vision_max_n_token": 1020,
+    "previous_vision_max_n_token": 1024,
+    "vision_prefix_lm": true,
+    "disable_chunked_mm_input": true,
+    "vision_change_user_confirmed": true,
+    "vision_change_lossless_claim": false,
+    "requested_image_token_ceiling": 1024,
+    "dspark_reserved_token_slots": 4
+  },
+  "repository_snapshots": [
+    {
+      "repository": "wtdcode/vllm-backport",
+      "commit": "29e66dad461b11caae6039f510eaa7913f9dfb19",
+      "committed_at": "2026-09-26T16:16:02Z",
+      "title": "kv_cache_utils: don't allocate other PP stages' layers of an empty uniform group",
+      "url": "https://github.com/wtdcode/vllm-backport/commit/29e66dad461b11caae6039f510eaa7913f9dfb19",
+      "decision": "keep_pinned_base",
+      "reason": "SM80 native mixed weights and inherited Triton sparse MLA; preserve tested image plus overlays; no new matched V4.1 performance receipt at latest HEAD.",
+      "readme_sha256": "1a4d3e093784443963ec1e044e52087f35cec2feec6cc9101c3e29e61550c53d",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "Tokha233/deepseek-v4.1-flash-a100-turbo",
+      "commit": "fae324ae62ac5cef31b7d38f5d369618e1cae1fa",
+      "committed_at": "2026-09-15T09:20:44Z",
+      "title": "docs: prepare Tokha233 release announcement",
+      "url": "https://github.com/Tokha233/deepseek-v4.1-flash-a100-turbo/commit/fae324ae62ac5cef31b7d38f5d369618e1cae1fa",
+      "decision": "already_ported_core",
+      "reason": "A800 TP4 DP2 EP8 recipe; main dense/MoE/EP improvements already incorporated; C128 aggregate is not a new A100 result.",
+      "readme_sha256": "bed00bbb607762760266bb9c372406210f52ccc691ab2e00cdd72dd80ed3929f",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "Zanooda/deepseek-v4.1-flash-cmp170hx",
+      "commit": "28c5729c0c1e00ff81b3245bb2f849c94f409aa2",
+      "committed_at": "2026-10-14T17:05:53Z",
+      "title": "bench: metrics_window.py reads the live engine's symptoms from /metrics",
+      "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx/commit/28c5729c0c1e00ff81b3245bb2f849c94f409aa2",
+      "decision": "monitor_pp_specific",
+      "reason": "New patch0019 spreads decode bursts over PP8 ring slots; current pp_size1 has no corresponding ring slots; do not copy scheduler throttling.",
+      "readme_sha256": "b4e115ffa95cc557894c9d70da23102c489e2bf24b04b520883760893c54fd76",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "shi3z/deepseekv4.1-A100-custom",
+      "commit": "580568edd6f84537ff042ded4ee842b892bf3ff4",
+      "committed_at": "2026-09-20T02:55:10Z",
+      "title": "fix(serve): add missing sys import and resilient dashboard error handling; add Jev Arcade link",
+      "url": "https://github.com/shi3z/deepseekv4.1-A100-custom/commit/580568edd6f84537ff042ded4ee842b892bf3ff4",
+      "decision": "reference_not_replacement",
+      "reason": "Actual Engine has incremental batched decode; correct historical serialized-only description; serialized prefill and delayed chat SSE remain; public 4GPU profiles do not match current scale.",
+      "readme_sha256": "8dea9079cf1c71925339a9eb63aa662292c8d000d20b1f4d566a71d1bc6d1d1b",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "concentrate1/deepseekv4.1-A100-custom",
+      "commit": "53c7595491a643e21cc827def619ce5a571b9612",
+      "committed_at": "2026-09-27T19:04:50Z",
+      "title": "fix: align streaming and final parsing for thinking and tool calls",
+      "url": "https://github.com/concentrate1/deepseekv4.1-A100-custom/commit/53c7595491a643e21cc827def619ce5a571b9612",
+      "decision": "reference_not_replacement",
+      "reason": "Fork has batch DSpark, vision, cancellation and image prefix improvements; no matched 8A100 500K C64 benchmark establishes superiority.",
+      "readme_sha256": "d2e0fc85bfc75225ebd9559f6e2d3898ad6dbfb3c30b18c486248beeb76e1127",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "guqiong96/Lvllm",
+      "commit": "43ffc42a54ef4aa736ee585acb525e6c6afbad0e",
+      "committed_at": "2026-09-22T03:42:56Z",
+      "title": "dsv4: bound the block_table load in global-topk index mapping",
+      "url": "https://github.com/guqiong96/Lvllm/commit/43ffc42a54ef4aa736ee585acb525e6c6afbad0e",
+      "decision": "mechanisms_evaluated",
+      "reason": "CPU/GPU hybrid and SM8x tiled prefill useful for constrained VRAM; no matched evidence superior to GPU-resident compute weights.",
+      "readme_sha256": "b00c25d488a85f22fb98b599295bcf8a3a66607c6943fb26f9dcfff5effd0818",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "guqiong96/Lsglang",
+      "commit": "8350d80fb924136cecda471bf9cfb7351070020a",
+      "committed_at": "2026-10-15T07:24:29Z",
+      "title": "tune: LK_POOL_SLOTS=18 for dsv41 dspark tp2 3090 (6.4GiB/GiB card, ~2GiB margin)",
+      "url": "https://github.com/guqiong96/Lsglang/commit/8350d80fb924136cecda471bf9cfb7351070020a",
+      "decision": "mechanisms_evaluated",
+      "reason": "Active NUMA hybrid inference and SM80 support, latest tuning for dual3090 pool; offloading MoE/NVMe differs from current Engram-only host placement.",
+      "readme_sha256": "fd82e2b132dc2c54c24dfa0a56bbccc6e9b729422af10afae8df5f52ea36b41f",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "yeungtuzi/vllm-xtu-moe",
+      "commit": "fdfdeef31a5ff50b85db6a707e0c1c11f91b78dc",
+      "committed_at": "2026-10-15T07:23:19Z",
+      "title": "B430: \u6696\u533a\u95f4(APC\u547d\u4e2d)\u5b9e\u6d4b TTFT 295s->1.36s(218x), \u89e3\u7801\u6301\u5e73, deg \u66f4\u5e72\u51c0; \u4fee\u6b63 B428 'prefill \u843d\u540e' \u7684\u9002\u7528\u6027(\u53ea\u5bf9\u51b7\u542f\u52a8)",
+      "url": "https://github.com/yeungtuzi/vllm-xtu-moe/commit/fdfdeef31a5ff50b85db6a707e0c1c11f91b78dc",
+      "decision": "not_current_staging_path",
+      "reason": "v0.2.7 DMA staging reduction applies to CPU experts copied for GPU prefill, not current resident experts; decode-speed claim explicitly retracted.",
+      "readme_sha256": null,
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "antirez/ds4",
+      "commit": "fc80bd695da76ee14bcb86820bf900a5cdfda806",
+      "committed_at": "2026-10-07T19:43:05Z",
+      "title": "Avoid full context rebuilds at DSpark response boundaries",
+      "url": "https://github.com/antirez/ds4/commit/fc80bd695da76ee14bcb86820bf900a5cdfda806",
+      "decision": "exclude_contract_change",
+      "reason": "GGUF/SSD experts and disk Engram alter format/runtime; pinned DGX Spark docs explicitly lack V4.1 CUDA vision and DSpark.",
+      "readme_sha256": "d61ff9a3153916ab88917cbfab0ca1a8c2e42b138b71a1ca0d74d05f391ff113",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "Entrpi/ds4-on-spark",
+      "commit": "99fb7b1705281a9767e18176c889d0b7dbbf6a8b",
+      "committed_at": "2026-08-27T04:25:19Z",
+      "title": "README polish: agent-robustness row in the fork delta table",
+      "url": "https://github.com/Entrpi/ds4-on-spark/commit/99fb7b1705281a9767e18176c889d0b7dbbf6a8b",
+      "decision": "different_model_and_hardware",
+      "reason": "Older V4 Flash GGUF/GB10 route; Blackwell gains and continuous batching do not establish V4.1 SM80 support.",
+      "readme_sha256": "31dfcf2bc607aedeed4a34cc83b0cbc90555fc214c48cdf123fa0c8697802b5f",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark",
+      "commit": "d45538f67366c62da668c35ec1afd4fcd0e4c8b4",
+      "committed_at": "2026-09-19T13:16:08Z",
+      "title": "Speed run 2: 13:15 health line, deadline met",
+      "url": "https://github.com/tonyd2wild/DeepSeek-V4.1-Flash-vLLM-DGX-Spark/commit/d45538f67366c62da668c35ec1afd4fcd0e4c8b4",
+      "decision": "different_memory_system",
+      "reason": "Track IO/cache ideas; Spark unified-memory capacity and SM121 kernels are not direct A100 replacements.",
+      "readme_sha256": "8c72dbb42a49a0f9b5b5f8a70055a467823993012bdb47cad748b5b0e04e36a7",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "catid/dgx_station_benchmarks",
+      "commit": "ff8a496e5e027bbc462f81643361ef5516072a68",
+      "committed_at": "2026-09-11T06:16:36Z",
+      "title": "Add PP2 + DSpark prefill and lead the DeepSeek-V4.1-Flash deck with best results",
+      "url": "https://github.com/catid/dgx_station_benchmarks/commit/ff8a496e5e027bbc462f81643361ef5516072a68",
+      "decision": "reference_benchmark_method",
+      "reason": "Dual GB300 DGX Stations, original checkpoint, PP/TP/NCCL/RDMA comparisons; distinct from DGX Spark and A100, numbers not predictions.",
+      "readme_sha256": null,
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "vllm-project/vllm",
+      "commit": "7020600b1db32f239611b037f07e0dc5268e5b4f",
+      "committed_at": "2026-10-15T09:18:15Z",
+      "title": "[KV Connector][NIXL] Register packed MLA KV rows as a single region (#61074)",
+      "url": "https://github.com/vllm-project/vllm/commit/7020600b1db32f239611b037f07e0dc5268e5b4f",
+      "decision": "selective_ports",
+      "reason": "Latest stable v0.31.0; inspected V4.1 FlashMLA majors9/10 and FlashInfer10/12; no SM80 drop-in backend.",
+      "readme_sha256": "4dc7399323b9660117f8cc1226afb7a81cdbb912dbb4ae74b66d89052417d11c",
+      "matched_target_benchmark_found": false
+    },
+    {
+      "repository": "sgl-project/sglang",
+      "commit": "f7ad4345b86d147a1c3095a3cebabca9a33ebaa1",
+      "committed_at": "2026-10-15T09:05:28Z",
+      "title": "[Refactor] deepseek-v4: Use explicit stage boundaries and row transport (#43607)",
+      "url": "https://github.com/sgl-project/sglang/commit/f7ad4345b86d147a1c3095a3cebabca9a33ebaa1",
+      "decision": "not_verified_a100_drop_in",
+      "reason": "Pinned V4.1 validated matrix H200/B200/B300/GB300/MI355X, NVIDIA preview image; no A100 in official matrix.",
+      "readme_sha256": "7c99b50fa5ef9f4a666a2f73860f746d3fc259e7e7912d4bff88dffdc1dc4c5e",
+      "matched_target_benchmark_found": false
+    }
+  ],
+  "selected_ports": [
+    {
+      "number": 60091,
+      "name": "prefill_output_size",
+      "url": "https://github.com/vllm-project/vllm/pull/60091",
+      "state": "open",
+      "draft": false,
+      "created_at_utc": "2026-10-05T18:19:57Z",
+      "updated_at_utc": "2026-10-12T02:57:24Z",
+      "merged_at_utc": null,
+      "head_sha": "82c6eaf85e2217da1ce917f24f25abf7fb9dad04",
+      "merge_sha": null,
+      "implementation": "Pass known num_tokens to both repeat_interleave calls in reached Ampere helper; preserve integer indexing math.",
+      "upstream_evidence_not_a100_prediction": {
+        "hardware": "MI350X",
+        "c1_ttft_delta_pct": -5.7,
+        "c64_aggregate_output_delta_pct": 2.7
+      },
+      "tests": [
+        "deploy/tests/performance_prefill_cpu.py"
+      ],
+      "implemented_in_r19": true,
+      "target_gpu_tested": false
+    },
+    {
+      "number": 57632,
+      "name": "draft_context_kv_graph",
+      "url": "https://github.com/vllm-project/vllm/pull/57632",
+      "state": "closed",
+      "draft": false,
+      "created_at_utc": "2026-09-18T21:17:51Z",
+      "updated_at_utc": "2026-09-24T21:38:05Z",
+      "merged_at_utc": "2026-09-24T21:38:04Z",
+      "head_sha": "f2b00d1f989e62edb44a869a8786f4594b55e495",
+      "merge_sha": "04730e82700d0c9b957cda188dd1bbc8073e1fcd",
+      "implementation": "Capture fixed context-KV prefix; eager overflow tail; k+1 verifier rows, PAD slots and per-layer KV group mappings.",
+      "upstream_evidence_not_a100_prediction": {
+        "hardware": "GB200",
+        "c1_tpot_delta_pct": -15.2,
+        "performance_used_synthetic_acceptance": true
+      },
+      "tests": [
+        "deploy/tests/draft_context_graph_cpu.py"
+      ],
+      "implemented_in_r19": true,
+      "target_gpu_tested": false
+    },
+    {
+      "number": 57435,
+      "name": "inverse_rope_reduce",
+      "url": "https://github.com/vllm-project/vllm/pull/57435",
+      "state": "closed",
+      "draft": false,
+      "created_at_utc": "2026-09-17T19:08:40Z",
+      "updated_at_utc": "2026-09-22T18:05:12Z",
+      "merged_at_utc": "2026-09-22T18:05:12Z",
+      "head_sha": "b1465b142c4c7cfc6c4d94ae34e45fa309cb9f31",
+      "merge_sha": "ca831d1c55714aa10acd826389674ce8f6a4f872",
+      "implementation": "Fuse inverse RoPE into existing split-K reduce and eagerly rotate remaining suffix; compiled projection has batch-independent inverse_rope=False; non-split fallback returns zero rotated rows.",
+      "upstream_evidence_not_a100_prediction": {
+        "hardware": "MI355X",
+        "kernel_launches_removed_per_step": 43,
+        "target_speed_claim": null
+      },
+      "tests": [
+        "deploy/tests/performance_inv_rope_cpu.py",
+        "deploy/tests/performance_inv_rope_kernels.py",
+        "build/compile_r19_kernels.py"
+      ],
+      "implemented_in_r19": true,
+      "target_gpu_tested": false
+    },
+    {
+      "number": 60874,
+      "name": "bounded_indexer_workspace",
+      "url": "https://github.com/vllm-project/vllm/pull/60874",
+      "state": "open",
+      "draft": false,
+      "created_at_utc": "2026-10-09T15:22:50Z",
+      "updated_at_utc": "2026-10-13T06:18:06Z",
+      "merged_at_utc": null,
+      "head_sha": "fe1a30812d3451953ed578290667e069774d74df",
+      "merge_sha": null,
+      "implementation": "Bound reservation using actual pinned chunk planner; retain uncompressed cap where the planner requires it; do not modify Ampere gather grouping.",
+      "upstream_evidence_not_a100_prediction": {
+        "hardware": "8xH20 TP8",
+        "context_tokens": 1048576,
+        "published_kv_gib_per_gpu_gain": 3.7,
+        "includes_flashmla_gather_changes_not_ported": true
+      },
+      "tests": [
+        "deploy/tests/performance_r19_workspace_cpu.py"
+      ],
+      "implemented_in_r19": true,
+      "target_gpu_tested": false
+    }
+  ],
+  "excluded_or_deferred": [
+    {
+      "prs": [
+        56720
+      ],
+      "reason": "ROCm one-pass dequant dispatch needs SM80 software-FP8 adaptation and grid validation; kernel speedup not sustained decode evidence."
+    },
+    {
+      "prs": [
+        61039,
+        60936
+      ],
+      "reason": "Reached candidate-source mechanism is useful but old image lacks new selector/DeepSelect/DeepGEMM or shared-helper ABI; do not silently replace precision or path."
+    },
+    {
+      "prs": [
+        59039
+      ],
+      "reason": "Bounded replay excludes sequence-parallel configuration used by TP4 DP2 EP8."
+    },
+    {
+      "prs": [
+        59923,
+        59327
+      ],
+      "reason": "Packed exchange fast path requires TP1/direct MXFP8 or SM100 peer exchange; sorting default Blackwell only, not current TP4 SM80."
+    },
+    {
+      "prs": [
+        56625,
+        58499
+      ],
+      "reason": "Full vision encoder graph requires runner/encoder metadata and padding port plus target multi-image GPU validation; keep existing validated vision path."
+    },
+    {
+      "prs": [
+        60397,
+        61082,
+        60731
+      ],
+      "reason": "AMD mono layer requires non-SM80 instructions/layouts and different memory budgets; cannot directly enable on 80GB A100."
+    },
+    {
+      "prs": [
+        46963,
+        59342
+      ],
+      "reason": "Standard MHA FA2 SM8x NVFP4 is not V4.1 compressed MLA; native compressed-MLA path remains different architecture."
+    },
+    {
+      "prs": [
+        59511
+      ],
+      "reason": "Followup full context/anchor capture tracked separately after context-KV graph, no stacked percentage claim."
+    },
+    {
+      "prs": [
+        61530
+      ],
+      "reason": "Requires packed MXFP4 Engram checkpoint, violates unchanged-weights scope."
+    },
+    {
+      "prs": [
+        61088,
+        60938
+      ],
+      "reason": "No stable applicable SM80 whole-model win or no validated GPU/model coverage; current implementation hardware/parallelism gates differ."
+    }
+  ],
+  "shi3z_correction": {
+    "commit": "580568edd6f84537ff042ded4ee842b892bf3ff4",
+    "old_serialized_only_claim_withdrawn": true,
+    "code_evidence": {
+      "engine_queue": "dsv41/engine.py:4394",
+      "scheduler": "dsv41/engine.py:4396",
+      "worker": "dsv41/engine.py:4411",
+      "serial_prefill": "dsv41/engine.py:4450",
+      "batched_rt_step": "dsv41/engine.py:4572",
+      "chat_sse_waits_generate_text": "dsv41/serve.py:263"
+    },
+    "observations": [
+      "max_seqs>1 admits requests into active decode slots and batches rt.step",
+      "Prefill runs serially inside same worker loop",
+      "Chat SSE heartbeat does not mean incremental token delivery",
+      "128K eight-slot startup uses mtp0; not DSpark throughput",
+      "README and header timestamps differ; actual engine code takes precedence"
+    ],
+    "author_reported_not_reproduced": {
+      "gpus": "4xA100-80GB PCIe",
+      "context_cap_for_eight_slots": 131072,
+      "decode_slots": 8,
+      "wall_aggregate_tps": 119.2,
+      "peak_engine_aggregate_tps": 119.9,
+      "million_token_cold_prefill_actual_tokens": 1000000,
+      "million_token_cold_prefill_seconds": 5729.2
+    }
+  },
+  "local_validation": {
+    "gpu_available": false,
+    "target_model_inference_tested": false,
+    "target_benchmark_available": false,
+    "original_runtime_image_used": true,
+    "prefill_exact_cpu_cases": 12,
+    "inverse_rope_interpreter_shape_cases": 6,
+    "inverse_rope_input_mutations_per_case": 2,
+    "mixed_attention_dispatch_cases": 6,
+    "split_fallback_wrapper_cases": 2,
+    "draft_context_cpu_tests": 6,
+    "workspace_workloads": 1440,
+    "workspace_chunks_checked": 2108452,
+    "benchmark_lifecycle_accounting_tests": 10,
+    "sm80_compile_cases": 34,
+    "sm80_compile_status": "PASS",
+    "compiled_source_sha256": "875eaa80630f59d18c8378a78eec105ea096c4ef662b57828ddba6bef10420d4",
+    "report_directory": "reports/r19-runtime-build",
+    "target_gates": [
+      "BF16 inverse-RoPE reference, unchanged NoPE, strided in-place fallback, mutable CUDA Graph replay",
+      "Full-model protocol, cache, multimodal, long-window and load acceptance",
+      "Clean isolated C1/C32/C64 benchmark with real token usage accounting"
+    ]
+  },
+  "capacity_arithmetic_not_gpu_measurement": {
+    "max_model_len": 512000,
+    "indexer_logits_budget_mib": 512,
+    "old_reserved_rows": {
+      "ratio1": 20480000,
+      "ratio2": 10240000
+    },
+    "new_reserved_rows": {
+      "ratio1": 8289721,
+      "ratio2": 5861718
+    },
+    "shared_workspace_warning": "Ampere attention gather and other reservations may dominate; do not add per-reservation savings or claim H20 3.70GiB gain on A100."
+  },
+  "performance_limits": [
+    "External percentages and absolute rates are hardware/workload-specific, not additive A100 forecasts",
+    "TTFT/capacity gains do not imply sustained decode TPS gains",
+    "C64 scheduler cap is not 64 simultaneous full 500K windows",
+    "999 images is a configured count limit, not tested memory/context capacity",
+    "Historical TP8 C32 and noisy R1.8 eight-image C1 results are not R1.9 measurements",
+    "SSE event counts are not token counts; count usage completion_tokens; retain contaminated observations without signoff",
+    "User-confirmed vision cap1024->512 may reduce image detail; retain prefix-LM and whole-image scheduling; not a purely lossless optimization."
+  ],
+  "source_content_hashes": [
+    {
+      "snapshot_name": "Entrpi__ds4-on-spark__README.md",
+      "sha256": "31dfcf2bc607aedeed4a34cc83b0cbc90555fc214c48cdf123fa0c8697802b5f"
+    },
+    {
+      "snapshot_name": "Tokha233__deepseek-v4.1-flash-a100-turbo__README.md",
+      "sha256": "bed00bbb607762760266bb9c372406210f52ccc691ab2e00cdd72dd80ed3929f"
+    },
+    {
+      "snapshot_name": "Zanooda__deepseek-v4.1-flash-cmp170hx__README.md",
+      "sha256": "b4e115ffa95cc557894c9d70da23102c489e2bf24b04b520883760893c54fd76"
+    },
+    {
+      "snapshot_name": "Zanooda__deepseek-v4.1-flash-cmp170hx__RESULTS.md",
+      "sha256": "59b3954810e10f8b0d917bf8c4f11b6affcd764b576bed28abb40c4481cb52d9"
+    },
+    {
+      "snapshot_name": "Zanooda__deepseek-v4.1-flash-cmp170hx__patches__README.md",
+      "sha256": "72a1ba11a966951f9f8602eba8c10993c47f7fae50f530c784034299548fc1e5"
+    },
+    {
+      "snapshot_name": "antirez__ds4__README.md",
+      "sha256": "d61ff9a3153916ab88917cbfab0ca1a8c2e42b138b71a1ca0d74d05f391ff113"
+    },
+    {
+      "snapshot_name": "antirez__ds4__docs__DGX_SPARK.md",
+      "sha256": "f7ee8952749cf1538692b8fc7afd894df67080a148d5bd41811771a828bf50a0"
+    },
+    {
+      "snapshot_name": "antirez__ds4__docs__MODELS.md",
+      "sha256": "ce23d3de59bd83e38fe396d48883810b3233e0106af14b8c2dd8ca488c270de6"
+    },
+    {
+      "snapshot_name": "catid__dgx_station_benchmarks__deepseek-v4.1-flash__README.md",
+      "sha256": "6612ca00ab552a3348842e52b5a74e68af6155eef89c014b2762498bb6d826d7"
+    },
+    {
+      "snapshot_name": "concentrate1__deepseekv4.1-A100-custom__README.md",
+      "sha256": "d2e0fc85bfc75225ebd9559f6e2d3898ad6dbfb3c30b18c486248beeb76e1127"
+    },
+    {
+      "snapshot_name": "concentrate1__deepseekv4.1-A100-custom__dsv41__serve.py",
+      "sha256": "0d947303a56caeb984ecfc7a022d0d357fd80e4c17737d0cfa5296551be5904a"
+    },
+    {
+      "snapshot_name": "guqiong96__Lsglang__README.md",
+      "sha256": "fd82e2b132dc2c54c24dfa0a56bbccc6e9b729422af10afae8df5f52ea36b41f"
+    },
+    {
+      "snapshot_name": "guqiong96__Lvllm__README.md",
+      "sha256": "b00c25d488a85f22fb98b599295bcf8a3a66607c6943fb26f9dcfff5effd0818"
+    },
+    {
+      "snapshot_name": "sgl-project__sglang__README.md",
+      "sha256": "7c99b50fa5ef9f4a666a2f73860f746d3fc259e7e7912d4bff88dffdc1dc4c5e"
+    },
+    {
+      "snapshot_name": "sgl-project__sglang__docs__cookbook__autoregressive__DeepSeek__DeepSeek-V4_1.mdx",
+      "sha256": "6bd22951e1cc355236d5c7e80f0bafde29fa0062edca3b26061e8b48ae32d5d8"
+    },
+    {
+      "snapshot_name": "shi3z__deepseekv4.1-A100-custom__README.md",
+      "sha256": "8dea9079cf1c71925339a9eb63aa662292c8d000d20b1f4d566a71d1bc6d1d1b"
+    },
+    {
+      "snapshot_name": "shi3z__deepseekv4.1-A100-custom__dsv41__engine.py",
+      "sha256": "6059c92c718d5731165a61407fa29e383cde9908e4b5600fa26d86e108b3b8b0"
+    },
+    {
+      "snapshot_name": "shi3z__deepseekv4.1-A100-custom__dsv41__serve.py",
+      "sha256": "b1b4209538eed6ffd0806bfe1cb9ac1a83346fe03090c0b282572e83a7120a3f"
+    },
+    {
+      "snapshot_name": "tonyd2wild__DeepSeek-V4.1-Flash-vLLM-DGX-Spark__README.md",
+      "sha256": "8c72dbb42a49a0f9b5b5f8a70055a467823993012bdb47cad748b5b0e04e36a7"
+    },
+    {
+      "snapshot_name": "vllm-project__vllm__README.md",
+      "sha256": "4dc7399323b9660117f8cc1226afb7a81cdbb912dbb4ae74b66d89052417d11c"
+    },
+    {
+      "snapshot_name": "vllm-project__vllm__vllm__models__deepseek_v41__nvidia__flashinfer_sparse.py",
+      "sha256": "7926b4e3fa44fe0fc1ed3f93f0f292b4f56fa2103cf93c30a94d93958f84d682"
+    },
+    {
+      "snapshot_name": "vllm-project__vllm__vllm__models__deepseek_v41__sparse_mla.py",
+      "sha256": "1b87aa3f27e7867b6508893da5f52a0f10944b59fd03aa58bd8c568f4e6aef16"
+    },
+    {
+      "snapshot_name": "wtdcode__vllm-backport__README.md",
+      "sha256": "1a4d3e093784443963ec1e044e52087f35cec2feec6cc9101c3e29e61550c53d"
+    },
+    {
+      "snapshot_name": "yeungtuzi__vllm-xtu-moe__RELEASE_NOTES_v0.2.7.md",
+      "sha256": "251d7da351b5c12463f3f5478fdafe1c98017a2f6cc01d613add97daf8da6c39"
+    }
+  ],
+  "review_limitations": [
+    {
+      "area": "capture_observer_profiling_classification",
+      "finding": "memory_estimation_probe reads manager._capture_mem_samples, assigned to target only during profiling; draft throwaway captures can be labeled non-probe.",
+      "required_evidence": "Pair capture with actual FULL replay of corresponding manager, successful generated requests and absence of CUDA errors.",
+      "lifecycle_changed_in_r19": false
+    }
+  ],
+  "independent_source_review": {
+    "original_image_manager_signature_checked": true,
+    "manager_capture_signature": "self, create_forward_fn: CreateForwardFn, progress_bar_desc: str = Capturing CUDA graphs",
+    "manager_replay_signature": "self, desc: BatchExecutionDescriptor",
+    "original_image_capture_and_replay_observer_hooks_present": true,
+    "blocking_runtime_defect_found": false,
+    "gpu_execution_performed": false,
+    "scope": [
+      "capture callback order context before draft query",
+      "fixed k+1 context capacity",
+      "PAD slots for dummy and padded context",
+      "eager overflow tail before fixed graph prefix",
+      "baseline attention/shared operator optional argument ABI"
+    ]
+  },
+  "final_image_budget": {
+    "operator_ceiling": 1024,
+    "processor_hf_override": 1020,
+    "dspark_new_slots": 4,
+    "decoder_budget": 1024,
+    "atomic_bidirectional_image": true,
+    "quality_tradeoff": "latest operator steering requested1024 instead of512; processor1020 plus4 DSpark slots"
+  },
+  "latest_user_steering": "2026-10-15: changed scheduling/image upper budget from512 to1024 to preserve image detail",
+  "important_limits": []
+}

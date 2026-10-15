@@ -18,7 +18,7 @@ def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True,
     manifest = json.loads((root / 'manifest.json').read_text())
     rows = []
     enabled = {'mhc': mhc, 'indexer': indexer, 'moe_align': moe_align, 'vision': True,
-               'r12': True, 'r13': True, 'decode_metadata': decode_metadata}
+               'r12': True, 'r13': True, 'r19': True, 'decode_metadata': decode_metadata}
     for item in manifest['files']:
         name = item['path']
         rel = Path(name)
@@ -47,6 +47,8 @@ def plan(deploy, site, host_deploy, mhc, indexer=True, moe_align=True,
             'custom_ep8_collectives': True, 'cuda_sparse_decode_warps': 8,
             'cuda_shared_expert_overlap': True, 'eplb_target_only': True,
             'stacked_dspark_context_kv': bool(dspark_kv), 'reuse_topk_ragged': bool(topk_reuse),
+            'prefill_repeat_output_size': bool(decode_metadata), 'fused_inverse_rope': bool(decode_metadata),
+            'draft_context_kv_graph': True, 'bounded_indexer_workspace': True,
             'decode_metadata_fusion': bool(decode_metadata), 'fused_indptr_max_rows': 1024,
             'manifest_sha256': digest(root / 'manifest.json')}
 

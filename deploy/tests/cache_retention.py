@@ -48,7 +48,7 @@ def main():
         salt = uuid.uuid4().hex
         text = 'Probe '+salt+'. Reference records follow.\n' + '\n'.join(
             f'Row {n}: this is a stable local record with unchanged text.' for n in range(1024)) + '\nReply exactly CACHE_READY.'
-        body = {'model':'DeepSeek-V4-Flash', 'messages':[{'role':'user', 'content':text}],
+        body = {'model':'DeepSeek-Flash', 'messages':[{'role':'user', 'content':text}],
                 'max_tokens':32, 'temperature':0, 'chat_template_kwargs':{'thinking':False}}
         (directory/'request.json').write_text(json.dumps(body, indent=2)+'\n')
         cold = observe(client, body)

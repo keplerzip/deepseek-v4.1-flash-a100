@@ -83,6 +83,7 @@ def record_graph_capture(manager, description):
             'memory_estimation_probe': manager._capture_mem_samples is not None,
             'decode_query_len': int(manager.decode_query_len),
             'max_num_reqs': int(manager.max_num_reqs),
+            'draft_context_kv_captured': bool(getattr(manager, 'captures_context_kv', False)),
             'breakable_piecewise': bool(manager.use_breakable_cg),
             'captured_full_graphs': [_descriptor(d) for d in manager.graphs]})
 
@@ -96,5 +97,6 @@ def record_graph_replay(manager, desc):
     _SEEN_REPLAYS.add(key)
     _write('graph-replay', {**_parallel(manager.vllm_config), 'manager': type(manager).__name__, 'manager_id': id(manager),
             'device': str(manager.device), 'decode_query_len': int(manager.decode_query_len),
+            'draft_context_kv_captured': bool(getattr(manager, 'captures_context_kv', False)),
             'descriptor': _descriptor(desc),
             'scope': 'first replay issued for this shape; request success and CUDA errors checked separately'})

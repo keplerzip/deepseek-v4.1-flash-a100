@@ -1,0 +1,8 @@
+test_capacity_and_graph_callbacks_record_actual_dp_coordinates (__main__.Checks.test_capacity_and_graph_callbacks_record_actual_dp_coordinates) ... ok
+test_history_sticks_to_same_pool_and_independent_conversations_spread (__main__.Checks.test_history_sticks_to_same_pool_and_independent_conversations_spread) ... ok
+test_middleware_injects_rank_and_preserves_exact_body_for_each_protocol (__main__.Checks.test_middleware_injects_rank_and_preserves_exact_body_for_each_protocol) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.003s
+
+OK

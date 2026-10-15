@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "served_model_name": "DeepSeek-V4-Flash",
-  "max_model_len": 1048576,
-  "minimum_concurrency": 32,
-  "concurrency_formula": "fixed(32)",
+  "served_model_name": "DeepSeek-Flash",
+  "max_model_len": 512000,
+  "minimum_concurrency": 64,
+  "concurrency_formula": "fixed(64)",
   "tensor_parallel_size": 4,
   "pipeline_parallel_size": 1,
   "dspark_k": 5,
@@ -17,5 +17,11 @@
   "image_limit_per_prompt": 999,
   "client_api_key_required": false,
   "access_policy": "loopback-and-docker-only",
-  "maximum_concurrency": 32
+  "maximum_concurrency": 64,
+  "max_num_batched_tokens": 1024,
+  "disable_chunked_mm_input": true,
+  "vision_max_n_token": 1020,
+  "enable_chunked_prefill": true,
+  "requested_image_token_ceiling": 1024,
+  "dspark_reserved_token_slots": 4
 }

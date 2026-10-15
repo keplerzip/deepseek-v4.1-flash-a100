@@ -26,9 +26,12 @@ def main():
                 assert (path.parent/target).exists(),(str(path),link)
     cfg=json.loads((ROOT/'deploy/configs/runtime.json').read_text())
     assert cfg['speculative_config']['num_speculative_tokens']==5
+    assert cfg['max_num_batched_tokens']==1024
+    assert cfg['enable_chunked_prefill'] is True and cfg['disable_chunked_mm_input'] is True
+    assert cfg['hf_overrides']=={'vision_max_n_token':1020}
     assert cfg['limit_mm_per_prompt']=={'image':999}
     assert cfg['model']=='/models/DeepSeek-V4.1-Flash'
-    assert cfg['served_model_name']=='DeepSeek-V4-Flash' and cfg['max_model_len']==1048576
+    assert cfg['served_model_name']=='DeepSeek-Flash' and cfg['max_model_len']==512000
     assert cfg['tensor_parallel_size']==4 and cfg['data_parallel_size']==cfg['data_parallel_size_local']==2
     assert cfg['enable_expert_parallel'] and cfg['enable_eplb']
     assert cfg['eplb_config']['num_redundant_experts']==0
@@ -40,24 +43,24 @@ def main():
     overlay=json.loads((ROOT/'deploy/overrides/performance/manifest.json').read_text())
     assert (ROOT/'VERSION').read_text().strip()==release['release']==update['release']
     assert release['source_update']==update['id']
-    # Context-only releases reuse the exact R1.4 kernel overlay and its proofs.
+    # Overlay identity includes every ported source and its pinned base hashes.
     assert release['performance_overlay_release']==overlay['release']
     assert release['performance_overlay_id']==overlay['id']
     constraints=json.loads((ROOT/'deploy/configs/constraints.json').read_text())
     assert release['context']==constraints['max_model_len']==cfg['max_model_len']
     assert release['gpu_memory_utilization']==constraints['gpu_memory_utilization']==cfg['gpu_memory_utilization']==0.92
     assert release['client_api_key_required'] is False
-    assert release['model']=='DeepSeek-V4-Flash' and release['weight_model']=='DeepSeek-V4.1-Flash'
+    assert release['model']=='DeepSeek-Flash' and release['weight_model']=='DeepSeek-V4.1-Flash'
     assert release['concurrency_formula']==constraints['concurrency_formula']
-    assert constraints['minimum_concurrency']==constraints['maximum_concurrency']==32
-    assert release['concurrency_formula']=='fixed(32)'
+    assert constraints['minimum_concurrency']==constraints['maximum_concurrency']==64
+    assert release['concurrency_formula']=='fixed(64)'
     for name in ('deploy/configs/locked-scheme.json','deploy/manifests/baseline.json'):
         fixed=json.loads((ROOT/name).read_text())
         assert fixed['release']==release['release'] and fixed['tensor_parallel_size']==4 and fixed['data_parallel_size']==2
         assert fixed['context']==release['context']
         assert fixed['gpu_memory_utilization']==0.92
         assert fixed['concurrency_formula']==release['concurrency_formula']
-        assert fixed['served_model_name']=='DeepSeek-V4-Flash'
+        assert fixed['served_model_name']=='DeepSeek-Flash'
     assert update['cumulative'] and not update['requires_prior_update']
     assert release['runtime_tag']==update['compatible_initial_image']
     assert release['performance_overlay_sha256']==hashlib.sha256((ROOT/'deploy/overrides/performance/manifest.json').read_bytes()).hexdigest()

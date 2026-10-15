@@ -85,7 +85,7 @@ def main():
     report = {'status': 'RUNNING', 'cases': [], 'full_model_tested': False,
               'groups': {'mhc': a.mhc, 'indexer': a.indexer, 'moe_align': a.moe_align,
                          'dspark_kv': a.dspark_kv, 'topk_reuse': a.topk_reuse,
-                         'decode_metadata': a.decode_metadata}}
+                         'decode_metadata': a.decode_metadata, 'inverse_rope': True}}
     try:
         if not torch.cuda.is_available() or torch.cuda.get_device_capability() != (8, 0):
             raise RuntimeError('This test must execute on an SM80 GPU; CPU is not a passing result')
@@ -93,6 +93,7 @@ def main():
         from performance_r12_kernels import check_dense, check_shared, check_sparse
         from performance_r13_kernels import check_dspark_kv, check_topk_reuse
         from performance_r14_kernels import check_decode_metadata
+        from performance_inv_rope_kernels import check_inverse_rope
         for enabled, name, check in ((a.indexer, 'compact-indexer', check_indexer),
                                     (a.moe_align, 'stable-moe-align', check_moe),
                                     (a.mhc, 'mhc', check_mhc),
@@ -101,9 +102,10 @@ def main():
                                     (True, 'sparse-decode-8-warps', check_sparse),
                                     (a.dspark_kv, 'stacked-dspark-context-kv', check_dspark_kv),
                                     (a.topk_reuse, 'ragged-topk-reuse', check_topk_reuse),
-                                    (a.decode_metadata, 'decode-metadata-fusion', check_decode_metadata)):
+                                    (a.decode_metadata, 'decode-metadata-fusion', check_decode_metadata),
+                                    (True, 'inverse-rope-reduce-epilogue', check_inverse_rope)):
             if enabled:
-                print('[R1.4 kernels] Starting '+name, flush=True)
+                print('[SM80 kernels] Starting '+name, flush=True)
                 check(report)
         report.update(status='PASS', gpu=torch.cuda.get_device_name(),
                       scope='Enabled SM80 kernel reference checks and graph replay; no model speed result')

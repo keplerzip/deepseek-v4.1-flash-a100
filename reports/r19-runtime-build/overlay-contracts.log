@@ -1,0 +1,11 @@
+test_independent_group_switches_restore_matching_callers (__main__.OverlayChecks.test_independent_group_switches_restore_matching_callers) ... ok
+test_modified_image_is_rejected_before_mount_plan (__main__.OverlayChecks.test_modified_image_is_rejected_before_mount_plan) ... ok
+test_modified_payload_is_rejected (__main__.OverlayChecks.test_modified_payload_is_rejected) ... ok
+test_old_and_updated_images_have_complete_reversible_layer_abi (__main__.OverlayChecks.test_old_and_updated_images_have_complete_reversible_layer_abi) ... ok
+test_r13_diagnostic_switches_are_recorded_independently (__main__.OverlayChecks.test_r13_diagnostic_switches_are_recorded_independently) ... ok
+test_r14_switch_restores_r13_including_cross_layer_reuse (__main__.OverlayChecks.test_r14_switch_restores_r13_including_cross_layer_reuse) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.155s
+
+OK

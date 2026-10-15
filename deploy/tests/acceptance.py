@@ -12,9 +12,9 @@ import urllib.error
 import urllib.request
 import uuid
 
-MODEL = 'DeepSeek-V4-Flash'
-LENGTH = 1048576
-LONG_INPUT_BUDGETS = (32768, 65536, 131072, 258048, 524288, LENGTH - 4096)
+MODEL = 'DeepSeek-Flash'
+LENGTH = 512000
+LONG_INPUT_BUDGETS = (32768, 65536, 131072, 258048, LENGTH - 4096)
 
 
 class Client:
@@ -388,6 +388,6 @@ if __name__ == '__main__':
     p.add_argument('--key-file',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--suite',choices=['smoke','full','long','parallel','gateway'],default='full')
-    p.add_argument('--concurrency',type=int,default=32)
+    p.add_argument('--concurrency',type=int,default=64)
     p.add_argument('--dp-rank',type=int,choices=(0,1))
     raise SystemExit(run(p.parse_args()))

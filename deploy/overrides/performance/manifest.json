@@ -1,5 +1,5 @@
 {
-  "id": "20260922-perf5",
+  "id": "20261015-perf6",
   "base_commit": "a350766628514d597670d2a5217777fdee2ba7f4",
   "upstream_prs": [
     {
@@ -28,7 +28,7 @@
       "path": "vllm/models/deepseek_v4_1/common/mm_preprocess.py",
       "group": "vision",
       "base_sha256": "4ce1a019d74b1933706432c8aa1c347be78882019f25a956599665cf6d105d63",
-      "patched_sha256": "91f66f0c84f55709c10f16127b486a8af0e5f291efe08b46d617830eed3e8cab"
+      "patched_sha256": "fd7505b6a65c2c8ef4bc03da8139d92912ff21baf7e4326656164dcc226af7e8"
     },
     {
       "path": "vllm/models/deepseek_v4_1/nvidia/dspark.py",
@@ -127,7 +127,7 @@
       "group": "r12",
       "base_sha256": "1484e9e69ae013c5e98f5c1d2f54f77678cf97c305d8fb259c8ba720b87296c5",
       "baseline_sha256": "1484e9e69ae013c5e98f5c1d2f54f77678cf97c305d8fb259c8ba720b87296c5",
-      "patched_sha256": "8c1ea71674edaac4a650ccf312ee09da896f84a659c339aed6af1698188212a7"
+      "patched_sha256": "724b3fc415a5f00f2149fa6615922adc443f85dc910b88cc9f7e61431f8c9b11"
     },
     {
       "path": "vllm/v1/worker/gpu/spec_decode/multi_module_mtp/speculator.py",
@@ -162,7 +162,7 @@
       "group": "r12",
       "base_sha256": "72ecfe633dd70ce7ea0f75bef45a78aa618a9d79194a9c3b58040fc2eebf9711",
       "baseline_sha256": "72ecfe633dd70ce7ea0f75bef45a78aa618a9d79194a9c3b58040fc2eebf9711",
-      "patched_sha256": "38e3184f18c923012b4b64a77c1e64036a426f0ccc4687f8553078680a5c392f"
+      "patched_sha256": "875eaa80630f59d18c8378a78eec105ea096c4ef662b57828ddba6bef10420d4"
     },
     {
       "path": "vllm/v1/worker/gpu/eplb_utils.py",
@@ -176,7 +176,7 @@
       "group": "r12",
       "base_sha256": "b1dbf9c0c88b430301f25c254ace6a1bb1bc8da5a84523e3fe1ee71ffccf7b92",
       "baseline_sha256": "b1dbf9c0c88b430301f25c254ace6a1bb1bc8da5a84523e3fe1ee71ffccf7b92",
-      "patched_sha256": "c664ecf7f7b52254dae5cdec6e3472324c4590c1998987575ace4570b4fbcbf3"
+      "patched_sha256": "6437fe5154800e0eec9a5bf1102ce86df42b5217be53f6c86164f23fc36410a9"
     },
     {
       "path": "vllm/entrypoints/openai/responses/serving.py",
@@ -190,7 +190,7 @@
       "group": "decode_metadata",
       "base_sha256": "b74d9d75b29b81530b0f458f7d87d80bc6907949f4b94d22b70c649f9b521bea",
       "baseline_sha256": "160dd9b8d8796f74205da2083edd7f56f8183d481d88850a728ce5072ffed10f",
-      "patched_sha256": "9d9136eec7149ee1fa959f1b3400d618d9bb67070061f320ec9d16e3fed08ff7"
+      "patched_sha256": "69fa464c390ad15c60cc364faddfcaf21a1760aec2069b1355486a4a42f81ea3"
     },
     {
       "path": "vllm/v1/attention/backends/mla/indexer.py",
@@ -205,10 +205,31 @@
       "base_sha256": "15db794abea3be63f610ad210f2fd215d8dee4d596cd47027b7edf698439c206",
       "baseline_sha256": "15db794abea3be63f610ad210f2fd215d8dee4d596cd47027b7edf698439c206",
       "patched_sha256": "b2a87a6a91831b7f34df4d502dd7e088f7b9b89e92e5942ccd59ef925b5b19bc"
+    },
+    {
+      "path": "vllm/models/deepseek_v4_1/attention.py",
+      "group": "r19",
+      "base_sha256": "991af78c9eda16a0f829ecba57397b2a434335dfecbbd93fff1dc40cbbb92698",
+      "baseline_sha256": "991af78c9eda16a0f829ecba57397b2a434335dfecbbd93fff1dc40cbbb92698",
+      "patched_sha256": "1dcbfc69f3d80a742038cc305cc829e4c2eed5cc7a6c53d77e3b45eb039c4228"
+    },
+    {
+      "path": "vllm/v1/worker/gpu/spec_decode/dflash/cudagraph.py",
+      "group": "r19",
+      "base_sha256": "beab567ae2df6a2ba2cd92fe7ee452c6b959b8a7037a4b5f493993a1824619bb",
+      "baseline_sha256": "beab567ae2df6a2ba2cd92fe7ee452c6b959b8a7037a4b5f493993a1824619bb",
+      "patched_sha256": "bd13cb2a7289b63074c8c8fe3f2a9fda15c21c5fbb76e363aba9ba0d2d77c690"
+    },
+    {
+      "path": "vllm/v1/core/sched/scheduler.py",
+      "group": "r19",
+      "base_sha256": "5ef33e44cebc274bca239cc4337ad1370298fd369660b025ca98eec48c4cc015",
+      "baseline_sha256": "5ef33e44cebc274bca239cc4337ad1370298fd369660b025ca98eec48c4cc015",
+      "patched_sha256": "d62c42b26ca6c7a12a6b24515fbe16f8973c0b1db9159dee71de573343555841"
     }
   ],
   "gpu_validated": false,
-  "release": "1.4.0",
+  "release": "1.9.0",
   "upstream_sources": [
     {
       "url": "https://github.com/Zanooda/deepseek-v4.1-flash-cmp170hx",
@@ -267,6 +288,34 @@
       "commit": "2031422bfd952cc65fc1a46a9b570f6f04dc318d",
       "r14": true,
       "component": "fused ragged indptr/pack; local <=1024-row bound and empty-input handling"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57435",
+      "commit": "b1465b142c4c7cfc6c4d94ae34e45fa309cb9f31",
+      "r19": true,
+      "component": "inverse RoPE fused into sparse split attention reduction; SM80 port"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/57632",
+      "commit": "f2b00d1f989e62edb44a869a8786f4594b55e495",
+      "r19": true,
+      "component": "DSpark context KV projection inside draft CUDA Graph"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/60091",
+      "commit": "82c6eaf85e2217da1ce917f24f25abf7fb9dad04",
+      "r19": true,
+      "component": "explicit repeat_interleave output_size on inherited Ampere prefill"
+    },
+    {
+      "url": "https://github.com/vllm-project/vllm/pull/60874",
+      "commit": "fe1a30812d3451953ed578290667e069774d74df",
+      "r19": true,
+      "component": "indexer workspace bound adapted to original chunk builder"
     }
+  ],
+  "local_r19_correctness_fixes": [
+    "atomic bidirectional image scheduling before encoder-cache shortcuts; exact-start and prefix-tail boundaries",
+    "PIL zero-dimension guard only for degenerate aspect ratios"
   ]
 }

@@ -49,7 +49,7 @@ class OverlayChecks(unittest.TestCase):
             for mhc, indexer, moe in product((False, True), repeat=3):
                 result = perf.plan(DEPLOY, site, Path('/target/deploy'), mhc, indexer, moe)
                 switches = dict(mhc=mhc, indexer=indexer, moe_align=moe, vision=True,
-                                r12=True, r13=True, decode_metadata=True)
+                                r12=True, r13=True, r19=True, decode_metadata=True)
                 for row in result['files']:
                     self.assertEqual(row['variant'], 'patched' if switches[by_path[row['path']]['group']] else 'baseline')
 

@@ -14,6 +14,9 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--image', default='deepseek-v4.1-flash-a100:20260913-r1')
     p.add_argument('--checks', nargs='*', help='Optional logfile stems to resume a failed check')
+    p.add_argument('--model-metadata', type=Path,
+                   default=ROOT / 'delivery/deepseek-v4.1-flash-a100/DeepSeek-V4.1-Flash',
+                   help='Local config/tokenizer metadata for the CPU scheduler/model-config check; weights are not read')
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=True)
     if a.checks is None or 'frontend-mount' in a.checks:
@@ -49,18 +52,30 @@ def main():
               (['/deploy/tests/performance_r13_cpu.py'], 'r13-cpu.log'),
               (['/deploy/tests/performance_r14_cpu.py'], 'r14-cpu.log'),
               (['/deploy/tests/performance_r14_interpreter.py'], 'r14-interpreter.log'),
+              (['/deploy/tests/performance_prefill_cpu.py'], 'prefill-cpu.log'),
+              (['/deploy/tests/performance_inv_rope_cpu.py'], 'inverse-rope-cpu.log'),
+              (['/deploy/tests/draft_context_graph_cpu.py'], 'draft-context-cpu.log'),
+              (['/deploy/tests/scheduler_multimodal_cpu.py', '--model', '/models/DeepSeek-V4.1-Flash'], 'scheduler-mm-cpu.log'),
+              (['/deploy/tests/performance_r19_workspace_cpu.py'], 'r19-workspace-cpu.log'),
+              (['/deploy/tests/performance_r19_benchmark_cpu.py'], 'r19-benchmark-cpu.log'),
               (['/deploy/tests/vision_schema.py'], 'vision-schema.log'),
               (['/deploy/tests/guard_schema.py', '--guard-path', '/deploy/overrides/dsv41_guard.py'], 'guard-schema.log'),
               (['/build/compile_r11_kernels.py', '--output', '/results/sm80-compile.json'], 'sm80-compile.log'),
               (['/build/compile_r12_kernels.py', '--output', '/results/r12-sm80-compile.json'], 'r12-sm80-compile.log'),
               (['/build/compile_r13_kernels.py', '--output', '/results/r13-sm80-compile.json'], 'r13-sm80-compile.log'),
-              (['/build/compile_r14_kernels.py', '--output', '/results/r14-sm80-compile.json'], 'r14-sm80-compile.log')]
+              (['/build/compile_r14_kernels.py', '--output', '/results/r14-sm80-compile.json'], 'r14-sm80-compile.log'),
+              (['/build/compile_r19_kernels.py', '--output', '/results/r19-sm80-compile.json'], 'r19-sm80-compile.log')]
     for command, logfile in checks:
         if a.checks is not None and Path(logfile).stem not in a.checks:
             continue
         print('Checking '+command[0], flush=True)
+        extra_mounts = []
+        if logfile == 'scheduler-mm-cpu.log':
+            if not (a.model_metadata / 'config.json').is_file():
+                raise FileNotFoundError('Pass --model-metadata with local V4.1 config/tokenizer metadata')
+            extra_mounts = ['-v', f'{a.model_metadata.resolve()}:/models/DeepSeek-V4.1-Flash:ro']
         with (a.output/logfile).open('w') as out:
-            result = subprocess.run(common+mounts+['-v', f'{a.output.resolve()}:/results',
+            result = subprocess.run(common+mounts+extra_mounts+['-v', f'{a.output.resolve()}:/results',
                                     a.image, '-u', *command], stdout=out, stderr=subprocess.STDOUT, timeout=600)
         print((a.output/logfile).read_text(), flush=True)
         result.check_returncode()

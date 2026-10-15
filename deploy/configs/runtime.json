@@ -1,6 +1,6 @@
 {
   "model": "/models/DeepSeek-V4.1-Flash",
-  "served_model_name": "DeepSeek-V4-Flash",
+  "served_model_name": "DeepSeek-Flash",
   "tensor_parallel_size": 4,
   "data_parallel_size": 2,
   "data_parallel_size_local": 2,
@@ -16,8 +16,8 @@
     "log_balancedness_interval": 500
   },
   "pipeline_parallel_size": 1,
-  "max_model_len": 1048576,
-  "max_num_batched_tokens": 8192,
+  "max_model_len": 512000,
+  "max_num_batched_tokens": 1024,
   "gpu_memory_utilization": 0.92,
   "kv_cache_dtype": "fp8_ds_mla",
   "engram_config": {
@@ -41,5 +41,10 @@
     "rejection_sample_method": "standard",
     "use_local_argmax_reduction": true,
     "enable_adaptive_verification": false
+  },
+  "enable_chunked_prefill": true,
+  "disable_chunked_mm_input": true,
+  "hf_overrides": {
+    "vision_max_n_token": 1020
   }
 }

@@ -1,0 +1,8 @@
+test_candidate_source_short_context_and_switch_keep_original_path (__main__.DispatchChecks.test_candidate_source_short_context_and_switch_keep_original_path) ... ok
+test_decode_preserves_tp_group_and_candidate_row_slices (__main__.DispatchChecks.test_decode_preserves_tp_group_and_candidate_row_slices) ... ok
+test_prefill_chunk_does_not_reenter_dense_topk (__main__.DispatchChecks.test_prefill_chunk_does_not_reenter_dense_topk) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.025s
+
+OK

@@ -20,7 +20,7 @@ def percentile(values,fraction):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--base-url',required=True); p.add_argument('--key-file',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True); p.add_argument('--concurrency',type=int,default=32)
+    p.add_argument('--output',type=Path,required=True); p.add_argument('--concurrency',type=int,default=64)
     p.add_argument('--requests',type=int,default=200); p.add_argument('--output-tokens',type=int,default=1024)
     p.add_argument('--thinking',action='store_true'); p.add_argument('--duration-hours',type=float,default=0)
     a=p.parse_args()
